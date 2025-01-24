@@ -1,0 +1,22 @@
+{% extends "admin_dashboard.html" %}
+
+{% block admin_side %}
+
+<form method="POST">
+    {% csrf_token %}
+    <label for="brand_name" class="block text-sm font-medium text-gray-700">Brand Name</label>
+    <input 
+        type="text" 
+        id="brand_name" 
+        name="brand_name" 
+        required 
+        class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+    >
+    <button 
+        type="submit" 
+        class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+        Add Brand
+    </button>
+</form>
+
+{% endblock %}

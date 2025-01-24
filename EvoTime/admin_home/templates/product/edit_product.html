@@ -1,0 +1,96 @@
+{% extends 'admin_dashboard.html' %}
+
+{% block admin_side %}
+<div class="max-w-4xl mx-auto bg-white p-6 shadow-md rounded-md">
+    <h1 class="text-2xl font-bold text-gray-700 mb-4">Edit Product</h1>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-4">
+            <label for="name" class="block text-sm font-medium text-gray-700">Product Name</label>
+            <input type="text" name="name" id="name" value="{{ product.name }}" 
+                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        <div class="mb-4">
+            <label for="regular_price" class="block text-sm font-medium text-gray-700">Regular Price</label>
+            <input type="number" name="regular_price" id="regular_price" value="{{ product.regular_price }}" 
+                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" step="0.01">
+        </div>
+
+        <div class="mb-4">
+            <label for="sales_price" class="block text-sm font-medium text-gray-700">Sales Price</label>
+            <input type="number" name="sales_price" id="sales_price" value="{{ product.sales_price }}" 
+                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" step="0.01">
+        </div>
+
+        <div class="mb-4">
+            <label for="stock" class="block text-sm font-medium text-gray-700">Stock</label>
+            <input type="number" name="stock" id="stock" value="{{ product.stock }}" 
+                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <div class="mb-4">
+            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+            <textarea name="description" id="description" rows="4" 
+                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">{{ product.description }}</textarea>
+        </div>
+
+        <div class="mb-4">
+            <label for="brand" class="block text-sm font-medium text-gray-700">Brand</label>
+            <select name="brand" id="brand" 
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                {% for brand in brands %}
+                <option value="{{ brand.id }}" {% if brand.id == product.brand_id %}selected{% endif %}>
+                    {{ brand.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+            <select name="category" id="category" 
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if category.id == product.category_id %}selected{% endif %}>
+                    {{ category.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label for="image1" class="block text-sm font-medium text-gray-700">Image 1</label>
+            <input type="file" name="image1" id="image1" 
+                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <div class="mb-4">
+            <label for="image2" class="block text-sm font-medium text-gray-700">Image 2</label>
+            <input type="file" name="image2" id="image2" 
+                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <div class="mb-4">
+            <label for="image3" class="block text-sm font-medium text-gray-700">Image 3</label>
+            <input type="file" name="image3" id="image3" 
+                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <div class="mb-4">
+            <label for="image4" class="block text-sm font-medium text-gray-700">Image 4</label>
+            <input type="file" name="image4" id="image4" 
+                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <!-- Add fields for image2, image3, and image4 similarly -->
+
+        <div class="flex justify-end">
+            <button type="submit" 
+                    class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                Update Product
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

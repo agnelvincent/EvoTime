@@ -1,0 +1,51 @@
+{% extends 'admin_dashboard.html' %}
+
+{% block admin_side %}
+<a href="{% url 'add_product' %}" class="mt-4 inline-block px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+    Add New Product
+</a>
+<div class="max-w-7xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Product List</h1>
+    <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Category</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Price</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Stock</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            {% for product in products %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 text-gray-700 font-medium whitespace-nowrap">{{ product.name }}</td>
+                <td class="px-6 py-4 text-gray-600 whitespace-nowrap">{{ product.category.name }}</td>
+                <td class="px-6 py-4 text-gray-600 whitespace-nowrap">₹ {{ product.regular_price }}</td>
+                <td class="px-6 py-4 text-gray-600 whitespace-nowrap">{{ product.stock }}</td>
+                <td class="px-6 py-4 text-gray-600 whitespace-nowrap">
+                    {% if product.is_blocked %}
+                    <span class="inline-block px-3 py-1 text-sm font-semibold text-red-600 bg-red-100 rounded-full">Blocked</span>
+                    {% else %}
+                    <span class="inline-block px-3 py-1 text-sm font-semibold text-green-600 bg-green-100 rounded-full">Active</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center space-x-4">
+                        <a href="{% url 'edit_product' product.id %}" class="text-blue-600 hover:underline font-medium">Edit</a>
+                        {% if product.is_blocked %}
+                        <a href="{% url 'unblock_product' product.id %}" class="text-green-600 hover:underline font-medium">Unblock</a>
+                        {% else %}
+                        <a href="{% url 'block_product' product.id %}" class="text-red-600 hover:underline font-medium">Block</a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+

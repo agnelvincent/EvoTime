@@ -1,0 +1,171 @@
+{% extends 'admin_dashboard.html' %}
+
+{% block admin_side %}
+<div class="max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-lg">
+    <h1 class="text-3xl font-semibold text-gray-800 mb-6">Add New Product</h1>
+    <form method="POST" enctype="multipart/form-data" action="{% url 'add_product' %}">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Product Name -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700">Product Name</label>
+                <input 
+                    type="text" 
+                    name="name" 
+                    id="name" 
+                    placeholder="Enter product name" 
+                    required 
+                    class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+            </div>
+
+            <!-- Category -->
+            <div>
+                <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                <select 
+                    id="category" 
+                    name="category" 
+                    required 
+                    class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+                    {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Description -->
+            <div class="md:col-span-2">
+                <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                <textarea 
+                    name="description" 
+                    id="description" 
+                    placeholder="Enter product description" 
+                    rows="4" 
+                    required 
+                    class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                ></textarea>
+            </div>
+
+            <!-- Stock Quantity -->
+            <div>
+                <label for="stock" class="block text-sm font-medium text-gray-700">Stock Quantity</label>
+                <input 
+                    type="number" 
+                    name="stock" 
+                    id="stock" 
+                    value="0" 
+                    required 
+                    class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+            </div>
+
+            <!-- Regular Price -->
+            <div>
+                <label for="regular_price" class="block text-sm font-medium text-gray-700">Regular Price</label>
+                <input 
+                    type="number" 
+                    name="regular_price" 
+                    id="regular_price" 
+                    placeholder="₹ 1,65,000" 
+                    required 
+                    class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+            </div>
+
+            <!-- Sale Price -->
+            <div>
+                <label for="sales_price" class="block text-sm font-medium text-gray-700">Sale Price</label>
+                <input 
+                    type="number" 
+                    name="sales_price" 
+                    id="sales_price" 
+                    placeholder="₹ 1,46,300" 
+                    required 
+                    class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+
+            </div>
+
+            <!-- Brand -->
+            <div>
+                <label for="brand" class="block text-sm font-medium text-gray-700">Brand</label>
+                <select 
+                    name="brand" 
+                    id="brand" 
+                    required 
+                    class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+                    {% for brand in brands %}
+                        <option value="{{ brand.id }}">{{ brand.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Product Images -->
+            <div class="md:col-span-2">
+                <label for="image1" class="block text-sm font-medium text-gray-700">Product Image 1</label>
+                <input 
+                    type="file" 
+                    name="image1" 
+                    id="image1" 
+                    accept="image/*" 
+                    class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+            </div>
+
+            <div class="md:col-span-2">
+                <label for="image2" class="block text-sm font-medium text-gray-700">Product Image 2</label>
+                <input 
+                    type="file" 
+                    name="image2" 
+                    id="image2" 
+                    accept="image/*" 
+                    class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+            </div>
+
+            <div class="md:col-span-2">
+                <label for="image3" class="block text-sm font-medium text-gray-700">Product Image 3</label>
+                <input 
+                    type="file" 
+                    name="image3" 
+                    id="image3" 
+                    accept="image/*" 
+                    class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+            </div>
+
+            <div class="md:col-span-2">
+                <label for="image4" class="block text-sm font-medium text-gray-700">Product Image 4</label>
+                <input 
+                    type="file" 
+                    name="image4" 
+                    id="image4" 
+                    accept="image/*" 
+                    class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+            </div>
+        </div>
+
+        <!-- Add Brand & Submit Buttons -->
+        <div class="flex items-center justify-between mt-8">
+            <a 
+                href="{% url 'add_brands' %}" 
+                class="flex items-center px-5 py-3 bg-gray-800 text-white rounded-md shadow-md hover:bg-gray-900"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 5a1 1 0 01.993.883L11 6v4h4a1 1 0 01.117 1.993L15 12h-4v4a1 1 0 01-1.993.117L9 16v-4H5a1 1 0 01-.117-1.993L5 10h4V6a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                Add New Brand
+            </a>
+
+            <button 
+                type="submit" 
+                class="px-6 py-3 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700">
+                Add Product
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

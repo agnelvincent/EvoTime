@@ -1,0 +1,67 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - EvoTime</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/dashboard.css' %}">
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+    <!-- Header -->
+    <header class="w-full z-10 flex items-center justify-between px-6 py-4 bg-white shadow">
+        <div class="flex items-center">
+            <img src="{% static 'images/evo_time_logo.webp' %}" alt="EvoTime Logo" class="w-12 h-12 rounded-full mr-3">
+            <h1 class="text-2xl font-bold text-red-800">EvoTime</h1>
+        </div>
+        <div class="w-1/3">
+            <input
+                type="text"
+                placeholder="Search..."
+                class="w-full px-4 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="flex flex-1"> <!-- Use flex-1 to ensure it stretches to fill available space -->
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow h-screen sticky top-0"> <!-- Sticky ensures it stays in view -->
+            <nav class="pt-6">
+                <ul>
+                    <li><a href="{% url 'admin_dashboard' %}" class="flex items-center mt-7 px-4 py-2 hover:bg-blue-500 hover:text-white rounded-lg">Dashboard</a></li>
+                    <li><a href="{% url 'admin_product' %}" class="flex items-center mt-4 px-4 py-2 hover:bg-blue-500 hover:text-white rounded-lg">Products</a></li>
+                    <li><a href="#" class="flex items-center mt-4 px-4 py-2 hover:bg-blue-500 hover:text-white rounded-lg">Order Lists</a></li>
+                    <li><a href="{% url 'user_viewer' %}" class="flex items-center mt-4 px-4 py-2 hover:bg-blue-500 hover:text-white rounded-lg">Users</a></li>
+                    <li><a href="#" class="flex items-center mt-4 px-4 py-2 hover:bg-blue-500 hover:text-white rounded-lg">Sales Report</a></li>
+                    <li><a href="#" class="flex items-center mt-4 px-4 py-2 hover:bg-blue-500 hover:text-white rounded-lg">Coupons</a></li>
+                    <li><a href="{% url 'manage_categories' %}" class="flex items-center mt-4 px-4 py-2 hover:bg-blue-500 hover:text-white rounded-lg">Category</a></li>
+                    <li><a href="#" class="flex items-center mt-4 px-4 py-2 hover:bg-blue-500 hover:text-white rounded-lg">Banner Management</a></li>
+                    <li><a href="#" class="flex items-center mt-4 px-4 py-2 hover:bg-blue-500 hover:text-white rounded-lg">Offer Management</a></li>
+                    <li class="mt-10"><a href="#" class="flex items-center mt-5 px-4 py-2 hover:bg-blue-500 hover:text-white rounded-lg">Settings</a></li>
+                    <li><a href="{% url 'admin_logout' %}" class="flex items-center px-4 mt-4 py-2 hover:bg-blue-500 hover:text-white rounded-lg">Logout</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="flex-1 px-6 py-6">
+            {% block admin_side %}
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold mb-4">Welcome to EvoTime Admin Dashboard</h2>
+                <p class="text-gray-700">This is the main content area. Add your dashboard widgets or content here.</p>
+            </div>
+            {% endblock admin_side %}
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white shadow w-full py-4"> 
+        <div class="text-center text-sm text-gray-600"> 
+        © 2025 EvoTime. All rights reserved. 
+        </div> 
+    </footer>
+</body>
+</html>
