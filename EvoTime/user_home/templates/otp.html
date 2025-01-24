@@ -4,76 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OTP Verification</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .otp-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 100%;
-        }
-        .otp-container h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #333;
-        }
-        .otp-container form {
-            display: flex;
-            flex-direction: column;
-        }
-        .otp-container input[type="text"] {
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        .otp-container button {
-            padding: 10px;
-            font-size: 16px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .otp-container button:hover {
-            background-color: #0056b3;
-        }
-        .message {
-            margin-top: 10px;
-            text-align: center;
-            color: red;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="otp-container">
-        <h2>OTP Verification</h2>
-        <form method="POST" action="{% url 'verify_otp' %}">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h2 class="text-2xl font-bold text-center mb-4">OTP Verification</h2>
+        <form method="POST" action="{% url 'verify_otp' %}" class="space-y-4">
             {% csrf_token %}
-            <label for="otp">Enter OTP</label>
-            <input type="text" name="otp" id="otp" placeholder="Enter OTP" required>
-            <button type="submit">Verify OTP</button>
+            <div>
+                <label for="otp" class="block text-sm font-medium text-gray-700">Enter OTP</label>
+                <input type="text" name="otp" id="otp" placeholder="Enter OTP" 
+                    class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                    required>
+            </div>
+            <button type="submit" 
+                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition">
+                Verify OTP
+            </button>
         </form>
-        {% if messages %}
-        <div class="message">
-            {% for message in messages %}
-                <p>{{ message }}</p>
-            {% endfor %}
+        
+        <div class="text-center mt-4">
+            <p class="text-sm text-gray-600">Time Remaining: <span id="timer" class="font-bold text-gray-800">1:00</span></p>
         </div>
+
+        {% if messages %}
+            <div class="mt-4 text-center">
+                {% for message in messages %}
+                    <p class="text-sm text-red-600">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if not otp_expired %}
+            <div class="text-center mt-4">
+                <p class="text-sm text-gray-600">
+                    Didn't receive the OTP? 
+                    <a href="{% url 'verify_otp' %}?resend=true" class="text-blue-500 hover:underline">Resend OTP</a>
+                </p>
+            </div>
         {% endif %}
     </div>
+
+    <script>
+        // Timer countdown logic
+        let timeLeft = 60;  // Set to 60 seconds for OTP expiration
+        const countdown = () => {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById("timer").innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft === 0) {
+                clearInterval(timerInterval);
+            } else {
+                timeLeft--;
+            }
+        };
+        const timerInterval = setInterval(countdown, 1000);
+    </script>
 </body>
 </html>

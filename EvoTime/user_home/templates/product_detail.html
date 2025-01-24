@@ -1,62 +1,44 @@
 {% extends "home.html" %}
 
 {% block product %}
-    <section class="bg-white py-16 mt-16">
-        <div class="container mx-auto px-6 flex flex-col lg:flex-row items-center lg:items-start space-y-8 lg:space-y-0">
-            <!-- Product Images -->
-            <div class="lg:w-1/2 flex flex-col items-center space-y-4">
-                <img src="{{ product.image1.url }}" alt="{{ product.name }}" class="w-full max-w-md h-auto rounded-lg shadow-lg">
-                <div class="flex space-x-4 justify-center">
-                    <img src="{{ product.image2.url }}" alt="{{ product.name }} - Image 2" class="w-20 h-20 object-cover rounded-lg shadow-md">
-                    <img src="{{ product.image3.url }}" alt="{{ product.name }} - Image 3" class="w-20 h-20 object-cover rounded-lg shadow-md">
-                    <img src="{{ product.image4.url }}" alt="{{ product.name }} - Image 4" class="w-20 h-20 object-cover rounded-lg shadow-md">
-                </div>
-            </div>
-
-            <!-- Product Details -->
-            <div class="lg:w-1/2 space-y-6">
-                <h1 class="text-3xl font-bold text-gray-800">{{ product.name }}</h1>
-                <p class="text-lg text-gray-600">{{ product.description }}</p>
-
-                <div class="flex items-center space-x-4">
-                    <span class="text-2xl font-semibold text-gray-900">${{ product.sales_price|default:product.regular_price }}</span>
-                    {% if product.sales_price %}
-                        <span class="text-sm line-through text-gray-500">${{ product.regular_price }}</span>
-                    {% endif %}
-                </div>
-
-                <div class="space-y-6">
-                    <!-- Variants Selection -->
-                    <div>
-                        <h3 class="font-medium text-gray-700">Select Color</h3>
-                        <div class="flex space-x-4 mt-2">
-                            {% for variant in product.variants.all %}
-                                <button class="w-8 h-8 bg-{{ variant.color }}-500 rounded-full border-2 border-white hover:border-gray-400 transition"></button>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 class="font-medium text-gray-700">Select Size</h3>
-                        <div class="flex space-x-4 mt-2">
-                            {% for variant in product.variants.all %}
-                                <button class="py-2 px-4 border border-gray-300 rounded-lg hover:border-blue-500 transition">{{ variant.size }}</button>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Action Buttons: Add to Cart & Buy Now -->
-                <div class="mt-6 flex space-x-4">
-                    <button class="w-full lg:w-48 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        Add to Cart
-                    </button>
-                    <button class="w-full lg:w-48 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition duration-300 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                        Buy Now
-                    </button>
-                </div>
-                
+<section class="bg-white py-16 mt-16">
+    <div class="container mx-auto px-6 flex flex-col lg:flex-row items-center lg:items-start space-y-8 lg:space-y-0">
+        <!-- Product Images -->
+        <div class="lg:w-1/2 flex flex-col items-center space-y-4">
+            <img src="{{ product.image1.url }}" alt="{{ product.name }}" class="w-full max-w-md h-auto rounded-lg shadow-lg">
+            <div class="flex space-x-4 justify-center">
+                <img src="{{ product.image2.url }}" alt="{{ product.name }} - Image 2" class="w-20 h-20 object-cover rounded-lg shadow-md">
+                <img src="{{ product.image3.url }}" alt="{{ product.name }} - Image 3" class="w-20 h-20 object-cover rounded-lg shadow-md">
+                <img src="{{ product.image4.url }}" alt="{{ product.name }} - Image 4" class="w-20 h-20 object-cover rounded-lg shadow-md">
             </div>
         </div>
-    </section>
-{% endblock product %}
+
+        <!-- Product Details -->
+        <div class="lg:w-1/2 space-y-6">
+            <h1 class="text-3xl font-bold text-gray-800">{{ product.name }}</h1>
+            <p class="text-lg text-gray-600">{{ product.description }}</p>
+
+            <div class="flex items-center space-x-4">
+                <span class="text-2xl font-semibold text-gray-900">₹{{ product.sales_price|default:product.regular_price }}</span>
+                {% if product.sales_price %}
+                    <span class="text-sm line-through text-gray-500">₹{{ product.regular_price }}</span>
+                {% endif %}
+            </div>
+            
+
+            <!-- Action Buttons: Add to Cart & Buy Now -->
+            <div class="mt-6 flex space-x-4">
+                <!-- Add to Cart Button -->
+                <button class="w-full lg:w-48 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Add to Cart
+                </button>
+
+                <!-- Buy Now Button -->
+                <button class="w-full lg:w-48 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition duration-300 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    Buy Now
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

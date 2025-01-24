@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - EvoTime</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+    <!-- Header -->
+    <header class="bg-gray-800 text-white fixed top-0 left-0 right-0 shadow-md z-50">
+        <div class="container mx-auto flex justify-between items-center px-6 py-4">
+            <h1 class="text-2xl font-bold">EvoTime</h1>
+            <nav class="flex space-x-6">
+                <a href="{% url "home" %}" class="hover:text-yellow-400">Home</a>
+                <a href="#" class="hover:text-yellow-400">Brands</a>
+                <a href="#" class="hover:text-yellow-400">Men</a>
+                <a href="#" class="hover:text-yellow-400">Women</a>
+                <a href="#" class="hover:text-yellow-400">Luxury</a>
+            </nav>
+            <div class="flex items-center space-x-4">
+                <a href="#" class="hover:text-yellow-400">Wishlist</a>
+                <a href="#" class="hover:text-yellow-400">Cart</a>
+                <a href="{% url "account_overview" %}" class="hover:text-yellow-400">Account</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar and Main Content Container -->
+    <div class="flex flex-1 pt-16"> <!-- Add flex-1 to ensure it takes the full height -->
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gradient-to-b from-gray-800 to-gray-700 text-white h-screen flex flex-col shadow-md">
+            <div class="flex flex-col items-center p-6 bg-gray-900">
+                {% if user.profile_image %}
+                    <img src="{{ user.profile_image.url }}" alt="User DP" class="w-20 h-20 rounded-full border-4 border-gray-700 mb-3">
+                {% else %}
+                    <!-- Default Placeholder Image if Profile Picture is Not Available -->
+                    <img src="https://via.placeholder.com/100" alt="Default User DP" class="w-20 h-20 rounded-full border-4 border-gray-700 mb-3">
+                {% endif %}
+                <h2 class="text-lg font-semibold text-white">
+                    {% if user.full_name %}
+                        {{ user.full_name }}
+                    {% endif %}
+                </h2>
+                
+                <p class="text-sm text-gray-400">{{ user.email }}</p>
+            </div>
+            
+            <ul class="space-y-2 px-4 flex-1">
+                <li>
+                    <a href="{% url "account_overview" %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-600 hover:text-white rounded-lg transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.707 3.293a1 1 0 00-1.414 0L3 9.586V17a1 1 0 001 1h12a1 1 0 001-1v-7.414l-6.293-6.293zM9 10v5a1 1 0 102 0v-5a1 1 0 00-2 0z" />
+                        </svg>
+                        Account Overview
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-600 hover:text-white rounded-lg transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M6 2a1 1 0 00-.894.553L4.382 4H2a1 1 0 100 2h1.618l.89 4.447c.156.78.858 1.553 1.618 1.553h7.568c.76 0 1.462-.774 1.618-1.553L16.382 6H18a1 1 0 100-2h-2.382l-.724-1.447A1 1 0 0014 2H6zM6.382 6h7.236l-.618 3H7L6.382 6zM10 12a2 2 0 110 4 2 2 0 010-4z" />
+                        </svg>
+                        Order Lists
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url "manage_address" %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-600 hover:text-white rounded-lg transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5 2a1 1 0 00-1 1v14a1 1 0 001 1h10a1 1 0 001-1V3a1 1 0 00-1-1H5zm9 9H6v2h8v-2zm0-4H6v2h8V7z" clip-rule="evenodd" />
+                        </svg>
+                        Manage Address
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-600 hover:text-white rounded-lg transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M12 4.5V8H8V4.5a4 4 0 114 0zM10 9a2 2 0 110 4 2 2 0 010-4z" />
+                            <path fill-rule="evenodd" d="M6 9a4 4 0 018 0v2a4 4 0 01-8 0V9z" clip-rule="evenodd" />
+                        </svg>
+                        Wallet
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url "user_logout" %}" class="flex items-center px-4 py-2 text-red-500 hover:bg-red-600 hover:text-white rounded-lg transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 9a7 7 0 1114 0A7 7 0 013 9zm7 3a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                        </svg>
+                        Logout
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        {% block 'user' %}
+        <!-- Main Content -->
+        <main class="flex-1 p-6 bg-white">
+            <h1 class="text-2xl font-semibold mb-6">Personal Information</h1>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div class="flex flex-col">
+                        <label for="profile-picture" class="text-sm font-semibold">Profile Picture</label>
+                        <input type="file" id="profile-picture" name="profile_image" class="border border-gray-300 p-2 rounded">
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="dob" class="text-sm font-semibold">Date of Birth</label>
+                        <input type="date" id="dob" name="dob" value="{{ user.dob|date:'Y-m-d' }}" class="border border-gray-300 p-2 rounded">
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="alt-phone" class="text-sm font-semibold">Alternative Phone Number</label>
+                        <input type="text" id="alt-phone" name="alternate_phone_number" placeholder="Enter alternative phone number" value="{{ user.alternate_phone_number }}" class="border border-gray-300 p-2 rounded">
+                    </div>
+                    
+                </div>
+                <div class="mt-6 flex space-x-4">
+                    <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">Save</button>
+                    <button class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">Add Address</button>
+                </div>
+            </form>
+        </main>
+        {% endblock 'user' %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-auto">
+        <div class="container mx-auto flex justify-between items-center px-6">
+            <div>
+                <h3 class="font-bold">About Us</h3>
+                <p class="text-sm">EvoTime is your go-to destination for premium watches and accessories.</p>
+            </div>
+        </div>
