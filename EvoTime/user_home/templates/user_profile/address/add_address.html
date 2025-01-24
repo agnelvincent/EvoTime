@@ -1,0 +1,50 @@
+{% extends "user_profile/account_overview.html" %}
+
+{% block 'user' %}
+<main class="flex-1 p-6 bg-white">
+    <h1 class="text-2xl font-semibold mb-6">Add Address</h1>
+    <form action="{% url 'add_address' %}" method="post" class="space-y-6">
+        {% csrf_token %}
+        <div class="space-y-4">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                <input type="text" name="name" id="name" class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring focus:ring-green-200" required>
+            </div>
+            <div>
+                <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
+                <input type="text" name="phone" id="phone" class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring focus:ring-green-200" required>
+            </div>
+            <div>
+                <label for="address_line" class="block text-sm font-medium text-gray-700">Address</label>
+                <textarea name="address_line" id="address_line" rows="3" class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring focus:ring-green-200" required></textarea>
+            </div>
+            <div>
+                <label for="address_type" class="block text-sm font-medium text-gray-700">Address Type</label>
+                <select name="address_type" id="address_type" class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring focus:ring-green-200" required>
+                    <option value="home">Home</option>
+                    <option value="work">Work</option>
+                </select>
+            </div>
+            <div>
+                <label for="city" class="block text-sm font-medium text-gray-700">City</label>
+                <input type="text" name="city" id="city" class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring focus:ring-green-200" required>
+            </div>
+            <div>
+                <label for="state" class="block text-sm font-medium text-gray-700">State</label>
+                <input type="text" name="state" id="state" class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring focus:ring-green-200" required>
+            </div>
+            <div>
+                <label for="postal_code" class="block text-sm font-medium text-gray-700">Postal Code</label>
+                <input type="text" name="postal_code" id="postal_code" class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring focus:ring-green-200" required>
+            </div>
+            <div>
+                <label for="country" class="block text-sm font-medium text-gray-700">Country</label>
+                <input type="text" name="country" id="country" class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring focus:ring-green-200" required>
+            </div>
+        </div>
+        <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">
+            Save Address
+        </button>
+    </form>
+</main>
+{% endblock %}

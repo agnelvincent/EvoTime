@@ -3,6 +3,8 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 
+    
+
 class Brand(models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True)
