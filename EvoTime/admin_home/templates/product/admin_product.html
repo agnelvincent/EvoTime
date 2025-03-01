@@ -1,51 +1,253 @@
 {% extends 'admin_dashboard.html' %}
 
 {% block admin_side %}
-<a href="{% url 'add_product' %}" class="mt-4 inline-block px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
-    Add New Product
-</a>
-<div class="max-w-7xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Product List</h1>
-    <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Category</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Price</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Stock</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-            {% for product in products %}
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 text-gray-700 font-medium whitespace-nowrap">{{ product.name }}</td>
-                <td class="px-6 py-4 text-gray-600 whitespace-nowrap">{{ product.category.name }}</td>
-                <td class="px-6 py-4 text-gray-600 whitespace-nowrap">₹ {{ product.regular_price }}</td>
-                <td class="px-6 py-4 text-gray-600 whitespace-nowrap">{{ product.stock }}</td>
-                <td class="px-6 py-4 text-gray-600 whitespace-nowrap">
-                    {% if product.is_blocked %}
-                    <span class="inline-block px-3 py-1 text-sm font-semibold text-red-600 bg-red-100 rounded-full">Blocked</span>
-                    {% else %}
-                    <span class="inline-block px-3 py-1 text-sm font-semibold text-green-600 bg-green-100 rounded-full">Active</span>
-                    {% endif %}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex items-center space-x-4">
-                        <a href="{% url 'edit_product' product.id %}" class="text-blue-600 hover:underline font-medium">Edit</a>
+<div class="container mx-auto mt-10">
+    <!-- Buttons to Toggle Add Product and Add Brand Forms -->
+    <div class="mb-4 flex justify-between items-center">
+        <button id="toggleAddProduct" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200">Add Product</button>
+        <button id="toggleAddBrand" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200">Add Brand</button>
+    </div>
+
+    <!-- Add Product Form -->
+    <div id="addProductForm" class="hidden bg-white shadow-lg rounded-lg p-6 mb-4">
+        <h2 class="text-xl font-bold mb-4">Add Product</h2>
+        <form method="POST" action="{% url 'add_product' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <!-- Product Name -->
+            <input type="text" name="name" placeholder="Product Name" class="w-full border p-2 rounded mb-2" required>
+
+            <!-- Category Dropdown -->
+            <select name="category" class="w-full border p-2 rounded mb-2" required>
+                <option value="">Select Category</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Description -->
+            <textarea name="description" placeholder="Description" class="w-full border p-2 rounded mb-2" required></textarea>
+
+            <!-- Regular Price -->
+            <input type="number" name="regular_price" id="regular_price" placeholder="Regular Price" class="w-full border p-2 rounded mb-2" required>
+
+            <!-- Offer Percentage -->
+            <input type="number" name="offer_percentage" id="offer_percentage" placeholder="Offer %" class="w-full border p-2 rounded mb-2" min="0" max="100">
+
+            <!-- Sales Price (Readonly) -->
+            <input type="number" name="sales_price" id="sales_price" placeholder="Sales Price" class="w-full border p-2 rounded mb-2" readonly>
+
+            <!-- Image Upload and Cropping -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Upload Product Image</label>
+                <input type="file" id="imageInput" name="image" accept="image/*" class="w-full border p-2 rounded mb-2">
+                <div class="relative w-60 h-60 border rounded-md overflow-hidden mt-2">
+                    <img id="imagePreview" class="hidden w-full h-full object-cover">
+                </div>
+                <button type="button" id="cropButton" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Crop Image</button>
+            </div>
+
+            <!-- Hidden Input for Cropped Image -->
+            <input type="hidden" name="cropped_image" id="croppedImageInput">
+
+            <!-- Brand Dropdown -->
+            <select name="brand" class="w-full border p-2 rounded mb-2" required>
+                <option value="" disabled selected>Select Brand</option>
+                {% for brand in brands %}
+                    <option value="{{ brand.id }}">{{ brand.name }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Submit Button -->
+            <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Add Product</button>
+        </form>
+    </div>
+
+    <!-- Add Brand Form -->
+    <div id="addBrandForm" class="hidden bg-white shadow-lg rounded-lg p-6 mb-4">
+        <h2 class="text-xl font-bold mb-4">Add Brand</h2>
+        <form method="POST" action="{% url 'add_brand' %}">
+            {% csrf_token %}
+            <!-- Brand Name -->
+            <input type="text" name="brand_name" placeholder="Brand Name" class="w-full border p-2 rounded mb-2" required>
+
+            <!-- Submit Button -->
+            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Add Brand</button>
+        </form>
+    </div>
+
+    <!-- Product List -->
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Product List</h1>
+        <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-6 py-4 text-left">Name</th>
+                    <th class="px-6 py-4 text-left">Category</th>
+                    <th class="px-4 py-4 text-left">Price</th>
+                    <th class="px-4 py-4 text-left">Sales Price</th>
+                    <th class="px-6 py-4 text-left">Status</th>
+                    <th class="px-6 py-4 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for product in products %}
+                <tr>
+                    <td class="px-6 py-4">{{ product.name }}</td>
+                    <td class="px-6 py-4">{{ product.category.name }}</td>
+                    <td class="px-6 py-4">₹{{ product.regular_price }}</td>
+                    <td class="px-6 py-4">₹{{ product.sales_price }}</td>
+                    <td class="px-6 py-4">
                         {% if product.is_blocked %}
-                        <a href="{% url 'unblock_product' product.id %}" class="text-green-600 hover:underline font-medium">Unblock</a>
+                        <span class="text-red-600">Blocked</span>
                         {% else %}
-                        <a href="{% url 'block_product' product.id %}" class="text-red-600 hover:underline font-medium">Block</a>
+                        <span class="text-green-600">Active</span>
                         {% endif %}
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    </td>
+                    <td class="px-6 py-4">
+                        <button onclick="toggleEditProduct('{{ product.id }}')" class="text-blue-600 hover:underline">Edit</button>
+                        <a href="{% url 'manage_variants' product.id %}" class="text-purple-600 hover:underline">View Variants</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
-{% endblock %}
+<!-- Edit Product Form Template -->
+{% for product in products %}
+<div id="editProductForm{{ product.id }}" class="hidden bg-white shadow-lg rounded-lg p-6 mb-4">
+    <h2 class="text-xl font-bold mb-4">Edit Product: {{ product.name }}</h2>
+    <form method="POST" action="{% url 'edit_product' product.id %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- Product Name -->
+        <input type="text" name="name" value="{{ product.name }}" class="w-full border p-2 rounded mb-2" required>
 
+        <!-- Category Dropdown -->
+        <select name="category" class="w-full border p-2 rounded mb-2" required>
+            <option value="">Select Category</option>
+            {% for category in categories %}
+                <option value="{{ category.id }}" {% if category.id == product.category.id %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Description -->
+        <textarea name="description" class="w-full border p-2 rounded mb-2" required>{{ product.description }}</textarea>
+
+        <!-- Regular Price -->
+        <input type="number" name="regular_price" id="regular_price{{ product.id }}" value="{{ product.regular_price }}" class="w-full border p-2 rounded mb-2" required>
+
+        <!-- Offer Percentage -->
+        <input type="number" name="offer_percentage" id="offer_percentage{{ product.id }}" value="{{ product.offer_percentage }}" class="w-full border p-2 rounded mb-2" min="0" max="100">
+
+        <!-- Sales Price (Readonly) -->
+        <input type="number" name="sales_price" id="sales_price{{ product.id }}" value="{{ product.sales_price }}" class="w-full border p-2 rounded mb-2" readonly>
+
+        <!-- Image Upload and Cropping -->
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Upload Product Image</label>
+            <input type="file" id="imageInput{{ product.id }}" name="image" accept="image/*" class="w-full border p-2 rounded mb-2">
+            <div class="relative w-60 h-60 border rounded-md overflow-hidden mt-2">
+                <img id="imagePreview{{ product.id }}" class="hidden w-full h-full object-cover" src="{{ product.image.url }}">
+            </div>
+            <button type="button" id="cropButton{{ product.id }}" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Crop Image</button>
+        </div>
+
+        <!-- Hidden Input for Cropped Image -->
+        <input type="hidden" name="cropped_image" id="croppedImageInput{{ product.id }}">
+
+        <!-- Brand Dropdown -->
+        <select name="brand" class="w-full border p-2 rounded mb-2" required>   
+            <option value="">Select Brand</option>
+            {% for brand in brands %}
+                <option value="{{ brand.id }}" {% if brand.id == product.brand.id %}selected{% endif %}>{{ brand.name }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Submit Button -->
+        <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Update Product</button>
+    </form>
+</div>
+{% endfor %}
+
+<!-- JavaScript for Toggles, Image Cropping, and Edit Product -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Function to calculate sales price
+        function calculateSalesPrice(regularPrice, offerPercentage) {
+            if (regularPrice && offerPercentage) {
+                return regularPrice - (regularPrice * (offerPercentage / 100));
+            }
+            return regularPrice; // If no offer, sales price = regular price
+        }
+
+        // Add Product Form Calculation
+        const regularPriceInput = document.getElementById("regular_price");
+        const offerPercentageInput = document.getElementById("offer_percentage");
+        const salesPriceInput = document.getElementById("sales_price");
+
+        if (regularPriceInput && offerPercentageInput && salesPriceInput) {
+            regularPriceInput.addEventListener("input", function() {
+                const regularPrice = parseFloat(regularPriceInput.value);
+                const offerPercentage = parseFloat(offerPercentageInput.value);
+                salesPriceInput.value = calculateSalesPrice(regularPrice, offerPercentage).toFixed(2);
+            });
+
+            offerPercentageInput.addEventListener("input", function() {
+                const regularPrice = parseFloat(regularPriceInput.value);
+                const offerPercentage = parseFloat(offerPercentageInput.value);
+                salesPriceInput.value = calculateSalesPrice(regularPrice, offerPercentage).toFixed(2);
+            });
+        }
+
+        // Edit Product Form Calculation (for each product)
+        {% for product in products %}
+            const regularPriceInput{{ product.id }} = document.getElementById("regular_price{{ product.id }}");
+            const offerPercentageInput{{ product.id }} = document.getElementById("offer_percentage{{ product.id }}");
+            const salesPriceInput{{ product.id }} = document.getElementById("sales_price{{ product.id }}");
+
+            if (regularPriceInput{{ product.id }} && offerPercentageInput{{ product.id }} && salesPriceInput{{ product.id }}) {
+                regularPriceInput{{ product.id }}.addEventListener("input", function() {
+                    const regularPrice = parseFloat(regularPriceInput{{ product.id }}.value);
+                    const offerPercentage = parseFloat(offerPercentageInput{{ product.id }}.value);
+                    salesPriceInput{{ product.id }}.value = calculateSalesPrice(regularPrice, offerPercentage).toFixed(2);
+                });
+
+                offerPercentageInput{{ product.id }}.addEventListener("input", function() {
+                    const regularPrice = parseFloat(regularPriceInput{{ product.id }}.value);
+                    const offerPercentage = parseFloat(offerPercentageInput{{ product.id }}.value);
+                    salesPriceInput{{ product.id }}.value = calculateSalesPrice(regularPrice, offerPercentage).toFixed(2);
+                });
+            }
+        {% endfor %}
+    });
+    
+    function toggleEditProduct(productId) {
+        console.log("Edit Product button clicked for product ID:", productId);  // Debugging
+        const editForm = document.getElementById("editProductForm" + productId);
+        if (editForm) {
+            editForm.classList.toggle("hidden");
+        } else {
+            console.error("Edit form not found for product ID:", productId);  // Debugging
+        }
+    }
+    document.addEventListener("DOMContentLoaded", function() {
+        // Toggle Add Product Form
+        document.getElementById("toggleAddProduct").addEventListener("click", function() {
+            console.log("Add Product button clicked");  // Debugging
+            document.getElementById("addProductForm").classList.toggle("hidden");
+        });
+
+        // Toggle Add Brand Form
+        document.getElementById("toggleAddBrand").addEventListener("click", function() {
+            console.log("Add Brand button clicked");  // Debugging
+            document.getElementById("addBrandForm").classList.toggle("hidden");
+        })
+
+        // Existing image cropping and sales price calculation logic
+    });
+</script>
+
+{% endblock %}

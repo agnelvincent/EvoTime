@@ -1,0 +1,299 @@
+{% extends "home.html" %}
+
+{% block product %}
+<div class="container mx-auto px-4 py-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <!-- Product Images -->
+        <div class="flex flex-col items-center space-y-4 relative">
+            <div class="relative group overflow-visible w-[400px] h-[400px]">
+                <img id="mainImage" src="{{ variants.0.image1.url }}" 
+                     class="w-full h-full rounded-lg object-cover cursor-pointer transition-transform duration-300 transform group-hover:scale-105" 
+                     alt="{{ product.name }}">
+            </div>
+            <div id="zoomBox" class="hidden absolute border-2 border-gray-300 bg-white shadow-lg"></div>
+            <div class="flex space-x-3">
+                <img src="{{ variants.0.image1.url }}" data-src="{{ variants.0.image1.url }}" class="thumbnail w-20 h-20 object-cover rounded-md cursor-pointer border border-gray-300 hover:border-blue-500 transition">
+                <img src="{{ variants.0.image2.url }}" data-src="{{ variants.0.image2.url }}" class="thumbnail w-20 h-20 object-cover rounded-md cursor-pointer border border-gray-300 hover:border-blue-500 transition">
+                <img src="{{ variants.0.image3.url }}" data-src="{{ variants.0.image3.url }}" class="thumbnail w-20 h-20 object-cover rounded-md cursor-pointer border border-gray-300 hover:border-blue-500 transition">
+                <img src="{{ variants.0.image4.url }}" data-src="{{ variants.0.image4.url }}" class="thumbnail w-20 h-20 object-cover rounded-md cursor-pointer border border-gray-300 hover:border-blue-500 transition">
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="space-y-6">
+            <h1 class="text-3xl font-bold text-gray-800">{{ product.name }}</h1>
+            <div class="flex items-center space-x-2">
+                <span class="text-yellow-500"><i class="fas fa-star"></i></span>
+                <span class="text-yellow-500"><i class="fas fa-star"></i></span>
+                <span class="text-yellow-500"><i class="fas fa-star"></i></span>
+                <span class="text-yellow-500"><i class="fas fa-star"></i></span>
+                <span class="text-gray-300"><i class="fas fa-star"></i></span>
+                <span class="text-gray-600">({{ product.rating }} reviews)</span>
+            </div>
+            <p class="text-lg text-gray-600">{{ product.description }}</p>
+            <div class="flex items-center space-x-4">
+                <span class="text-2xl font-bold text-red-500">₹{{ product.sales_price }}</span>
+                <span class="text-lg text-gray-400 line-through">₹{{ product.regular_price }}</span>
+            </div>
+            <select id="variantSelect" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                {% for variant in variants %}
+                    <option value="{{ variant.id }}" 
+                            data-stock="{{ variant.stock }}"
+                            data-image1="{{ variant.image1.url }}"
+                            data-image2="{{ variant.image2.url }}"
+                            data-image3="{{ variant.image3.url }}"
+                            data-image4="{{ variant.image4.url }}"
+                            data-in-wishlist="{{ variant.in_wishlist|default:'false' }}">
+                        {{ variant.color }}
+                    </option>
+                {% endfor %}
+            </select>
+            <div class="flex space-x-4">
+                <button id="addToCartBtn" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">Add to Cart</button>
+                <button id="buyNowBtn" class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">Buy Now</button>
+                <button id="addToWishlistBtn" class="flex-1 border border-gray-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                    <i id="wishlistIcon" class="far fa-heart"></i> <span id="wishlistBtnText">Add to Wishlist</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #zoomBox {
+        position: absolute;
+        top: 50%;
+        left: 110%;
+        transform: translateY(-50%);
+        width: 250px;
+        height: 250px;
+        border: 2px solid #ddd;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        display: none;
+        pointer-events: none;
+        z-index: 10;
+    }
+    
+    .fa-heart.active {
+        color: red;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const mainImage = document.getElementById("mainImage");
+        const thumbnails = document.querySelectorAll(".thumbnail");
+        const zoomBox = document.getElementById("zoomBox");
+        const variantSelect = document.getElementById("variantSelect");
+        const buyNowBtn = document.getElementById("buyNowBtn");
+        const addToCartBtn = document.getElementById("addToCartBtn");
+        const addToWishlistBtn = document.getElementById("addToWishlistBtn");
+        const wishlistIcon = document.getElementById("wishlistIcon");
+        const wishlistBtnText = document.getElementById("wishlistBtnText");
+
+        /** ✅ Initial Stock Check and Wishlist Status */
+        checkStockOnLoad();
+        updateWishlistButton();
+
+        /** ✅ Handle Variant Selection */
+        variantSelect.addEventListener("change", function () {
+            const selectedVariant = this.options[this.selectedIndex];
+            updateProductImages(selectedVariant);
+            checkStock(selectedVariant);
+            updateWishlistButton();
+        });
+
+        /** ✅ Image Thumbnail Click Handler */
+        thumbnails.forEach(thumbnail => {
+            thumbnail.addEventListener("click", () => {
+                const newSrc = thumbnail.dataset.src;
+                mainImage.src = newSrc;
+                zoomBox.style.backgroundImage = `url(${newSrc})`;
+            });
+        });
+
+        /** ✅ Zoom Feature */
+        mainImage.addEventListener("mouseenter", () => zoomBox.style.display = "block");
+        mainImage.addEventListener("mousemove", (e) => {
+            const rect = mainImage.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+            zoomBox.style.backgroundImage = `url(${mainImage.src})`;
+            zoomBox.style.backgroundSize = "250%";
+            zoomBox.style.backgroundPosition = `${x}% ${y}%`;
+        });
+        mainImage.addEventListener("mouseleave", () => zoomBox.style.display = "none");
+
+        /** ✅ Add to Cart */
+        addToCartBtn.addEventListener("click", function () {
+            const selectedVariant = variantSelect.options[variantSelect.selectedIndex];
+            const stock = parseInt(selectedVariant.getAttribute("data-stock"));
+
+            if (stock < 1) {
+                showToast("Insufficient stock!", "error");
+                return;
+            }
+
+            const selectedVariantId = variantSelect.value;
+            if (selectedVariantId) {
+                addCartItem(selectedVariantId);
+            } else {
+                showToast("Please select a variant before adding to the cart.", "error");
+            }
+        });
+
+        /** ✅ Buy Now */
+        buyNowBtn.addEventListener("click", function () {
+            const selectedVariant = variantSelect.options[variantSelect.selectedIndex];
+            const variantId = selectedVariant.value;
+
+            if (!variantId) {
+                showToast("Please select a variant before proceeding to checkout.", "error");
+                return;
+            }
+
+            window.location.href = `/cart/checkout/buy_now/${variantId}/`;
+        });
+
+        /** ✅ Add to/Remove from Wishlist */
+        addToWishlistBtn.addEventListener("click", function () {
+            const selectedVariantId = variantSelect.value;
+            const selectedVariant = variantSelect.options[variantSelect.selectedIndex];
+            const isInWishlist = selectedVariant.getAttribute("data-in-wishlist") === "true";
+
+            if (!selectedVariantId) {
+                showToast("Please select a variant before adding to wishlist.", "error");
+                return;
+            }
+
+            if (isInWishlist) {
+                // Remove from wishlist
+                removeFromWishlist(selectedVariantId);
+            } else {
+                // Add to wishlist
+                addToWishlist(selectedVariantId);
+            }
+        });
+
+        /** ✅ Add to Wishlist Function */
+        function addToWishlist(variantId) {
+            fetch(`/wishlist/add/${variantId}/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ variantId: variantId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the selected option's data attribute
+                    const selectedOption = variantSelect.options[variantSelect.selectedIndex];
+                    selectedOption.setAttribute("data-in-wishlist", "true");
+                    updateWishlistButton();
+                    showToast("Added to Wishlist", "success");
+                } else {
+                    if (data.error === "Login required") {
+                        showToast("Please log in to add items to your wishlist", "error");
+                    } else {
+                        showToast(data.error || "Failed to add to wishlist", "error");
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Error adding item to wishlist:", error);
+                showToast("Something went wrong while adding to wishlist.", "error");
+            });
+        }
+
+        /** ✅ Remove from Wishlist Function */
+        function removeFromWishlist(variantId) {
+            fetch(`/wishlist/remove/${variantId}/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the selected option's data attribute
+                    const selectedOption = variantSelect.options[variantSelect.selectedIndex];
+                    selectedOption.setAttribute("data-in-wishlist", "false");
+                    updateWishlistButton();
+                    showToast("Removed from Wishlist", "success");
+                } else {
+                    showToast(data.error || "Failed to remove from wishlist", "error");
+                }
+            })
+            .catch(error => {
+                console.error("Error removing item from wishlist:", error);
+                showToast("Something went wrong while removing from wishlist.", "error");
+            });
+        }
+
+        /** ✅ Update Wishlist Button Appearance */
+        function updateWishlistButton() {
+            const selectedVariant = variantSelect.options[variantSelect.selectedIndex];
+            const isInWishlist = selectedVariant.getAttribute("data-in-wishlist") === "true";
+            
+            if (isInWishlist) {
+                wishlistIcon.className = "fas fa-heart active";
+                wishlistBtnText.textContent = "Remove from Wishlist";
+                addToWishlistBtn.classList.add("bg-red-50");
+            } else {
+                wishlistIcon.className = "far fa-heart";
+                wishlistBtnText.textContent = "Add to Wishlist";
+                addToWishlistBtn.classList.remove("bg-red-50");
+            }
+        }
+
+        /** ✅ Check Stock on Page Load */
+        function checkStockOnLoad() {
+            const selectedVariant = variantSelect.options[variantSelect.selectedIndex];
+            checkStock(selectedVariant);
+        }
+
+        /** ✅ Check Stock and Update Buttons */
+        function checkStock(selectedVariant) {
+            const stock = parseInt(selectedVariant.getAttribute("data-stock"));
+            if (stock < 1) {
+                buyNowBtn.disabled = true;
+                addToCartBtn.disabled = true;
+                buyNowBtn.textContent = "Out of Stock";
+                addToCartBtn.textContent = "Out of Stock";
+            } else {
+                buyNowBtn.disabled = false;
+                addToCartBtn.disabled = false;
+                buyNowBtn.textContent = "Buy Now";
+                addToCartBtn.textContent = "Add to Cart";
+            }
+        }
+
+        /** ✅ Update Product Images */
+        function updateProductImages(selectedVariant) {
+            mainImage.src = selectedVariant.getAttribute("data-image1");
+            document.querySelectorAll(".thumbnail").forEach((thumb, index) => {
+                thumb.src = selectedVariant.getAttribute(`data-image${index + 1}`);
+                thumb.dataset.src = selectedVariant.getAttribute(`data-image${index + 1}`);
+            });
+        }
+
+        /** ✅ Show Toast Message */
+        function showToast(message, type) {
+            const toast = document.createElement("div");
+            toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded shadow-lg text-white ${
+                type === "success" ? "bg-green-500" : "bg-red-500"
+            }`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    });
+</script>
+{% endblock product %}

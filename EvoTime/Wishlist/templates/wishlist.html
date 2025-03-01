@@ -1,0 +1,106 @@
+{% extends 'home.html' %}
+{% block product %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Your Wishlist</h1>
+    {% if wishlist %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="wishlist-container">
+        {% for item in wishlist.items.all %}
+        <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300 hover:shadow-lg" id="wishlist-item-{{ item.id }}">
+            <div class="relative">
+                <img src="{{ item.variant.image1.url }}" alt="{{ item.variant.product.name }}" class="w-full h-64 object-cover">
+                <div class="absolute top-2 right-2">
+                    <button onclick="removeFromWishlist({{ item.id }})" class="remove-wishlist-btn bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transform hover:scale-110 transition duration-300">
+                        <i class="fas fa-trash text-red-500 text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-4">
+                <h3 class="font-medium text-gray-800 mb-2">{{ item.variant.product.name }}</h3>
+                <div class="flex justify-between items-center">
+                    <span class="text-lg font-bold text-gray-800">₹{{ item.variant.product.sales_price }}</span>
+                    <button onclick="removeFromWishlist({{ item.id }})" class="text-sm text-red-500 hover:text-red-700">Remove</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-600" id="empty-wishlist-message" style="display: none;">Your wishlist is empty.</p>
+    {% endif %}
+</div>
+
+<script>
+function removeFromWishlist(itemId) {
+    // Create CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Send request to remove item
+    fetch(`/wishlist/remove/${itemId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the item from the DOM
+            const itemElement = document.getElementById(`wishlist-item-${itemId}`);
+            itemElement.remove();
+            
+            // Check if wishlist is now empty
+            const wishlistContainer = document.getElementById('wishlist-container');
+            if (wishlistContainer.children.length === 0) {
+                wishlistContainer.style.display = 'none';
+                document.getElementById('empty-wishlist-message').style.display = 'block';
+            }
+            
+            // Optional: Show a success message
+            showNotification('Item removed from wishlist', 'success');
+        } else {
+            showNotification('Failed to remove item: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred', 'error');
+    });
+}
+
+// Optional: Simple notification function
+function showNotification(message, type) {
+    // You can implement this based on your notification system
+    // Example: Create a toast notification
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 3000);
+    }, 100);
+}
+</script>
+{% endblock %}

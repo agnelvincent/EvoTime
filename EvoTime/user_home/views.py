@@ -1,18 +1,38 @@
 from django.shortcuts import render, redirect , get_object_or_404
-from django.contrib.auth import authenticate, login , logout
+from django.contrib.auth import authenticate, login , logout , get_backends
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import CustomUser, Address
-from admin_home.models import Product
+from Products.models import Product, ProductVariant , Brand , Category
 from django.contrib.auth.hashers import make_password
 from django.views.decorators.cache import never_cache
 import re
 from django.contrib.auth import login
-from django.utils.crypto import get_random_string
 from .utils import send_otp
 from datetime import datetime, timedelta
 from django.urls import reverse
+from django.utils import timezone
 from django.http import JsonResponse
+from Cart.models import Order , OrderItem
+from Wishlist.models import Wishlist , WishlistItem
+from django.core.exceptions import ValidationError
+from django.views.decorators.http import require_http_methods
+from django.core.paginator import Paginator
+from datetime import timedelta
+from django.core.mail import send_mail
+from Cart.models import Wallet
+from django.db import transaction
+from django.urls import reverse
+from decimal import Decimal
+from django.http import HttpResponse
+from django.template.loader import get_template
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.units import inch
+from reportlab.lib.enums import TA_CENTER
+
 
 def block_superuser_navigation(view_func):
     def wrapper(request, *args, **kwargs):
@@ -21,33 +41,31 @@ def block_superuser_navigation(view_func):
         return view_func(request, *args, **kwargs)
     return wrapper
 
+
 @never_cache
 @block_superuser_navigation
 def user_login(request):
-
     if request.user.is_authenticated:
         return redirect('home')
 
-    if request.method == 'POST':
-        email = request.POST.get('email')  # Use get to avoid KeyError
-        password = request.POST.get('password')
+    login_error = None  # Initialize error variable
 
-        # Authenticate user
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
         user = authenticate(request, username=email, password=password)
 
         if user is not None:
             if not user.is_active:
-                messages.error(request, "This account is inactive. Please contact support.")
-                return redirect('user_login')
-            
-            login(request, user)
-            messages.success(request, "Login successful! Welcome back.")
-            return redirect('home')  # Redirect to dashboard after successful login
+                login_error = "This account is inactive. Please contact support."
+            else:
+                login(request, user)
+                return redirect('home')
         else:
-            messages.error(request, "Invalid email or password. Please try again.")
+            login_error = "Invalid email or password. Please try again."
 
-    # Render the login page for GET requests or after a failed login
-    return render(request, 'login.html')
+    # Render the login page with the error if any
+    return render(request, 'login.html', {'login_error': login_error})
 
 @never_cache
 @block_superuser_navigation
@@ -57,26 +75,26 @@ def user_signup(request):
     
     if request.method == 'POST':
         # Retrieve form data
-        full_name = request.POST.get('full_name')
-        email = request.POST.get('email')
-        phone_number = request.POST.get('phone_number')
-        password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
+        full_name = request.POST.get('full_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone_number = request.POST.get('phone_number', '').strip()
+        password = request.POST.get('password', '')
+        confirm_password = request.POST.get('confirm_password', '')
 
         # Validations
-        if not full_name or len(full_name.strip()) < 3:
+        if len(full_name) < 3:
             messages.error(request, "Full name must be at least 3 characters long.")
             return redirect('user_signup')
 
-        if not email or not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
+        if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
             messages.error(request, "Please enter a valid email address.")
             return redirect('user_signup')
 
-        if not phone_number or not re.match(r'^\+?1?\d{9,15}$', phone_number):
-            messages.error(request, "Please enter a valid phone number in the format '+999999999' (up to 15 digits).")
+        if not re.match(r'^\+?1?\d{9,15}$', phone_number):
+            messages.error(request, "Please enter a valid phone number (up to 15 digits).")
             return redirect('user_signup')
 
-        if not password or len(password) < 8:
+        if len(password) < 8:
             messages.error(request, "Password must be at least 8 characters long.")
             return redirect('user_signup')
 
@@ -85,13 +103,16 @@ def user_signup(request):
             return redirect('user_signup')
 
         # Check if email or phone already exists
-        if CustomUser.objects.filter(email=email).exists():
+        if CustomUser .objects.filter(email=email).exists():
             messages.error(request, "An account with this email already exists.")
             return redirect('user_signup')
 
-        if CustomUser.objects.filter(phone_number=phone_number).exists():
+        if CustomUser .objects.filter(phone_number=phone_number).exists():
             messages.error(request, "An account with this phone number already exists.")
             return redirect('user_signup')
+
+        # Clear any previous session data
+        request.session.flush()
 
         # Generate OTP and send email
         otp = send_otp(email)
@@ -103,8 +124,8 @@ def user_signup(request):
             'email': email,
             'phone_number': phone_number,
             'otp': otp,
-            'otp_created_at': datetime.now().isoformat(),  # Store OTP creation time
-            'password': password,
+            'otp_created_at': timezone.now().isoformat(),  # Use timezone.now() here
+            'password': make_password(password),  # Hash the password
         }
         request.session['user_data'] = user_data
 
@@ -112,64 +133,176 @@ def user_signup(request):
 
     return render(request, 'signup.html')
 
-@block_superuser_navigation
+
+
 @never_cache
 def verify_otp(request):
-    if request.user.is_authenticated:
-        return redirect('home')
-
-    user_data = request.session.get('user_data', {})
-    if not user_data:
-        messages.error(request, "Session expired or invalid access. Please sign up again.")
-        return redirect('user_signup')
-
     if request.method == 'POST':
         entered_otp = request.POST.get('otp')
+        user_data = request.session.get('user_data')
 
-        # Check OTP timeout
+        if not user_data:
+            messages.error(request, "Session expired. Please sign up again.")
+            return redirect('user_signup')
+
+        otp = user_data.get('otp')
         otp_created_at = datetime.fromisoformat(user_data.get('otp_created_at'))
-        if datetime.now() > otp_created_at + timedelta(minutes=2):  # Timeout after 2 minutes
-            messages.error(request, "OTP has expired. Please resend OTP.")
+
+        # Check if OTP is expired
+        if timezone.now() > otp_created_at + timedelta(minutes=2):
+            messages.error(request, "OTP has expired. Please request a new one.")
             return redirect('resend_otp')
 
-        # Validate the entered OTP
-        if user_data.get('otp') == entered_otp:
+        if entered_otp == otp:
             # Create the user
-            user = CustomUser.objects.create(
-                full_name=user_data['full_name'].strip(),
-                email=user_data['email'].strip(),
-                phone_number=user_data['phone_number'].strip(),
-                password=make_password(user_data['password']),  # Hash the password
+            user = CustomUser (
+                full_name=user_data['full_name'],
+                email=user_data['email'],
+                phone_number=user_data['phone_number'],
+                password=user_data['password']
             )
+            user.save()
 
-            # Log the user in
+            # Clear session data
+            request.session.flush()
+
+            # Login the user with the specified backend
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-            messages.success(request, "OTP verified successfully! Your account has been created.")
-            del request.session['user_data']  # Clear session
-            return redirect('home')
+            messages.success(request, "Account created successfully! You are now logged in.")
+            return redirect('home')  # Redirect to home page
         else:
             messages.error(request, "Invalid OTP. Please try again.")
-            return redirect('verify_otp')
 
-    return render(request, 'otp.html')
+    user_data = request.session.get('user_data')
+    return render(request, 'verify_otp.html', {'user_data': user_data})
 
 
 @never_cache
 def resend_otp(request):
-    user_data = request.session.get('user_data', {})
+    user_data = request.session.get('user_data')
+
     if not user_data:
-        messages.error(request, "Session expired or invalid access. Please sign up again.")
+        messages.error(request, "Session expired. Please sign up again.")
         return redirect('user_signup')
 
-    # Resend the OTP
-    new_otp = send_otp(user_data['email'])
-    user_data['otp'] = new_otp  # Update OTP in session
-    user_data['otp_created_at'] = datetime.now().isoformat()  # Reset OTP creation time
-    request.session['user_data'] = user_data  # Save updated data in session
+    # Generate a new OTP and send it
+    otp = send_otp(user_data['email'])
+    print('New OTP is:', otp)  # Debugging purposes (remove in production)
+
+    # Update the OTP in session
+    user_data['otp'] = otp
+    user_data['otp_created_at'] = timezone.now().isoformat()  # Update OTP creation time
+    request.session['user_data'] = user_data
 
     messages.success(request, "A new OTP has been sent to your email.")
     return redirect('verify_otp')
+
+@never_cache
+def forgot_password(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        try:
+            user = CustomUser.objects.get(email=email)
+            # Generate OTP using your existing function
+            otp = send_otp(email)
+            
+            # Store data in session
+            reset_data = {
+                'email': email,
+                'otp': otp,
+                'otp_created_at': timezone.now().isoformat(),
+                'is_password_reset': True
+            }
+            request.session['reset_data'] = reset_data
+            
+            messages.success(request, 'OTP has been sent to your email.')
+            return redirect('verify_reset_otp')
+        except CustomUser.DoesNotExist:
+            messages.error(request, 'No account found with this email address.')
+    return render(request, 'password/forgot_password.html')
+
+@never_cache
+def verify_reset_otp(request):
+    if request.method == 'POST':
+        entered_otp = request.POST.get('otp')
+        reset_data = request.session.get('reset_data')
+
+        if not reset_data:
+            messages.error(request, "Session expired. Please try again.")
+            return redirect('forgot_password')
+
+        otp = reset_data.get('otp')
+        otp_created_at = datetime.fromisoformat(reset_data.get('otp_created_at'))
+
+        # Check if OTP is expired (2 minutes)
+        if timezone.now() > otp_created_at + timedelta(minutes=2):
+            messages.error(request, "OTP has expired. Please request a new one.")
+            return redirect('resend_reset_otp')
+
+        if entered_otp == otp:
+            reset_data['otp_verified'] = True
+            request.session['reset_data'] = reset_data
+            return redirect('reset_password')
+        else:
+            messages.error(request, "Invalid OTP. Please try again.")
+
+    reset_data = request.session.get('reset_data')
+    return render(request, 'password/verify_reset_otp.html', {'reset_data': reset_data})
+
+@never_cache
+def resend_reset_otp(request):
+    reset_data = request.session.get('reset_data')
+
+    if not reset_data:
+        messages.error(request, "Session expired. Please try again.")
+        return redirect('forgot_password')
+
+    email = reset_data['email']
+    otp = send_otp(email)
+
+    reset_data['otp'] = otp
+    reset_data['otp_created_at'] = timezone.now().isoformat()
+    request.session['reset_data'] = reset_data
+
+    messages.success(request, "A new OTP has been sent to your email.")
+    return redirect('verify_reset_otp')
+
+@never_cache
+def reset_password(request):
+    reset_data = request.session.get('reset_data')
+    
+    if not reset_data or not reset_data.get('otp_verified'):
+        messages.error(request, "Please verify your OTP first")
+        return redirect('forgot_password')
+        
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if new_password != confirm_password:
+            messages.error(request, 'Passwords do not match')
+            return render(request, 'password/reset_password.html')
+            
+        if len(new_password) < 8:
+            messages.error(request, 'Password must be at least 8 characters long')
+            return render(request, 'password/reset_password.html')
+            
+        try:
+            user = CustomUser.objects.get(email=reset_data['email'])
+            user.set_password(new_password)
+            user.save()
+            
+            # Clear session data
+            request.session.flush()
+            
+            messages.success(request, 'Password has been reset successfully')
+            return redirect('user_login')
+        except CustomUser.DoesNotExist:
+            messages.error(request, 'Something went wrong. Please try again.')
+            return redirect('forgot_password')
+            
+    return render(request, 'password/reset_password.html')
 
 
 @block_superuser_navigation
@@ -177,57 +310,156 @@ def resend_otp(request):
 @login_required
 def home_view(request):
     """
-    Renders the home page with all available products.
+    Renders the home page with all available products and their variants,
+    with filters for price, name sorting, and additional filters.
     """
-    products = Product.objects.all()  # Fetch all products from the database
+    # Get the sorting filter from the request, default to 'name'
+    sort_by = request.GET.get('sort_by', 'name')  # Options: 'price_low_to_high', 'price_high_to_low', 'name_a_to_z', 'name_z_to_a'
+    
+    # Get filter parameters from the request
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
+    brand = request.GET.get('brand')
+    category = request.GET.get('category')
+
+    # Fetch products with related variants
+    products = Product.objects.prefetch_related('variants').all()
+    new_products = Product.objects.all().order_by('-created_at')[:8]
+
+    user_wishlist_variant_ids = []
+    if request.user.is_authenticated:
+        wishlist = Wishlist.objects.filter(user=request.user).first()
+        if wishlist:
+            user_wishlist_variant_ids = wishlist.items.values_list('variant_id', flat=True)
+
+
+    # Apply filters
+    if min_price:
+        products = products.filter(regular_price__gte=min_price)
+    if max_price:
+        products = products.filter(regular_price__lte=max_price)
+    if brand:
+        products = products.filter(brand__name=brand)
+    if category:
+        products = products.filter(category__name=category)
+
+    # Apply sorting based on user choice
+    if sort_by == 'price_low_to_high':
+        products = products.order_by('regular_price')
+    elif sort_by == 'price_high_to_low':
+        products = products.order_by('-regular_price')
+    elif sort_by == 'name_a_to_z':
+        products = products.order_by('name')
+    elif sort_by == 'name_z_to_a':
+        products = products.order_by('-name')
+
+    # Set up pagination
+    paginator = Paginator(products, 12)  # Show 12 products per page
+    page_number = request.GET.get('page')  # Get the page number from the URL
+    products_page = paginator.get_page(page_number)  # Get the products for the current page
+
     context = {
-        'products': products
+        'products': products_page,  # Pass the paginated products to the template
+        'sort_by': sort_by,  # Pass the current sorting option to the template for maintaining the state
+        'new_products': new_products,
+        'brands': Brand.objects.all(),  # Pass all brands for filtering
+        'categories': Category.objects.all(),  # Pass all categories for filtering
+        'user_wishlist_variant_ids': user_wishlist_variant_ids,
     }
     return render(request, 'home.html', context)
 
-@block_superuser_navigation
-@never_cache
-def product_detail_view(request, id):
-    """
-    Displays detailed information for a single product.
-    """
-    product = get_object_or_404(Product, id=id)  # Automatically handles the case if the product is not found
-    context = {
-        'product': product
-    }
-    return render(request, 'product_detail.html', context)
+def brand_list(request):
+    brands = Brand.objects.all()  # Fetch all brands
+    return render(request, 'brand.html', {'brands': brands})
 
 
-@block_superuser_navigation
+
+def brand_products(request, brand_id):
+    try:
+        brand = Brand.objects.get(id=brand_id)
+        products = Product.objects.filter(brand=brand, is_blocked=False)
+
+        product_list = []
+        for product in products:
+            product_list.append({
+                'id': product.id,
+                'name': product.name,
+                'regular_price': str(product.regular_price),
+                'sales_price': str(product.sales_price) if product.sales_price else str(product.regular_price),
+                'image': product.image.url if product.image else '',
+                'discount': round(((product.regular_price - product.sales_price) / product.regular_price) * 100, 2) if product.sales_price else 0,
+                'variants': [{'id': variant.id, 'stock': variant.stock} for variant in product.variants.all()]
+            })
+
+        return JsonResponse({
+            'brand': {
+                'id': brand.id,
+                'name': brand.name,
+                'description': brand.description
+            },
+            'products': product_list
+        })
+    except Brand.DoesNotExist:
+        return JsonResponse({'error': 'Brand not found'}, status=404)
+
+
 @login_required
-@never_cache
 def account_overview(request):
-    user = request.user  # Get current user
+    user = request.user  # Get the logged-in user
 
-    if request.method == 'POST':
-        profile_image = request.FILES.get('profile_image')
-        dob = request.POST.get('dob')
-        alternate_phone_number = request.POST.get('alternate_phone_number')
+    if request.method == "POST":
+        # Retrieve form data
+        dob = request.POST.get("dob")
+        alternate_phone_number = request.POST.get("alternate_phone_number")
+        profile_image = request.FILES.get("profile_image")
 
-        # Update the fields
-        if profile_image:
-            user.profile_image = profile_image
+        errors = False  # Flag to track validation errors
+
+        # Validate Date of Birth (must be a valid date and in the past)
         if dob:
-            user.dob = dob
+            try:
+                dob_date = datetime.strptime(dob, "%Y-%m-%d").date()
+                if dob_date >= datetime.today().date():
+                    messages.error(request, "Date of birth cannot be in the future!")
+                    errors = True
+                else:
+                    user.dob = dob_date
+            except ValueError:
+                messages.error(request, "Invalid date format! Use YYYY-MM-DD.")
+                errors = True
+
+        # Validate Alternate Phone Number (must be numeric and 10-15 digits)
         if alternate_phone_number:
-            user.alternate_phone_number = alternate_phone_number
+            if not re.match(r"^\d{10,15}$", alternate_phone_number):
+                messages.error(request, "Alternate phone number must be 10-15 digits long.")
+                errors = True
+            else:
+                user.alternate_phone_number = alternate_phone_number
 
-        user.save()
-        messages.success(request, 'Your details were successfully updated!')
-        return redirect('account_overview')  # Redirect back to the same page
+        # Validate Profile Image (optional, but must be an image file)
+        if profile_image:
+            if not profile_image.content_type.startswith("image"):
+                messages.error(request, "Invalid file type! Please upload an image.")
+                errors = True
+            else:
+                user.profile_image = profile_image  # Save uploaded image
 
+        # If no errors, save the user model and redirect
+        if not errors:
+            user.save()
+            messages.success(request, "Profile updated successfully!")
+            return redirect("account_overview")
+
+    # Prepopulate the form with existing data
     context = {
-        'profile_image': user.profile_image,
-        'dob': user.dob,
-        'alternate_phone_number': user.alternate_phone_number,
+        "profile_image": user.profile_image,
+        "dob": user.dob,
+        "alternate_phone_number": user.alternate_phone_number,
     }
 
-    return render(request, 'user_profile/account_overview.html', context)
+    return render(request, "user_profile/account_overview.html", context)
+
+
 
 @block_superuser_navigation
 @login_required
@@ -236,11 +468,14 @@ def manage_address(request):
     addresses = Address.objects.filter(user=request.user)  # Assuming a relationship between user and addresses
     return render(request, 'user_profile/address/manage_address.html', {'addresses': addresses})
 
+
+
 @block_superuser_navigation
 @login_required
 @never_cache
 def add_address(request):
     if request.method == "POST":
+        # Extract data from the request
         name = request.POST.get("name")
         phone = request.POST.get("phone")
         address_line = request.POST.get("address_line")
@@ -250,29 +485,50 @@ def add_address(request):
         postal_code = request.POST.get("postal_code")
         country = request.POST.get("country")
         
-        Address.objects.create(
-            user=request.user,
-            name=name,
-            phone=phone,
-            address_line=address_line,
-            address_type=address_type,
-            city=city,
-            state=state,
-            postal_code=postal_code,
-            country=country
-        )
-        return redirect("manage_address")
+        # Create the address
+        try:
+            address = Address(
+                user=request.user,
+                name=name,
+                phone=phone,
+                address_line=address_line,
+                address_type=address_type,
+                city=city,
+                state=state,
+                postal_code=postal_code,
+                country=country
+            )
+            address.save()  # Explicitly save the address instance
+            
+            # Return success with address data
+            return JsonResponse({
+                "success": True,
+                "address": {
+                    "id": address.id,
+                    "name": address.name,
+                    "phone": address.phone,
+                    "address_line": address.address_line,
+                    "city": address.city,
+                    "state": address.state,
+                    "postal_code": address.postal_code,
+                    "country": address.country
+                }
+            }, status=201)
+            
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
 
-    return render(request, "user_profile/address/add_address.html")
-
+    return JsonResponse({"success": False, "error": "Invalid request method."}, status=400)
 
 @block_superuser_navigation
 @login_required
 @never_cache
 def edit_address(request, address_id):
-    address = Address.objects.get(id=address_id, user=request.user)
+
+    address = get_object_or_404(Address, id=address_id, user=request.user)
     
     if request.method == "POST":
+        # Update the address fields
         address.name = request.POST.get("name")
         address.phone = request.POST.get("phone")
         address.address_line = request.POST.get("address_line")
@@ -281,10 +537,15 @@ def edit_address(request, address_id):
         address.state = request.POST.get("state")
         address.postal_code = request.POST.get("postal_code")
         address.country = request.POST.get("country")
-        address.save()
-        return redirect("manage_address")
+        
 
-    return render(request, "user_profile/address/edit_address.html", {"address": address})
+        try:
+            address.save() 
+            return JsonResponse({"success": True}, status=200) 
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)  # Bad Request
+
+    return JsonResponse({"error": "Invalid request method."}, status=400)
 
 
 @block_superuser_navigation
@@ -292,14 +553,276 @@ def edit_address(request, address_id):
 @never_cache
 def delete_address(request, address_id):
     if request.method == "DELETE":
+        # Use get_object_or_404 to handle the case where the address does not exist
+        address = get_object_or_404(Address, id=address_id, user=request.user)
+        
+        # Check if the address is used in any orders
+        if address.orders.exists():
+            return JsonResponse({
+                "error": "This address cannot be deleted as it is associated with one or more orders. Please add a new address instead.",
+                "type": "address_in_use"
+            }, status=400)
+        
         try:
-            address = Address.objects.get(id=address_id, user=request.user)
             address.delete()
             return JsonResponse({"success": True}, status=200)
-        except Address.DoesNotExist:
-            return JsonResponse({"error": "Address not found."}, status=404)
+        except Exception as e:
+            return JsonResponse({
+                "error": "An error occurred while deleting the address.",
+                "details": str(e)
+            }, status=400)
+
     return JsonResponse({"error": "Invalid request method."}, status=400)
 
+
+
+@never_cache
+@login_required
+def order_list_view(request):
+    orders_list = Order.objects.filter(user=request.user).order_by('-created_at')
+    
+    # Filter by status
+    status = request.GET.get('status')
+    if status:
+        orders_list = orders_list.filter(status__status=status)
+    
+    # Pagination
+    paginator = Paginator(orders_list, 5)  # Show 10 orders per page
+    page_number = request.GET.get('page')
+    orders = paginator.get_page(page_number)
+    
+    return render(request, 'user_profile/order_list.html', {'orders': orders})
+
+def generate_invoice(request, item_id):
+    item = get_object_or_404(OrderItem, id=item_id)
+    user = item.order.user
+    address = item.order.shipping_address  # Use the shipping address from the order
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="invoice_{item.id}.pdf"'
+
+    # Create the PDF object, using the response object as its "file."
+    pdf = SimpleDocTemplate(response, pagesize=letter)
+    styles = getSampleStyleSheet()
+    
+    # Define custom styles
+    title_style = ParagraphStyle(
+        'Title',
+        parent=styles['Title'],
+        fontSize=18,
+        spaceAfter=12,
+        alignment=TA_CENTER  # Center alignment
+    )
+    
+    header_style = ParagraphStyle(
+        'Header',
+        parent=styles['Heading2'],
+        fontSize=12,
+        spaceAfter=6,
+        textColor=colors.darkblue
+    )
+    
+    normal_style = styles['BodyText']
+    
+    # Create the content
+    content = []
+    
+    # Add title
+    content.append(Paragraph("Invoice", title_style))
+    content.append(Spacer(1, 12))
+    
+    # Add store information (dynamic)
+    store_name = "EvoTime"  # Replace with dynamic data (e.g., from a Store model)
+    store_address = "Ivrine Stafford Texas North America"  # Replace with dynamic data
+    content.append(Paragraph(store_name, header_style))
+    content.append(Paragraph(store_address, normal_style))
+    content.append(Spacer(1, 12))
+    
+    # Add customer information
+    content.append(Paragraph("Bill To:", header_style))
+    content.append(Paragraph(f"{user.full_name}", normal_style))
+    content.append(Paragraph(f"Email: {user.email}", normal_style))  # Add email
+    if address:
+        content.append(Paragraph(f"{address.address_line}", normal_style))
+        content.append(Paragraph(f"{address.city}, {address.state} {address.postal_code}", normal_style))
+        content.append(Paragraph(f"{address.country}", normal_style))
+    content.append(Spacer(1, 12))
+    
+    # Add order details
+    content.append(Paragraph("Order Details", header_style))
+    order_details = [
+        ["Order ID", item.order.id],
+        ["Product", Paragraph(item.product_variant.product.name, normal_style)],  # Wrap product name
+        ["Quantity", item.quantity],
+        ["Price per unit", f"${item.product_variant.product.sales_price}"],
+        ["Total Price", f"${item.total_price}"]
+    ]
+    
+    # Define column widths
+    col_widths = [1.5 * inch, 4.5 * inch]  # Adjust column widths to fit content
+    
+    table = Table(order_details, colWidths=col_widths)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('WORDWRAP', (0, 0), (-1, -1), True),  # Enable word wrap
+    ]))
+    
+    content.append(table)
+    content.append(Spacer(1, 12))
+    
+    # Add thank you message
+    content.append(Paragraph("Thank you for your purchase!", normal_style))
+    
+    # Build the PDF
+    pdf.build(content)
+    
+    return response
+
+
+
+
+@login_required
+def order_item_detail(request, item_id):
+    """
+    View for displaying detailed information about a specific order item
+    """
+    # Get the order item and make sure it belongs to the current user
+    order_item = get_object_or_404(OrderItem, id=item_id)
+    
+    # Security check: Make sure the order belongs to the current user
+    if order_item.order.user != request.user:
+        messages.error(request, "You don't have permission to view this order item.")
+        return redirect('order_list')
+        
+    context = {
+        'order_item': order_item,
+    }
+    
+    return render(request, 'user_profile/order_item_detail.html', context)
+
+
+@login_required
+def cancel_order_item(request, item_id):
+    """
+    View for cancelling a specific order item and processing a wallet refund if payment was completed.
+    """
+    if request.method != 'POST':
+        messages.error(request, "Invalid request method.")
+        return redirect('order_list')
+
+    order_item = get_object_or_404(OrderItem, id=item_id)
+
+    # Ensure the order item belongs to the logged-in user
+    if order_item.order.user != request.user:
+        messages.error(request, "You don't have permission to cancel this order item.")
+        return redirect('order_list')
+
+    try:
+        if not order_item.can_be_cancelled:
+            messages.error(request, "This item can no longer be cancelled.")
+            return redirect('order_item_detail', item_id=item_id)
+
+        with transaction.atomic():
+            reason = request.POST.get('reason', '')
+
+            # **1. Restock the cancelled item**
+            product_variant = order_item.product_variant
+            product_variant.stock += order_item.quantity
+            product_variant.save()
+
+
+            order = order_item.order
+            total_items = order.items.count()  
+
+            if total_items > 1:
+                shipping_share = order.shipping_charge / Decimal(total_items) 
+            else:
+                shipping_share = order.shipping_charge 
+
+
+            refund_amount = order_item.total_price + shipping_share
+
+
+            payment = order.payment
+            if payment.status == 'completed':
+                wallet, _ = Wallet.objects.get_or_create(user=order.user) 
+                wallet.add_amount(refund_amount, reason="Order Cancellation Refund")
+
+
+            order_item.cancel_item(reason=reason)
+
+            messages.success(request, "Item has been successfully cancelled, and the refund has been processed.")
+
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+
+    return redirect('order_item_detail', item_id=item_id)
+
+
+
+@login_required
+def return_order_item(request, item_id):
+    if request.method != 'POST':
+        messages.error(request, "Invalid request method.")
+        return redirect('order_list')
+
+    order_item = get_object_or_404(OrderItem, id=item_id)
+
+    if order_item.order.user != request.user:
+        messages.error(request, "You don't have permission to return this order item.")
+        return redirect('order_list')
+
+    try:
+        if not order_item.can_be_returned:
+            messages.error(request, "This item is not eligible for return.")
+            return redirect('order_item_detail', item_id=item_id)
+
+        reason = request.POST.get('reason', '')
+        order_item.return_status = "requested"
+        order_item.return_reason = reason
+        order_item.save()
+
+        messages.success(request, "Return request submitted successfully. Waiting for admin approval.")
+    
+    except Exception as e:
+        print(f"Exception: {e}")  # Debugging
+        messages.error(request, "An error occurred while processing your return request.")
+
+    return redirect('order_item_detail', item_id=item_id)
+
+
+
+@login_required
+def wallet_view(request):
+    """Display wallet balance and transaction history"""
+    wallet, created = Wallet.objects.get_or_create(user=request.user)
+    transactions = wallet.transactions.all().order_by("-timestamp")  # Latest first
+
+    context = {
+        "wallet": wallet,
+        "transactions": transactions,
+    }
+    return render(request, "user_profile/wallet_page.html", context)
+
+
+
+def search_products(request):
+    query = request.GET.get('q', '')
+    if query:
+        products = Product.objects.filter(name__icontains=query)[:5]  # Limit results
+        results = [{'id': p.id, 'name': p.name} for p in products]
+        return JsonResponse({'results': results})
+    return JsonResponse({'results': []})
+
+def order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    return render(request, 'user_profile/order_detail.html', {'order': order})
 
 
 @block_superuser_navigation

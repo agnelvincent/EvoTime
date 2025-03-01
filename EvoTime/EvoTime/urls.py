@@ -20,9 +20,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('superuser/', admin.site.urls),
-    path('admin/', include('admin_home.urls')),  # Include admin app URLs
+    path('admin/', admin.site.urls),
+    path('admin-panel/', include('admin_home.urls')),
     path('', include('user_home.urls')), # Include user app URLs
+    path('product/',include('Products.urls')),
+    path('cart/', include('Cart.urls')),
+    path('wishlist/',include('Wishlist.urls')),
     path('auth/', include('social_django.urls', namespace='social')),
     path('accounts/', include('allauth.urls'))
 ]

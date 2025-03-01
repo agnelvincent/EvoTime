@@ -1,101 +1,73 @@
 from django.db import models
-from django.core.exceptions import ValidationError
+from django.utils.timezone import now
 from django.utils import timezone
+from django.core.exceptions import ValidationError
+from django.conf import settings
 
+def validate_discount_percentage(value):
+    """Ensure the discount percentage is between 0 and 100."""
+    if value <= 0 or value > 100:
+        raise ValidationError("Discount percentage must be between 0 and 100.")
 
-    
+def validate_min_cart_value(value):
+    """Ensure the minimum cart value is a positive number."""
+    if value < 0:
+        raise ValidationError("Minimum cart value cannot be negative.")
 
-class Brand(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-    description = models.TextField(blank=True)
+class Coupon(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    discount_percentage = models.DecimalField(
+        max_digits=5, decimal_places=2, default=0.00,  # Set default value
+        validators=[validate_discount_percentage]
+    )
 
-    def __str__(self):
-        return self.name
-
-
-class Category(models.Model):
-    name = models.CharField(max_length=255)
+    min_cart_value = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        validators=[validate_min_cart_value]  # Ensures min cart value is not negative
+    )
+    start_date = models.DateField(default=timezone.now)
+    expiry_date = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)  # Only auto_now_add
-    updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return self.name
+    def is_expired(self):
+        """Check if the coupon has expired."""
+        return self.expiry_date and self.expiry_date <= timezone.now()
 
-    def clean(self):
-        # Prevent empty category names
-        if not self.name.strip():
-            raise ValidationError("Category name cannot be empty or whitespace only.")
+    def is_valid(self):
+        """Check if the coupon is active and not expired."""
+        return self.is_active and not self.is_expired()
 
-        # Ensure unique category names for active categories
-        if Category.objects.filter(name=self.name, is_active=True).exclude(id=self.id).exists():
-            raise ValidationError(f"An active category with the name '{self.name}' already exists.")
+    def calculate_discount(self, cart_total):
+        """Calculate the discount amount based on the cart total."""
+        # Convert cart_total to Decimal if it's a float
+        from decimal import Decimal
+        
+        if isinstance(cart_total, float):
+            cart_total = Decimal(str(cart_total))
+            
+        if cart_total < self.min_cart_value:
+            return Decimal('0')  # No discount if cart total is below the minimum required value
 
-
-class Product(models.Model):
-    name = models.CharField(max_length=255)
-    regular_price = models.DecimalField(max_digits=10, decimal_places=2)
-    sales_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    stock = models.PositiveIntegerField(default=0)
-    description = models.TextField()
-    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, related_name='products')
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
-    is_blocked = models.BooleanField(default=False)
-    image1 = models.ImageField(upload_to='product_images/', blank=True, null=True)
-    image2 = models.ImageField(upload_to='product_images/', blank=True, null=True)
-    image3 = models.ImageField(upload_to='product_images/', blank=True, null=True)
-    image4 = models.ImageField(upload_to='product_images/', blank=True, null=True)
-
-    def __str__(self):
-        return self.name
+        discount_amount = (self.discount_percentage / Decimal('100')) * cart_total
+        return round(discount_amount, 2)  # Round to 2 decimal places
 
     def clean(self):
-        # Ensure the sales price is not greater than the regular price
-        if self.sales_price and self.sales_price > self.regular_price:
-            raise ValidationError("Sales price cannot be greater than the regular price.")
+        """Extra validation before saving."""
+        if self.expiry_date and self.expiry_date < timezone.now():
+            self.is_active = False  # Automatically deactivate expired coupon
+            raise ValidationError("Expiry date cannot be in the past.")
 
-        # Ensure the product has a category and brand
-        if not self.category:
-            raise ValidationError("A category must be assigned to the product.")
-        if not self.brand:
-            raise ValidationError("A brand must be assigned to the product.")
-
-        # Validate images
-        if not any([self.image1, self.image2, self.image3, self.image4]):
-            raise ValidationError("At least one product image must be provided.")
-
-    def save(self, *args, **kwargs):
-        self.full_clean()  # Trigger validation before saving
-        super().save(*args, **kwargs)
-
-
-class ProductVariant(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
-    color = models.CharField(max_length=100)
-    image1 = models.ImageField(upload_to='variant_images/', blank=True, null=True)
-    image2 = models.ImageField(upload_to='variant_images/', blank=True, null=True)
-    image3 = models.ImageField(upload_to='variant_images/', blank=True, null=True)
-    image4 = models.ImageField(upload_to='variant_images/', blank=True, null=True)
-    stock = models.PositiveIntegerField(default=0)
 
     def __str__(self):
-        return f"{self.product.name} - {self.color}"
+        return f"{self.code} - {self.discount_percentage}%"
 
-    def clean(self):
-        # Ensure the variant stock is not greater than the product stock
-        if self.stock > self.product.stock:
-            raise ValidationError(
-                f"Variant stock ({self.stock}) cannot exceed the product stock ({self.product.stock})."
-            )
+class UsedCoupon(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE)
+    used_on = models.DateTimeField(auto_now_add=True)
 
-        # Ensure the variant color is unique for the product
-        if ProductVariant.objects.filter(product=self.product, color=self.color).exclude(id=self.id).exists():
-            raise ValidationError(f"A variant with the color '{self.color}' already exists for this product.")
+    class Meta:
+        unique_together = ('user', 'coupon')  # Ensures a user can use a coupon only once
 
-        # Validate images
-        if not any([self.image1, self.image2, self.image3, self.image4]):
-            raise ValidationError("At least one variant image must be provided.")
-
-    def save(self, *args, **kwargs):
-        self.full_clean()  # Trigger validation before saving
-        super().save(*args, **kwargs)
+    def __str__(self):
+        return f"{self.user.email} used {self.coupon.code}"

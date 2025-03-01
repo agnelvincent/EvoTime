@@ -1,0 +1,47 @@
+{% extends "user_profile/account_overview.html" %}
+
+{% block user %}
+<main class="ml-64 flex-1 p-6 bg-white min-h-screen"> <!-- Added ml-64 to match sidebar width -->
+    <h1 class="text-2xl font-bold mb-4">My Wallet</h1>
+
+    <!-- Wallet Balance -->
+    <div class="bg-gray-200 p-4 rounded-lg shadow-md">
+        <p class="text-xl font-semibold">Balance: ₹{{ wallet.balance }}</p>
+    </div>
+
+    <!-- Transaction History -->
+    <h2 class="text-xl font-bold mt-6">Transaction History</h2>
+    <div class="bg-white shadow-md rounded-lg mt-4">
+        <table class="w-full border-collapse">
+            <thead>
+                <tr class="bg-gray-300">
+                    <th class="p-3 text-left">Date</th>
+                    <th class="p-3 text-left">Type</th>
+                    <th class="p-3 text-left">Amount</th>
+                    <th class="p-3 text-left">Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                <tr class="border-t">
+                    <td class="p-3">{{ transaction.timestamp|date:"Y-m-d H:i" }}</td>
+                    <td class="p-3">
+                        {% if transaction.transaction_type == "CREDIT" %}
+                            <span class="text-green-600 font-bold">+ CREDIT</span>
+                        {% else %}
+                            <span class="text-red-600 font-bold">- DEBIT</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-3">₹{{ transaction.amount }}</td>
+                    <td class="p-3">{{ transaction.reason }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="p-3 text-center text-gray-500">No transactions found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</main>
+{% endblock %}

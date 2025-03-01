@@ -1,0 +1,117 @@
+{% extends 'home.html' %}  <!-- Inherit from the parent template -->
+
+{% block product %}
+<!-- Brand Section -->
+<section id="brandSection" class="container mx-auto px-4 py-12">
+    <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Our Brands</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for brand in brands %}
+        <div 
+            class="brand-card bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:scale-105 cursor-pointer"
+            onclick="showProducts('{{ brand.id }}')"
+        >
+            <div class="p-6 text-center">
+                <div class="bg-gray-100 rounded-full w-24 h-24 mx-auto flex items-center justify-center mb-4">
+                    <span class="text-2xl font-bold text-gray-800">{{ brand.name|slice:":2" }}</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ brand.name }}</h3>
+                <p class="text-gray-600 text-sm">{{ brand.description|truncatechars:100 }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Product Section (Hidden by default) -->
+<section id="productSection" class="container mx-auto px-4 py-12 hidden">
+    <div class="flex items-center justify-between mb-8">
+        <h2 id="brandName" class="text-3xl font-bold text-gray-800"></h2>
+        <button 
+            onclick="hideProducts()"
+            class="text-gray-600 hover:text-blue-600 transition flex items-center gap-2"
+        >
+            <i class="fas fa-arrow-left"></i>
+            Back to Brands
+        </button>
+    </div>
+    <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Products will be dynamically loaded here -->
+    </div>
+</section>
+
+<script>
+    // Function to show products for a specific brand
+    async function showProducts(brandId) {
+        try {
+            const response = await fetch(`/brand/${brandId}/`);
+            const data = await response.json();
+    
+            console.log("API Response:", data);  // Debugging
+    
+            if (response.ok) {
+                document.getElementById('brandName').textContent = data.brand.name;
+                const productGrid = document.getElementById('productGrid');
+                productGrid.innerHTML = '';
+    
+                data.products.forEach(product => {
+                    console.log("Product:", product);  // Debugging
+    
+                    const productCard = `
+                        <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:scale-105">
+                            <div class="relative">
+                                <img src="${product.image}" alt="${product.name}" class="w-full h-64 object-cover">
+                                <div class="absolute top-2 right-2">
+                                    <button class="bg-white p-2 rounded-full shadow hover:bg-gray-100">
+                                        <i class="far fa-heart text-gray-600"></i>
+                                    </button>
+                                </div>
+                                ${product.discount ? `<div class="absolute top-2 left-2"><span class="bg-red-500 text-white text-sm px-3 py-1 rounded-full font-medium">-${product.discount}%</span></div>` : ''}
+                            </div>
+                            <div class="p-4">
+                                <h3 class="font-medium text-gray-800 mb-2">${product.name}</h3>
+                                <div class="flex text-sm text-yellow-400 mb-2">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star-half-alt"></i>
+                                    <span class="text-gray-500 ml-1">(24)</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-lg font-bold text-gray-800">₹${product.sales_price}</span>
+                                        ${product.sales_price < product.regular_price ? `<span class="text-gray-400 line-through">₹${product.regular_price}</span>` : ''}
+                                    </div>
+                                    <button 
+                                        class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition flex items-center gap-2"
+                                        onclick="addCartItem(${product.variants.length > 0 ? product.variants[0].id : 'null'})"
+                                    >
+                                        <i class="fas fa-shopping-cart"></i>
+                                        <span>Add</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    productGrid.innerHTML += productCard;
+                });
+    
+                document.getElementById('productSection').classList.remove('hidden');
+                document.getElementById('brandSection').classList.add('hidden');
+            } else {
+                throw new Error(data.error || 'Failed to load products');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast(error.message || 'An error occurred while loading products', 'error');
+        }
+    }
+    
+
+    // Function to hide products and show brands
+    function hideProducts() {
+        document.getElementById('productSection').classList.add('hidden');
+        document.getElementById('brandSection').classList.remove('hidden');
+    }
+</script>
+{% endblock %}

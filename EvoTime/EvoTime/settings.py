@@ -26,12 +26,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'admin_home',
     'user_home',
+    'Products',
+    'Cart',
+    'Wishlist',
     'social_django',
     'django.contrib.sites',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'allauth.socialaccount.providers.google'
+    'allauth.socialaccount.providers.google',
+    'corsheaders'
 ]
 
 SITE_ID = 1
@@ -50,6 +54,10 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",  # Adjust based on your frontend origin
+]
 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None  # Disable username field in Allauth
 ACCOUNT_AUTHENTICATION_METHOD = 'email'  # Use email for authentication
@@ -70,6 +78,7 @@ LOGIN_URL = '/register'
 LOGOUT_URL = '/logout'
 LOGIN_REDIRECT_URL = "/home" 
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
+SOCIALACCOUNT_LOGIN_ON_GET = True
 
 
 
@@ -128,6 +137,9 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
+RAZORPAY_KEY_ID = config("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = config("RAZORPAY_KEY_SECRET")
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

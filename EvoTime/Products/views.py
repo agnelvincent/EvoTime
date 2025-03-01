@@ -1,15 +1,28 @@
 from django.shortcuts import render, redirect , get_object_or_404
-from django.contrib.auth import authenticate, login , logout
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from user_home.models import CustomUser, Address
-from admin_home.models import Brand , Category , Product , ProductVariant
-from admin_home.models import Product
+from .models import Brand, Product, Address , Category, ProductVariant
 from django.contrib.auth.hashers import make_password
+from Cart.views import add_to_cart
 from django.views.decorators.cache import never_cache
-import re
-from django.contrib.auth import login
-from django.utils.crypto import get_random_string
-from datetime import datetime, timedelta
-from django.urls import reverse
+from user_home.views import block_superuser_navigation
+from django.db import transaction
 from django.http import JsonResponse
+
+@block_superuser_navigation
+@login_required
+def product_detail_view(request, id):
+    product = get_object_or_404(Product, id=id)
+    variants = product.variants.all()  # Get all variants for this product
+    
+    print("Product:", product)  # Debugging
+    print("Variants:", variants)  # Debugging
+    
+    context = {
+        'product': product,
+        'variants': variants,
+    }
+    return render(request, 'product_detail.html', context)
+
+
+
+

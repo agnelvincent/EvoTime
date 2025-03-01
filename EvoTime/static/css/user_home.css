@@ -1,0 +1,41 @@
+
+    /* Shared Styles */
+    body {
+        background-color: #f8fafc; /* Light gray background */
+        font-family: 'Inter', sans-serif;
+    }
+    .form-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    .form-container input {
+        border: 1px solid #e2e8f0;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .form-container input:focus {
+        border-color: #4F46E5; /* Indigo focus */
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    .primary-button {
+        background-color: #4F46E5; /* Indigo */
+        transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+    .primary-button:hover {
+        background-color: #4338CA; /* Darker indigo */
+        transform: translateY(-2px);
+    }
+    .social-button {
+        background-color: #DB4437; /* Google red */
+        transition: background-color 0.3s ease;
+    }
+    .social-button:hover {
+        background-color: #C13527; /* Darker red */
+    }
+    .link-text {
+        color: #4F46E5; /* Indigo */
+        transition: color 0.3s ease;
+    }
+    .link-text:hover {
+        color: #4338CA; /* Darker indigo */
+    }
