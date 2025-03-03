@@ -128,22 +128,48 @@
         mainImage.addEventListener("mouseleave", () => zoomBox.style.display = "none");
 
         /** ✅ Add to Cart */
-        addToCartBtn.addEventListener("click", function () {
-            const selectedVariant = variantSelect.options[variantSelect.selectedIndex];
-            const stock = parseInt(selectedVariant.getAttribute("data-stock"));
+        /** ✅ Add to Cart */
+addToCartBtn.addEventListener("click", function () {
+    const selectedVariant = variantSelect.options[variantSelect.selectedIndex];
+    const stock = parseInt(selectedVariant.getAttribute("data-stock"));
+    const selectedVariantId = variantSelect.value;
 
-            if (stock < 1) {
-                showToast("Insufficient stock!", "error");
-                return;
-            }
+    if (!selectedVariantId) {
+        showToast("Please select a variant before adding to the cart.", "error");
+        return;
+    }
 
-            const selectedVariantId = variantSelect.value;
-            if (selectedVariantId) {
-                addCartItem(selectedVariantId);
+    if (stock < 1) {
+        showToast("Insufficient stock!", "error");
+        return;
+    }
+
+    fetch(`/cart/add_to_cart/${selectedVariantId}/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",  // Ensure CSRF token is included
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ variantId: selectedVariantId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast("Added to Cart!", "success");
+        } else {
+            if (data.error === "Login required") {
+                showToast("Please log in to add items to your cart", "error");
             } else {
-                showToast("Please select a variant before adding to the cart.", "error");
+                showToast(data.error || "Failed to add to cart", "error");
             }
-        });
+        }
+    })
+    .catch(error => {
+        console.error("Error adding item to cart:", error);
+        showToast("Something went wrong while adding to cart.", "error");
+    });
+});
+
 
         /** ✅ Buy Now */
         buyNowBtn.addEventListener("click", function () {

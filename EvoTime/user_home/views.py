@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect , get_object_or_404
-from django.contrib.auth import authenticate, login , logout , get_backends
+from django.contrib.auth import authenticate, login , logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import CustomUser, Address
-from Products.models import Product, ProductVariant , Brand , Category
+from Products.models import Product, Brand , Category
 from django.contrib.auth.hashers import make_password
 from django.views.decorators.cache import never_cache
 import re
@@ -14,24 +14,21 @@ from django.urls import reverse
 from django.utils import timezone
 from django.http import JsonResponse
 from Cart.models import Order , OrderItem
-from Wishlist.models import Wishlist , WishlistItem
-from django.core.exceptions import ValidationError
-from django.views.decorators.http import require_http_methods
+from Wishlist.models import Wishlist
 from django.core.paginator import Paginator
 from datetime import timedelta
-from django.core.mail import send_mail
 from Cart.models import Wallet
 from django.db import transaction
 from django.urls import reverse
 from decimal import Decimal
 from django.http import HttpResponse
-from django.template.loader import get_template
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 def block_superuser_navigation(view_func):
@@ -40,6 +37,10 @@ def block_superuser_navigation(view_func):
             return redirect(reverse('admin_dashboard'))  # Redirect to admin dashboard
         return view_func(request, *args, **kwargs)
     return wrapper
+
+
+def showpage(request):
+    return render(request , 'showpage.html')
 
 
 @never_cache
@@ -800,14 +801,30 @@ def return_order_item(request, item_id):
 
 @login_required
 def wallet_view(request):
-    """Display wallet balance and transaction history"""
+    """Display wallet balance and transaction history with pagination"""
     wallet, created = Wallet.objects.get_or_create(user=request.user)
-    transactions = wallet.transactions.all().order_by("-timestamp")  # Latest first
-
+    
+    # Get all transactions ordered by most recent first
+    transactions_list = wallet.transactions.all().order_by("-timestamp")
+    
+    # Set up pagination
+    page = request.GET.get('page', 1)
+    paginator = Paginator(transactions_list, 10)  # Show 10 transactions per page
+    
+    try:
+        transactions = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page
+        transactions = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page of results
+        transactions = paginator.page(paginator.num_pages)
+    
     context = {
         "wallet": wallet,
-        "transactions": transactions,
+        "page_obj": transactions,
     }
+    
     return render(request, "user_profile/wallet_page.html", context)
 
 

@@ -1,0 +1,305 @@
+{% extends "home.html" %}
+
+{% load static %}
+
+{% block product %}
+<!-- About Us Hero Section -->
+<section class="relative bg-gradient-to-r from-blue-900 to-indigo-800 text-white overflow-hidden">
+    <div class="container mx-auto px-4 py-20 md:py-28">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div data-aos="fade-right" data-aos-duration="1000">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">About EvoTime</h1>
+                <p class="text-xl md:text-2xl text-blue-200 mb-6">Crafting Elegance Since 2010</p>
+                <p class="text-gray-200 mb-8">We believe a timepiece is more than just an accessory — it's a statement of character, a companion through life's moments, and a legacy to be passed down through generations.</p>
+                <div class="flex space-x-4">
+                    <a href="{% url 'brand_list' %}" class="px-6 py-3 bg-white text-blue-800 font-medium rounded-lg hover:bg-blue-100 transition transform hover:scale-105">Explore Collections</a>
+                    <a href="#our-story" class="px-6 py-3 border border-white text-white font-medium rounded-lg hover:bg-white/10 transition transform hover:scale-105">Our Story</a>
+                </div>
+            </div>
+            <div class="relative hidden md:block" data-aos="fade-left" data-aos-duration="1000">
+                <div class="absolute -top-10 -left-10 w-24 h-24 bg-blue-400 rounded-full opacity-20"></div>
+                <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-indigo-400 rounded-full opacity-20"></div>
+                <img src="{% static 'images/about-hero.jpg' %}" alt="EvoTime Luxury Watches" class="relative z-10 rounded-lg shadow-2xl" onerror="this.src='https://via.placeholder.com/600x400?text=EvoTime+Luxury+Watches'; this.onerror=null;">
+            </div>
+        </div>
+    </div>
+    <div class="custom-shape-divider">
+        <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
+        </svg>
+    </div>
+</section>
+
+<!-- Our Story Section -->
+<section id="our-story" class="py-16 md:py-24 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto text-center mb-16" data-aos="fade-up" data-aos-duration="800">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">Our Story</h2>
+            <div class="w-16 h-1 bg-blue-600 mx-auto mb-6"></div>
+            <p class="text-gray-600">From humble beginnings to becoming a premier destination for luxury timepieces</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+            <div data-aos="fade-right" data-aos-duration="1000">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-blue-100 rounded-lg transform -rotate-3"></div>
+                    <img src="{% static 'images/founder.jpg' %}" alt="EvoTime Founder" class="relative rounded-lg shadow-lg z-10" onerror="this.src='https://via.placeholder.com/500x600?text=EvoTime+Founder'; this.onerror=null;">
+                </div>
+            </div>
+            <div data-aos="fade-left" data-aos-duration="1000">
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">The Beginning</h3>
+                    <p class="text-gray-600 mb-4">Founded in 2010 by horology enthusiast Michael Everton, EvoTime began as a small boutique in London with a mission to make exceptional timepieces accessible to discerning collectors.</p>
+                    <p class="text-gray-600">What started as a passion project quickly gained recognition for its curated selection and unparalleled expertise in luxury watches.</p>
+                </div>
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Our Growth</h3>
+                    <p class="text-gray-600 mb-4">By 2015, we expanded to an online platform, bringing our carefully selected collection to watch enthusiasts worldwide. Today, EvoTime is trusted by collectors in over 30 countries.</p>
+                    <p class="text-gray-600">Our journey is defined by a commitment to authenticity, exceptional service, and building lasting relationships with our clients.</p>
+                </div>
+                <div class="flex items-center space-x-6 text-gray-600">
+                    <div class="text-center">
+                        <p class="text-4xl font-bold text-blue-600">14+</p>
+                        <p class="text-sm">Years of Experience</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-4xl font-bold text-blue-600">30+</p>
+                        <p class="text-sm">Countries Served</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-4xl font-bold text-blue-600">50k+</p>
+                        <p class="text-sm">Happy Customers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Values Section -->
+<section class="py-16 md:py-24 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto text-center mb-16" data-aos="fade-up" data-aos-duration="800">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">Our Values</h2>
+            <div class="w-16 h-1 bg-blue-600 mx-auto mb-6"></div>
+            <p class="text-gray-600">The principles that guide us in everything we do</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white rounded-lg shadow-lg p-8 transition duration-300 ease-in-out transform hover:-translate-y-2 hover:shadow-xl" data-aos="fade-up" data-aos-delay="100">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-6 mx-auto">
+                    <i class="fas fa-gem text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-center mb-4 text-gray-800">Authenticity</h3>
+                <p class="text-gray-600 text-center">Every timepiece in our collection is verified for authenticity and comes with our certification guarantee.</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-lg p-8 transition duration-300 ease-in-out transform hover:-translate-y-2 hover:shadow-xl" data-aos="fade-up" data-aos-delay="200">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-6 mx-auto">
+                    <i class="fas fa-award text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-center mb-4 text-gray-800">Excellence</h3>
+                <p class="text-gray-600 text-center">We uphold the highest standards in our curation, customer service, and the expertise we bring to luxury watchmaking.</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-lg p-8 transition duration-300 ease-in-out transform hover:-translate-y-2 hover:shadow-xl" data-aos="fade-up" data-aos-delay="300">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-6 mx-auto">
+                    <i class="fas fa-handshake text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-center mb-4 text-gray-800">Trust</h3>
+                <p class="text-gray-600 text-center">Building lasting relationships with our clients through transparency, integrity, and personalized service.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Team Section -->
+<section class="py-16 md:py-24 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto text-center mb-16" data-aos="fade-up" data-aos-duration="800">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">Meet Our Team</h2>
+            <div class="w-16 h-1 bg-blue-600 mx-auto mb-6"></div>
+            <p class="text-gray-600">The dedicated professionals behind EvoTime</p>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="rounded-lg overflow-hidden shadow-md transition duration-300 ease-in-out transform hover:-translate-y-2 hover:shadow-xl" data-aos="fade-up" data-aos-delay="100">
+                <img src="{% static 'images/team-1.jpg' %}" alt="Michael Everton - Founder & CEO" class="w-full h-64 object-cover" onerror="this.src='https://via.placeholder.com/400x400?text=Michael+Everton'; this.onerror=null;">
+                <div class="p-6 bg-white">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1">Michael Everton</h3>
+                    <p class="text-blue-600 text-sm mb-3">Founder & CEO</p>
+                    <p class="text-gray-600 text-sm">Passionate about horology with over 20 years of experience in luxury timepieces.</p>
+                </div>
+            </div>
+            
+            <div class="rounded-lg overflow-hidden shadow-md transition duration-300 ease-in-out transform hover:-translate-y-2 hover:shadow-xl" data-aos="fade-up" data-aos-delay="200">
+                <img src="{% static 'images/team-2.jpg' %}" alt="Sarah Chen - Head of Curation" class="w-full h-64 object-cover" onerror="this.src='https://via.placeholder.com/400x400?text=Sarah+Chen'; this.onerror=null;">
+                <div class="p-6 bg-white">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1">Sarah Chen</h3>
+                    <p class="text-blue-600 text-sm mb-3">Head of Curation</p>
+                    <p class="text-gray-600 text-sm">Expert in vintage and contemporary watches with a keen eye for exceptional craftsmanship.</p>
+                </div>
+            </div>
+            
+            <div class="rounded-lg overflow-hidden shadow-md transition duration-300 ease-in-out transform hover:-translate-y-2 hover:shadow-xl" data-aos="fade-up" data-aos-delay="300">
+                <img src="{% static 'images/team-3.jpg' %}" alt="Daniel Martinez - Technical Specialist" class="w-full h-64 object-cover" onerror="this.src='https://via.placeholder.com/400x400?text=Daniel+Martinez'; this.onerror=null;">
+                <div class="p-6 bg-white">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1">Daniel Martinez</h3>
+                    <p class="text-blue-600 text-sm mb-3">Technical Specialist</p>
+                    <p class="text-gray-600 text-sm">Certified watchmaker with expertise in mechanical movements and restorations.</p>
+                </div>
+            </div>
+            
+            <div class="rounded-lg overflow-hidden shadow-md transition duration-300 ease-in-out transform hover:-translate-y-2 hover:shadow-xl" data-aos="fade-up" data-aos-delay="400">
+                <img src="{% static 'images/team-4.jpg' %}" alt="Emma Watson - Customer Experience" class="w-full h-64 object-cover" onerror="this.src='https://via.placeholder.com/400x400?text=Emma+Watson'; this.onerror=null;">
+                <div class="p-6 bg-white">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1">Emma Watson</h3>
+                    <p class="text-blue-600 text-sm mb-3">Customer Experience</p>
+                    <p class="text-gray-600 text-sm">Dedicated to creating personalized shopping experiences for our clients.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-16 md:py-24 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto text-center mb-16" data-aos="fade-up" data-aos-duration="800">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">What Our Clients Say</h2>
+            <div class="w-16 h-1 bg-blue-600 mx-auto mb-6"></div>
+            <p class="text-gray-600">Hear from the collectors who trust us with their timepiece investments</p>
+        </div>
+        
+        <div class="swiper-container testimonial-slider overflow-hidden" data-aos="fade-up" data-aos-duration="1000">
+            <div class="swiper-wrapper pb-12">
+                <!-- Testimonial 1 -->
+                <div class="swiper-slide p-4">
+                    <div class="bg-white rounded-lg shadow-lg p-8 h-full">
+                        <div class="text-yellow-400 flex mb-4">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p class="text-gray-600 mb-6">"EvoTime's expertise and authenticity guarantee gave me the confidence to invest in my first luxury watch. Their guidance throughout the process was invaluable."</p>
+                        <div class="flex items-center">
+                            <img src="{% static 'images/client-1.jpg' %}" alt="James Wilson" class="w-12 h-12 rounded-full mr-4" onerror="this.src='https://via.placeholder.com/100x100?text=J'; this.onerror=null;">
+                            <div>
+                                <h4 class="font-bold text-gray-800">James Wilson</h4>
+                                <p class="text-gray-500 text-sm">Rolex Enthusiast</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 2 -->
+                <div class="swiper-slide p-4">
+                    <div class="bg-white rounded-lg shadow-lg p-8 h-full">
+                        <div class="text-yellow-400 flex mb-4">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p class="text-gray-600 mb-6">"I've been collecting watches for over a decade, and EvoTime consistently impresses me with their curation and knowledge. Their after-sales service is second to none."</p>
+                        <div class="flex items-center">
+                            <img src="{% static 'images/client-2.jpg' %}" alt="Rebecca Thompson" class="w-12 h-12 rounded-full mr-4" onerror="this.src='https://via.placeholder.com/100x100?text=R'; this.onerror=null;">
+                            <div>
+                                <h4 class="font-bold text-gray-800">Rebecca Thompson</h4>
+                                <p class="text-gray-500 text-sm">Vintage Collector</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 3 -->
+                <div class="swiper-slide p-4">
+                    <div class="bg-white rounded-lg shadow-lg p-8 h-full">
+                        <div class="text-yellow-400 flex mb-4">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p class="text-gray-600 mb-6">"The personalized shopping experience at EvoTime made finding the perfect anniversary gift for my husband effortless. Their attention to detail and packaging exceeded my expectations."</p>
+                        <div class="flex items-center">
+                            <img src="{% static 'images/client-3.jpg' %}" alt="David Lee" class="w-12 h-12 rounded-full mr-4" onerror="this.src='https://via.placeholder.com/100x100?text=D'; this.onerror=null;">
+                            <div>
+                                <h4 class="font-bold text-gray-800">David Lee</h4>
+                                <p class="text-gray-500 text-sm">Omega Collector</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </div>
+</section>
+
+<!-- Join Us Section -->
+<section class="py-16 md:py-24 bg-gradient-to-r from-blue-800 to-indigo-900 text-white">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto text-center" data-aos="fade-up" data-aos-duration="800">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6">Join the EvoTime Community</h2>
+            <p class="text-xl text-blue-200 mb-8">Subscribe to our newsletter for exclusive updates, new arrivals, and special offers.</p>
+            
+            <form class="flex flex-col sm:flex-row max-w-lg mx-auto gap-4">
+                <input type="email" placeholder="Your email address" class="flex-1 px-6 py-4 rounded-lg focus:outline-none text-gray-800" required>
+                <button type="submit" class="px-6 py-4 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition transform hover:scale-105">
+                    Subscribe Now
+                </button>
+            </form>
+            
+            <div class="mt-10 flex justify-center space-x-6">
+                <a href="#" class="text-blue-200 hover:text-white transition">
+                    <i class="fab fa-facebook-f text-2xl"></i>
+                </a>
+                <a href="#" class="text-blue-200 hover:text-white transition">
+                    <i class="fab fa-instagram text-2xl"></i>
+                </a>
+                <a href="#" class="text-blue-200 hover:text-white transition">
+                    <i class="fab fa-twitter text-2xl"></i>
+                </a>
+                <a href="#" class="text-blue-200 hover:text-white transition">
+                    <i class="fab fa-youtube text-2xl"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- JavaScript for Testimonial Slider -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const testimonialSwiper = new Swiper('.testimonial-slider', {
+            slidesPerView: 1,
+            spaceBetween: 30,
+            loop: true,
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            },
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+            breakpoints: {
+                640: {
+                    slidesPerView: 1,
+                },
+                768: {
+                    slidesPerView: 2,
+                },
+                1024: {
+                    slidesPerView: 3,
+                },
+            }
+        });
+    });
+</script>
+{% endblock product %}

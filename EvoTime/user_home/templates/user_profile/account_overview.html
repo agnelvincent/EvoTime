@@ -53,6 +53,7 @@
 </head>
 <div id="alert-container" class="fixed top-4 right-4 z-50 space-y-2 min-w-[320px] max-w-md"></div>
 <body class="bg-gray-50">
+    <!-- Header -->
     <header class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
@@ -61,12 +62,12 @@
                     <div class="text-blue-600 text-3xl">
                         <img src="{% static 'evo_time.jpg' %}" alt="EvoTime Logo" class="w-10 h-10 rounded-full">
                     </div>
-                    <a href="{% url "home" %}" class="text-2xl font-bold text-gray-800">EvoTime</a>
+                    <a href="{% url 'home' %}" class="text-2xl font-bold text-gray-800">EvoTime</a>
                 </div>
                 
                 <!-- Navigation Links - Desktop -->
                 <nav class="hidden md:flex space-x-8">
-                    <a href="{% url "home" %}" class="nav-link font-medium text-gray-800 hover:text-blue-600 transition pb-1">Home</a>
+                    <a href="{% url 'home' %}" class="nav-link font-medium text-gray-800 hover:text-blue-600 transition pb-1">Home</a>
                     <a href="#" class="nav-link font-medium text-gray-600 hover:text-blue-600 transition pb-1">Brands</a>
                     <a href="#" class="nav-link font-medium text-gray-600 hover:text-blue-600 transition pb-1">About</a>
                     <a href="#" class="nav-link font-medium text-gray-600 hover:text-blue-600 transition pb-1">Contact</a>
@@ -77,23 +78,23 @@
                     <a href="#" class="text-gray-600 hover:text-blue-600 transition">
                         <i class="far fa-heart text-xl"></i>
                     </a>
-                    <a href="{% url "view_cart" %}" class="text-gray-600 hover:text-blue-600 transition relative">
+                    <a href="{% url 'view_cart' %}" class="text-gray-600 hover:text-blue-600 transition relative">
                         <i class="fas fa-shopping-cart text-xl"></i>
                         <span class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
                     </a>
-                    <a href="{% url "account_overview" %}" class="text-gray-600 hover:text-blue-600 transition">
+                    <a href="{% url 'account_overview' %}" class="text-gray-600 hover:text-blue-600 transition">
                         <i class="far fa-user text-xl"></i>
                     </a>
                     
                     <!-- Mobile Menu Button -->
-                    <button class="md:hidden text-gray-600 focus:outline-none">
+                    <button class="md:hidden text-gray-600 focus:outline-none" onclick="toggleMobileMenu()">
                         <i class="fas fa-bars text-2xl"></i>
                     </button>
                 </div>
             </div>
             
             <!-- Mobile Navigation - Hidden by default -->
-            <div class="md:hidden hidden mt-4 pb-2">
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-2">
                 <a href="{% url 'home' %}" class="block py-2 text-gray-800 font-medium">Home</a>
                 <a href="#" class="block py-2 text-gray-600">Brands</a>
                 <a href="#" class="block py-2 text-gray-600">About</a>
@@ -102,11 +103,12 @@
         </div>
     </header>
 
+    <!-- Main Content -->
     <div class="flex flex-col md:flex-row min-h-screen">
         <!-- Sidebar -->
         <div class="w-full md:w-64 bg-white shadow-lg">
             <div class="flex flex-col items-center pt-8 pb-4 border-b">
-                <div class="relative group">
+                <div class="relative group cursor-pointer">
                     {% if user.profile_image %}
                     <img src="{{ user.profile_image.url }}" alt="Profile" class="w-20 h-20 rounded-full object-cover border-2 border-blue-500 transition-transform group-hover:scale-105">
                     {% else %}
@@ -116,12 +118,12 @@
                         <i class="fas fa-camera text-white"></i>
                     </div>
                 </div>
-                <h3 class="mt-4 font-semibold text-gray-800">{{user.full_name}}</h3>
-                <p class="text-sm text-gray-500">{{user.email}}</p>
+                <h3 class="mt-4 font-semibold text-gray-800">{{ user.full_name }}</h3>
+                <p class="text-sm text-gray-500">{{ user.email }}</p>
             </div>
             
             <nav class="mt-6">
-                <a href="{% url 'account_overview' %}" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group active:bg-blue-100">
+                <a href="{% url 'account_overview' %}" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
                     <i class="fas fa-user-circle w-5 h-5 mr-3 group-hover:text-blue-600"></i>
                     Account Overview
                 </a>
@@ -133,7 +135,7 @@
                     <i class="fas fa-map-marker-alt w-5 h-5 mr-3 group-hover:text-blue-600"></i>
                     Manage Address
                 </a>
-                <a href="{% url "wallet_page" %}" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+                <a href="{% url 'wallet_page' %}" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
                     <i class="fas fa-wallet w-5 h-5 mr-3 group-hover:text-blue-600"></i>
                     Wallet
                 </a>
@@ -144,72 +146,72 @@
             </nav>
         </div>
 
-        <!-- Main Content -->
-        <div class="flex-1 p-8">
+        <!-- Main Content Area -->
+        <div class="flex-1 p-4 md:p-8">
             {% block user %}
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Profile Settings</h2>
-            <form method="POST" enctype="multipart/form-data">
+            <form method="POST" enctype="multipart/form-data" class="space-y-6">
                 {% csrf_token %}
-            <!-- Profile Picture Section -->
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Profile Picture</h3>
-                <div class="flex items-start space-x-6">
-                    <div class="relative group cursor-pointer">
-                        {% if user.profile_image %}
-                        <img src="{{ user.profile_image.url }}" alt="Profile" class="w-32 h-32 rounded-lg object-cover">
-                    {% else %}
-                        <img src="/api/placeholder/120/120" alt="Profile" class="w-32 h-32 rounded-lg object-cover">
-                    {% endif %}
-                        <div class="absolute inset-0 rounded-lg bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <i class="fas fa-camera text-white text-xl"></i>
+                <!-- Profile Picture Section -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Profile Picture</h3>
+                    <div class="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
+                        <div class="relative group cursor-pointer">
+                            {% if user.profile_image %}
+                            <img src="{{ user.profile_image.url }}" alt="Profile" class="w-32 h-32 rounded-lg object-cover">
+                            {% else %}
+                            <img src="/api/placeholder/120/120" alt="Profile" class="w-32 h-32 rounded-lg object-cover">
+                            {% endif %}
+                            <div class="absolute inset-0 rounded-lg bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <i class="fas fa-camera text-white text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm text-gray-600 mb-3">Upload a new profile picture. Recommended size: 400x400px</p>
+                            <input type="file" name="profile_image" class="hidden" id="profile-upload" accept="image/*">
+                            <button type="button" onclick="document.getElementById('profile-upload').click()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                                <i class="fas fa-upload mr-2"></i>
+                                Upload New Picture
+                            </button>
                         </div>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-600 mb-3">Upload a new profile picture. Recommended size: 400x400px</p>
-                        <input type="file" name="profile_image" class="hidden" id="profile-upload" accept="image/*">
-                        <button type="button" onclick="document.getElementById('profile-upload').click()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
-                            <i class="fas fa-upload mr-2"></i>
-                            Upload New Picture
-                        </button>
-                    </div>
                 </div>
-            </div>
 
-            <!-- Contact Information -->
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Contact Information</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Alternate Phone Number</label>
-                        <div class="relative">
-                            <input type="text" name="alternate_phone_number" value="{{ user.alternate_phone_number }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="+1 (234) 567-8900">
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                <i class="fas fa-phone text-gray-400"></i>
+                <!-- Contact Information -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Contact Information</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Alternate Phone Number</label>
+                            <div class="relative">
+                                <input type="text" name="alternate_phone_number" value="{{ user.alternate_phone_number }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="+1 (234) 567-8900">
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                    <i class="fas fa-phone text-gray-400"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Date of Birth -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
-                    <div class="relative">
-                        <input type="date" name="dob" value="{{ user.dob|date:'Y-m-d' }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                            <i class="fas fa-calendar text-gray-400"></i>
+                <!-- Date of Birth -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+                        <div class="relative">
+                            <input type="date" name="dob" value="{{ user.dob|date:'Y-m-d' }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                <i class="fas fa-calendar text-gray-400"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <button type="submit" class="bg-black text-white hover:bg-gray-800 font-medium py-2 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
-                Save Changes
-            </button>
-        </div>
-    </form>
+                <!-- Save Changes Button -->
+                <button type="submit" class="bg-black text-white hover:bg-gray-800 font-medium py-2 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
+                    Save Changes
+                </button>
+            </form>
             {% endblock %}
         </div>
     </div>
@@ -288,6 +290,12 @@
     </footer>
 
     <script>
+        // Toggle Mobile Menu
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        }
+
         // Initialize date picker
         flatpickr("#datepicker", {
             dateFormat: "Y-m-d",
@@ -304,13 +312,6 @@
                 };
                 reader.readAsDataURL(e.target.files[0]);
             }
-        });
-
-        // Add smooth hover transitions
-        document.querySelectorAll('nav a').forEach(link => {
-            link.addEventListener('mouseenter', function() {
-                this.style.transition = 'all 0.3s ease';
-            });
         });
     </script>
 </body>

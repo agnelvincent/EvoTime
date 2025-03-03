@@ -2,6 +2,7 @@
 {% block user %}
 <!-- Load Razorpay script -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 <div class="animate-fade-in">
     <!-- Breadcrumbs -->
     <div class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
@@ -285,46 +286,7 @@
     </div>
 </div>
 
-<!-- Alert/Toast Notification (Hidden by default) -->
-<div id="toast" class="fixed top-4 right-4 z-50 hidden">
-    <div class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-md flex items-center space-x-4">
-        <span id="toast-message"></span>
-        <button onclick="hideToast()" class="text-white hover:text-gray-100">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-</div>
-
 <script>
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        toastMessage.textContent = message;
-        
-        // Change background color based on notification type
-        if (type === 'success') {
-            toast.querySelector('div').className = 'bg-green-500 text-white px-6 py-3 rounded-lg shadow-md flex items-center space-x-4';
-        } else if (type === 'error') {
-            toast.querySelector('div').className = 'bg-red-500 text-white px-6 py-3 rounded-lg shadow-md flex items-center space-x-4';
-        }
-        
-        toast.classList.remove('hidden');
-        setTimeout(() => hideToast(), 5000); // Hide after 5 seconds
-    }
-
-    function hideToast() {
-        const toast = document.getElementById('toast');
-        toast.classList.add('hidden');
-    }
-    
-    // Show notification if available in context
-    {% if messages %}
-        {% for message in messages %}
-            showToast('{{ message }}', '{{ message.tags }}');
-        {% endfor %}
-    {% endif %}
-
-
     function retryPayment(orderId) {
         fetch(`/cart/retry-payment/${orderId}/`, {
             method: 'POST',
@@ -359,18 +321,39 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                showToast('Payment successful!', 'success');
+                                Toastify({
+                                    text: "Payment successful!",
+                                    duration: 3000,
+                                    close: true,
+                                    gravity: "top",
+                                    position: "right",
+                                    backgroundColor: "#10B981",
+                                }).showToast();
                                 // Redirect to the same order item detail page after a short delay
                                 setTimeout(() => {
                                     window.location.href = "{% url 'order_item_detail' order_item.id %}";
                                 }, 3000);
                             } else {
-                                showToast('Payment verification failed.', 'error');
+                                Toastify({
+                                    text: "Payment verification failed.",
+                                    duration: 3000,
+                                    close: true,
+                                    gravity: "top",
+                                    position: "right",
+                                    backgroundColor: "#EF4444",
+                                }).showToast();
                             }
                         })
                         .catch(error => {
                             console.error('Error:', error);
-                            showToast('An error occurred. Please try again.', 'error');
+                            Toastify({
+                                text: "An error occurred. Please try again.",
+                                duration: 3000,
+                                close: true,
+                                gravity: "top",
+                                position: "right",
+                                backgroundColor: "#EF4444",
+                            }).showToast();
                         });
                     },
                     prefill: {
@@ -384,12 +367,26 @@
                 const rzp = new Razorpay(options);
                 rzp.open();
             } else {
-                showToast(data.error, 'error');
+                Toastify({
+                    text: data.error,
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#EF4444",
+                }).showToast();
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showToast('An error occurred. Please try again.', 'error');
+            Toastify({
+                text: "An error occurred. Please try again.",
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#EF4444",
+            }).showToast();
         });
     }
 </script>
