@@ -17,6 +17,11 @@ urlpatterns = [
     path('home/', views.home_view, name='home'),
     path('brand/', views.brand_list, name='brand_list'),  # Brand list page
     path('brand/<int:brand_id>/', views.brand_products, name='brand_products'),
+    path('products/' , views.all_products , name = 'all_products'),
+    path('about/',views.about_us , name = 'about'),
+
+
+    
 
 
     path('search/', views.search_products, name='search_products'),

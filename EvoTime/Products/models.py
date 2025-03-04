@@ -6,9 +6,14 @@ from django.core.exceptions import ValidationError
 class Brand(models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True)
+    offer_percentage = models.PositiveIntegerField(default=0, help_text="Discount percentage for this brand.")
 
-    def __str__(self):
-        return self.name
+    def save(self, *args, **kwargs):
+        """Ensure all related products update their prices when brand offer changes."""
+        super().save(*args, **kwargs)
+        for product in self.products.all():  # Update all products of this brand
+            product.save()  # Triggers recalculation of sales_price
+
 
 
 class Category(models.Model):
@@ -43,6 +48,20 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def get_applicable_offer(self):
+        """Return the highest applicable offer between product and brand."""
+        brand_offer = self.brand.offer_percentage if self.brand else 0
+        product_offer = self.offer_percentage
+        return max(product_offer, brand_offer)  # Use the highest discount
+
+    def calculate_sales_price(self):
+        """Dynamically determine sales price based on the highest discount."""
+        highest_offer = self.get_applicable_offer()
+        if highest_offer > 0:
+            return self.regular_price - (self.regular_price * highest_offer / 100)
+        return self.regular_price  # No offer, revert to regular price
+
 
     def clean(self):
         if self.sales_price and self.sales_price > self.regular_price:

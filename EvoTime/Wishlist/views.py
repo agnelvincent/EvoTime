@@ -42,13 +42,22 @@ def add_to_wishlist(request, variant_id):
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
 
+@login_required
 def remove_from_wishlist(request, variant_id):
-    if request.method == 'POST' and request.user.is_authenticated:
-        # Get the wishlist item
-        wishlist_item = get_object_or_404(WishlistItem, id=variant_id, wishlist__user=request.user)
-        # Delete the wishlist item
-        wishlist_item.delete()
-        return JsonResponse({'success': True, 'message': 'Item removed from wishlist.'})
-    return JsonResponse({'success': False, 'error': 'Invalid request method or user not authenticated.'})
+    if request.method == "POST":
+        wishlist = Wishlist.objects.get(user=request.user)
+        item = get_object_or_404(WishlistItem, wishlist=wishlist, variant_id=variant_id)
+        item.delete()
+        return JsonResponse({"success": True})
+    
+    return JsonResponse({"success": False, "error": "Invalid request method"}, status=400)
+
+
+def wishlist_status(request):
+    """Return a list of product variant IDs in the user's wishlist"""
+    if request.user.is_authenticated:
+        wishlist_items = WishlistItem.objects.filter(wishlist__user=request.user).values_list('variant_id', flat=True)
+        return JsonResponse({'items': list(wishlist_items)})
+    return JsonResponse({'items': []})
     
 

@@ -50,12 +50,14 @@
             <input type="hidden" name="cropped_image" id="croppedImageInput">
 
             <!-- Brand Dropdown -->
-            <select name="brand" class="w-full border p-2 rounded mb-2" required>
+            <select name="brand" id="brandSelect" class="w-full border p-2 rounded mb-2" required>
                 <option value="" disabled selected>Select Brand</option>
                 {% for brand in brands %}
-                    <option value="{{ brand.id }}">{{ brand.name }}</option>
+                    <option value="{{ brand.id }}" data-offer="{{ brand.offer_percentage|default:0 }}">{{ brand.name }}</option>
                 {% endfor %}
             </select>
+            <input type="hidden" id="brand_offer" value="0">  <!-- Hidden input to store brand offer -->
+            
 
             <!-- Submit Button -->
             <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Add Product</button>
@@ -69,11 +71,15 @@
             {% csrf_token %}
             <!-- Brand Name -->
             <input type="text" name="brand_name" placeholder="Brand Name" class="w-full border p-2 rounded mb-2" required>
-
+    
+            <!-- Offer Percentage (Optional) -->
+            <input type="number" name="offer_percentage" placeholder="Offer Percentage (%)" min="0" max="100" class="w-full border p-2 rounded mb-2">
+    
             <!-- Submit Button -->
             <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Add Brand</button>
         </form>
     </div>
+    
 
     <!-- Product List -->
     <div class="bg-white shadow-lg rounded-lg p-6">
@@ -104,7 +110,10 @@
                         {% endif %}
                     </td>
                     <td class="px-6 py-4">
-                        <button onclick="toggleEditProduct('{{ product.id }}')" class="text-blue-600 hover:underline">Edit</button>
+                        <button class="edit-product-btn text-blue-600 hover:underline" data-product-id="{{ product.id }}">
+                            Edit
+                        </button>
+                        
                         <a href="{% url 'manage_variants' product.id %}" class="text-purple-600 hover:underline">View Variants</a>
                     </td>
                 </tr>
@@ -156,13 +165,18 @@
         <!-- Hidden Input for Cropped Image -->
         <input type="hidden" name="cropped_image" id="croppedImageInput{{ product.id }}">
 
-        <!-- Brand Dropdown -->
-        <select name="brand" class="w-full border p-2 rounded mb-2" required>   
-            <option value="">Select Brand</option>
+        <select name="brand" id="brandSelect{{ product.id }}" class="w-full border p-2 rounded mb-2" required>
+            <option value="" disabled>Select Brand</option>
             {% for brand in brands %}
-                <option value="{{ brand.id }}" {% if brand.id == product.brand.id %}selected{% endif %}>{{ brand.name }}</option>
+                <option value="{{ brand.id }}" data-offer="{{ brand.offer_percentage|default:0 }}" 
+                    {% if brand.id == product.brand.id %}selected{% endif %}>
+                    {{ brand.name }}
+                </option>
             {% endfor %}
         </select>
+        <input type="hidden" id="brand_offer{{ product.id }}" value="{{ product.brand.offer_percentage|default:0 }}">
+        
+        
 
         <!-- Submit Button -->
         <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Update Product</button>
@@ -175,79 +189,77 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Function to calculate sales price
-        function calculateSalesPrice(regularPrice, offerPercentage) {
-            if (regularPrice && offerPercentage) {
-                return regularPrice - (regularPrice * (offerPercentage / 100));
+        // Toggle Edit Product Form
+        function toggleEditProduct(productId) {
+            const editForm = document.getElementById(`editProductForm${productId}`);
+            if (editForm) {
+                editForm.classList.toggle("hidden");
             }
-            return regularPrice; // If no offer, sales price = regular price
         }
-
-        // Add Product Form Calculation
+    
+        // Add event listeners to each "Edit" button
+        document.querySelectorAll(".edit-product-btn").forEach(button => {
+            button.addEventListener("click", function() {
+                const productId = this.getAttribute("data-product-id");
+                toggleEditProduct(productId);
+            });
+        });
+    });
+    
+    document.addEventListener("DOMContentLoaded", function () {
+        // Function to calculate sales price based on the highest offer (product or brand)
+        function calculateSalesPrice(regularPrice, productOffer, brandOffer) {
+            let highestOffer = Math.max(productOffer || 0, brandOffer || 0);
+            return regularPrice - (regularPrice * (highestOffer / 100));
+        }
+    
+        // Function to update sales price when inputs change
+        function updateSalesPrice(regularPriceInput, offerPercentageInput, salesPriceInput, brandSelect, brandOfferInput) {
+            function recalculate() {
+                const regularPrice = parseFloat(regularPriceInput.value) || 0;
+                const productOffer = parseFloat(offerPercentageInput.value) || 0;
+                const brandOffer = parseFloat(brandOfferInput.value) || 0;
+                salesPriceInput.value = calculateSalesPrice(regularPrice, productOffer, brandOffer).toFixed(2);
+            }
+    
+            // Add event listeners for input changes
+            regularPriceInput.addEventListener("input", recalculate);
+            offerPercentageInput.addEventListener("input", recalculate);
+            brandSelect.addEventListener("change", function () {
+                const selectedBrand = brandSelect.options[brandSelect.selectedIndex];
+                brandOfferInput.value = selectedBrand.getAttribute("data-offer") || 0;
+                recalculate();
+            });
+    
+            recalculate(); // Initial calculation
+        }
+    
+        // Apply logic for Add Product form
         const regularPriceInput = document.getElementById("regular_price");
         const offerPercentageInput = document.getElementById("offer_percentage");
         const salesPriceInput = document.getElementById("sales_price");
-
-        if (regularPriceInput && offerPercentageInput && salesPriceInput) {
-            regularPriceInput.addEventListener("input", function() {
-                const regularPrice = parseFloat(regularPriceInput.value);
-                const offerPercentage = parseFloat(offerPercentageInput.value);
-                salesPriceInput.value = calculateSalesPrice(regularPrice, offerPercentage).toFixed(2);
-            });
-
-            offerPercentageInput.addEventListener("input", function() {
-                const regularPrice = parseFloat(regularPriceInput.value);
-                const offerPercentage = parseFloat(offerPercentageInput.value);
-                salesPriceInput.value = calculateSalesPrice(regularPrice, offerPercentage).toFixed(2);
-            });
+        const brandSelect = document.getElementById("brandSelect");
+        const brandOfferInput = document.getElementById("brand_offer");
+    
+        if (regularPriceInput && offerPercentageInput && salesPriceInput && brandSelect && brandOfferInput) {
+            updateSalesPrice(regularPriceInput, offerPercentageInput, salesPriceInput, brandSelect, brandOfferInput);
         }
-
-        // Edit Product Form Calculation (for each product)
+    
+        // Apply logic for each Edit Product form
         {% for product in products %}
             const regularPriceInput{{ product.id }} = document.getElementById("regular_price{{ product.id }}");
             const offerPercentageInput{{ product.id }} = document.getElementById("offer_percentage{{ product.id }}");
             const salesPriceInput{{ product.id }} = document.getElementById("sales_price{{ product.id }}");
-
-            if (regularPriceInput{{ product.id }} && offerPercentageInput{{ product.id }} && salesPriceInput{{ product.id }}) {
-                regularPriceInput{{ product.id }}.addEventListener("input", function() {
-                    const regularPrice = parseFloat(regularPriceInput{{ product.id }}.value);
-                    const offerPercentage = parseFloat(offerPercentageInput{{ product.id }}.value);
-                    salesPriceInput{{ product.id }}.value = calculateSalesPrice(regularPrice, offerPercentage).toFixed(2);
-                });
-
-                offerPercentageInput{{ product.id }}.addEventListener("input", function() {
-                    const regularPrice = parseFloat(regularPriceInput{{ product.id }}.value);
-                    const offerPercentage = parseFloat(offerPercentageInput{{ product.id }}.value);
-                    salesPriceInput{{ product.id }}.value = calculateSalesPrice(regularPrice, offerPercentage).toFixed(2);
-                });
+            const brandSelect{{ product.id }} = document.getElementById("brandSelect{{ product.id }}");
+            const brandOfferInput{{ product.id }} = document.getElementById("brand_offer{{ product.id }}");
+    
+            if (regularPriceInput{{ product.id }} && offerPercentageInput{{ product.id }} && salesPriceInput{{ product.id }} && brandSelect{{ product.id }} && brandOfferInput{{ product.id }}) {
+                updateSalesPrice(regularPriceInput{{ product.id }}, offerPercentageInput{{ product.id }}, salesPriceInput{{ product.id }}, brandSelect{{ product.id }}, brandOfferInput{{ product.id }});
             }
         {% endfor %}
     });
     
-    function toggleEditProduct(productId) {
-        console.log("Edit Product button clicked for product ID:", productId);  // Debugging
-        const editForm = document.getElementById("editProductForm" + productId);
-        if (editForm) {
-            editForm.classList.toggle("hidden");
-        } else {
-            console.error("Edit form not found for product ID:", productId);  // Debugging
-        }
-    }
-    document.addEventListener("DOMContentLoaded", function() {
-        // Toggle Add Product Form
-        document.getElementById("toggleAddProduct").addEventListener("click", function() {
-            console.log("Add Product button clicked");  // Debugging
-            document.getElementById("addProductForm").classList.toggle("hidden");
-        });
-
-        // Toggle Add Brand Form
-        document.getElementById("toggleAddBrand").addEventListener("click", function() {
-            console.log("Add Brand button clicked");  // Debugging
-            document.getElementById("addBrandForm").classList.toggle("hidden");
-        })
-
-        // Existing image cropping and sales price calculation logic
-    });
+    
 </script>
 
 {% endblock %}

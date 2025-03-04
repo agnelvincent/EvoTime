@@ -310,18 +310,7 @@ def reset_password(request):
 @never_cache
 @login_required
 def home_view(request):
-    """
-    Renders the home page with all available products and their variants,
-    with filters for price, name sorting, and additional filters.
-    """
-    # Get the sorting filter from the request, default to 'name'
-    sort_by = request.GET.get('sort_by', 'name')  # Options: 'price_low_to_high', 'price_high_to_low', 'name_a_to_z', 'name_z_to_a'
-    
-    # Get filter parameters from the request
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
-    brand = request.GET.get('brand')
-    category = request.GET.get('category')
+
 
     # Fetch products with related variants
     products = Product.objects.prefetch_related('variants').all()
@@ -334,26 +323,6 @@ def home_view(request):
             user_wishlist_variant_ids = wishlist.items.values_list('variant_id', flat=True)
 
 
-    # Apply filters
-    if min_price:
-        products = products.filter(regular_price__gte=min_price)
-    if max_price:
-        products = products.filter(regular_price__lte=max_price)
-    if brand:
-        products = products.filter(brand__name=brand)
-    if category:
-        products = products.filter(category__name=category)
-
-    # Apply sorting based on user choice
-    if sort_by == 'price_low_to_high':
-        products = products.order_by('regular_price')
-    elif sort_by == 'price_high_to_low':
-        products = products.order_by('-regular_price')
-    elif sort_by == 'name_a_to_z':
-        products = products.order_by('name')
-    elif sort_by == 'name_z_to_a':
-        products = products.order_by('-name')
-
     # Set up pagination
     paginator = Paginator(products, 12)  # Show 12 products per page
     page_number = request.GET.get('page')  # Get the page number from the URL
@@ -361,13 +330,42 @@ def home_view(request):
 
     context = {
         'products': products_page,  # Pass the paginated products to the template
-        'sort_by': sort_by,  # Pass the current sorting option to the template for maintaining the state
-        'new_products': new_products,
         'brands': Brand.objects.all(),  # Pass all brands for filtering
         'categories': Category.objects.all(),  # Pass all categories for filtering
         'user_wishlist_variant_ids': user_wishlist_variant_ids,
     }
     return render(request, 'home.html', context)
+
+
+def all_products(request):
+    products = Product.objects.filter(is_blocked=False)
+    brands = Brand.objects.all()
+    categories = Category.objects.filter(is_active=True)
+
+    # Apply filters
+    brand_id = request.GET.get('brand')
+    category_id = request.GET.get('category')
+    price_range = request.GET.get('price')
+
+    if brand_id:
+        products = products.filter(brand_id=brand_id)
+    if category_id:
+        products = products.filter(category_id=category_id)
+    if price_range:
+        min_price, max_price = price_range.split('-')
+        if min_price:
+            products = products.filter(regular_price__gte=min_price)
+        if max_price:
+            products = products.filter(regular_price__lte=max_price)
+
+    context = {
+        'products': products,
+        'brands': brands,
+        'categories': categories,
+    }
+    return render(request, 'all_products.html', context)
+
+
 
 def brand_list(request):
     brands = Brand.objects.all()  # Fetch all brands
@@ -402,6 +400,9 @@ def brand_products(request, brand_id):
         })
     except Brand.DoesNotExist:
         return JsonResponse({'error': 'Brand not found'}, status=404)
+    
+def about_us(request):
+    return render(request , 'about.html')
 
 
 @login_required
@@ -718,11 +719,6 @@ def cancel_order_item(request, item_id):
         return redirect('order_list')
 
     order_item = get_object_or_404(OrderItem, id=item_id)
-
-    # Ensure the order item belongs to the logged-in user
-    if order_item.order.user != request.user:
-        messages.error(request, "You don't have permission to cancel this order item.")
-        return redirect('order_list')
 
     try:
         if not order_item.can_be_cancelled:

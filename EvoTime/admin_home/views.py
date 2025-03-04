@@ -418,8 +418,9 @@ def admin_product_view(request):
 def add_brand(request):
     if request.method == 'POST':
         brand_name = request.POST.get('brand_name', '').strip()
+        offer_percentage = request.POST.get('offer_percentage', '').strip()
 
-
+        # Validations
         if not brand_name:
             messages.error(request, 'Brand name cannot be empty!')
         elif Brand.objects.filter(name__iexact=brand_name).exists():
@@ -427,14 +428,28 @@ def add_brand(request):
         elif len(brand_name) < 2:
             messages.error(request, 'Brand name must be at least 2 characters long!')
         else:
-            # Validate Offer Percentage
+            # Validate and Convert Offer Percentage
+            try:
+                offer_percentage = int(offer_percentage) if offer_percentage else 0
+                if offer_percentage < 0 or offer_percentage > 100:
+                    raise ValueError
+            except ValueError:
+                messages.error(request, 'Offer percentage must be between 0 and 100!')
+                return redirect('admin_product')
 
-            brand = Brand.objects.create(name=brand_name)
+            # Create Brand
+            brand = Brand.objects.create(name=brand_name, offer_percentage=offer_percentage)
+
+            # Apply Offer to All Associated Products
+            for product in brand.products.all():
+                product.save()  # This triggers price recalculation
+
             messages.success(request, 'Brand added successfully!')
-
+        
         return redirect('admin_product')
 
     return render(request, 'product/admin_product.html')
+
 
 
 @admin_required
@@ -481,13 +496,21 @@ def add_product(request):
                 messages.error(request, "Offer percentage must be between 0 and 100.")
                 return redirect('admin_product')
         else:
-            offer_percentage = Decimal(0)  # Default to 0 if no offer percentage is provided
+            offer_percentage = Decimal(0)  # Default to 0 if no product offer is provided
 
-        # Calculate sales price based on offer percentage
-        sales_price = regular_price - (regular_price * (offer_percentage / 100))
-
+        # Get Category & Brand
         category = get_object_or_404(Category, id=category_id)
         brand = get_object_or_404(Brand, id=brand_id)
+
+        # 🔥 **Check Brand Offer & Apply the Higher Discount**
+        brand_offer = Decimal(brand.offer_percentage) if brand else Decimal(0)
+        final_offer = max(offer_percentage, brand_offer)
+
+        # **Calculate Sales Price**
+        if final_offer > 0:
+            sales_price = regular_price - (regular_price * (final_offer / 100))
+        else:
+            sales_price = regular_price  # No offer applied, use regular price
 
         # Handle Image Processing
         if cropped_image:
@@ -516,20 +539,21 @@ def add_product(request):
         else:
             product_image = None
 
-        # Create Product
+        # Create Product with Correct Pricing
         Product.objects.create(
             name=name,
             category=category,
             description=description,
             regular_price=regular_price,
             sales_price=sales_price,
-            offer_percentage=offer_percentage,
+            offer_percentage=offer_percentage,  # Save product-level offer only
             brand=brand,
             image=product_image
         )
 
         messages.success(request, 'Product added successfully!')
     return redirect('admin_product')
+
 
 
 @admin_required
@@ -541,7 +565,6 @@ def edit_product(request, product_id):
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
         category_id = request.POST.get("category")
-        # sales_price = request.POST.get("sales_price")
         description = request.POST.get("description", "").strip()
         regular_price = request.POST.get("regular_price")
         offer_percentage = request.POST.get("offer_percentage", "").strip()
@@ -581,19 +604,31 @@ def edit_product(request, product_id):
         else:
             offer_percentage = Decimal(0)  # Default to 0 if empty
 
-        # Ensure correct sales price calculation
-        sales_price = regular_price - (regular_price * (int(offer_percentage) / 100))
+        # Get Category & Brand
+        category = get_object_or_404(Category, id=category_id)
+        brand = get_object_or_404(Brand, id=brand_id)
+
+        # 🔥 Apply Highest Offer Between Product & Brand
+        brand_offer = Decimal(brand.offer_percentage) if brand else Decimal(0)
+        final_offer = max(offer_percentage, brand_offer)
+
+        # **Calculate Sales Price**
+        if final_offer > 0:
+            sales_price = regular_price - (regular_price * (final_offer / 100))
+        else:
+            sales_price = regular_price  # No offer applied, use regular price
+
         # Debugging output (Check if values are correctly fetched)
-        print(f"Regular Price: {regular_price}, Offer Percentage: {offer_percentage}, Sales Price: {sales_price}")
+        print(f"Regular Price: {regular_price}, Product Offer: {offer_percentage}, Brand Offer: {brand_offer}, Applied Offer: {final_offer}, Sales Price: {sales_price}")
 
         # Assign updated values
         product.name = name
-        product.category = get_object_or_404(Category, id=category_id)
+        product.category = category
         product.description = description
         product.regular_price = regular_price
         product.sales_price = sales_price
-        product.offer_percentage = offer_percentage
-        product.brand = get_object_or_404(Brand, id=brand_id)
+        product.offer_percentage = offer_percentage  # Save product-level offer only
+        product.brand = brand
 
         if image:
             product.image = image
@@ -602,6 +637,7 @@ def edit_product(request, product_id):
         messages.success(request, "Product updated successfully!")
 
     return redirect("admin_product")
+
 
 @staff_member_required
 def manage_variants(request, product_id):
