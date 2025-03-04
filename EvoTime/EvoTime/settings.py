@@ -11,7 +11,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["www.timeevo.life", "timeevo.life", "localhost", "127.0.0.1"]
 
 AUTH_USER_MODEL = 'user_home.CustomUser'
 
@@ -56,8 +56,12 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",  # Adjust based on your frontend origin
+    "https://www.timeevo.life",
+    "http://www.timeevo.life",  # If your frontend might use HTTP
+    "http://localhost:8000",  # Keep this if you use local development
+    "http://127.0.0.1:8000"  # Add this if needed for local testing
 ]
+
 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None  # Disable username field in Allauth
 ACCOUNT_AUTHENTICATION_METHOD = 'email'  # Use email for authentication
