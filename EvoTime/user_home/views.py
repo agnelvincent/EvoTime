@@ -200,7 +200,7 @@ def resend_otp(request):
     messages.success(request, "A new OTP has been sent to your email.")
     return redirect('verify_otp')
 
-@login_required
+
 @never_cache
 def forgot_password(request):
     if request.method == 'POST':
@@ -225,7 +225,7 @@ def forgot_password(request):
             messages.error(request, 'No account found with this email address.')
     return render(request, 'password/forgot_password.html')
 
-@login_required
+
 @never_cache
 def verify_reset_otp(request):
     if request.method == 'POST':
@@ -254,7 +254,7 @@ def verify_reset_otp(request):
     reset_data = request.session.get('reset_data')
     return render(request, 'password/verify_reset_otp.html', {'reset_data': reset_data})
 
-@login_required
+
 @never_cache
 def resend_reset_otp(request):
     reset_data = request.session.get('reset_data')
@@ -273,7 +273,7 @@ def resend_reset_otp(request):
     messages.success(request, "A new OTP has been sent to your email.")
     return redirect('verify_reset_otp')
 
-@login_required
+
 @never_cache
 def reset_password(request):
     reset_data = request.session.get('reset_data')

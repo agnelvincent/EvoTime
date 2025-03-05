@@ -51,9 +51,14 @@ SOCIALACCOUNT_PROVIDERS = {
         'APP': {
             'client_id': config('GOOGLE_CLIENT_ID'),
             'secret': config('GOOGLE_CLIENT_SECRET'),
-        }
+        },
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
     }
 }
+
+
+CSRF_TRUSTED_ORIGINS = ["https://timeevo.life"]
 
 CORS_ALLOWED_ORIGINS = [
     "https://www.timeevo.life",
