@@ -23,12 +23,16 @@
         <div class="space-y-6">
             <h1 class="text-3xl font-bold text-gray-800">{{ product.name }}</h1>
             <div class="flex items-center space-x-2">
-                <span class="text-yellow-500"><i class="fas fa-star"></i></span>
-                <span class="text-yellow-500"><i class="fas fa-star"></i></span>
-                <span class="text-yellow-500"><i class="fas fa-star"></i></span>
-                <span class="text-yellow-500"><i class="fas fa-star"></i></span>
-                <span class="text-gray-300"><i class="fas fa-star"></i></span>
-                <span class="text-gray-600">({{ product.rating }} reviews)</span>
+                {% for i in "12345" %}
+                    {% if i|add:0 <= average_rating %}
+                        <span class="text-yellow-500"><i class="fas fa-star"></i></span>
+                    {% elif i|add:-0.5 <= average_rating %}
+                        <span class="text-yellow-500"><i class="fas fa-star-half-alt"></i></span>
+                    {% else %}
+                        <span class="text-yellow-500"><i class="far fa-star"></i></span>
+                    {% endif %}
+                {% endfor %}
+                <span class="text-gray-600">({{ product.reviews.count }} reviews)</span>
             </div>
             <p class="text-lg text-gray-600">{{ product.description }}</p>
             <div class="flex items-center space-x-4">
@@ -57,6 +61,35 @@
             </div>
         </div>
     </div>
+
+    <!-- Reviews Section -->
+    <div class="mt-10">
+    <h2 class="text-2xl font-bold text-gray-800">Customer Reviews</h2>
+    {% if reviews %}
+        <div class="mt-6 space-y-6">
+            {% for review in reviews %}
+                <div class="border-b pb-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-yellow-500">
+                            {% for i in "12345" %}
+                                {% if i|add:0 <= review.rating %}
+                                    <i class="fas fa-star"></i>  <!-- Full star -->
+                                {% else %}
+                                    <i class="far fa-star"></i>  <!-- Empty star -->
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                        <span class="text-gray-600">{{ review.user.email }}</span>
+                        <span class="text-gray-400 text-sm">{{ review.created_at|date:"F d, Y" }}</span>
+                    </div>
+                    <p class="text-gray-600 mt-2">{{ review.review }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-gray-600 mt-4">No reviews yet. Be the first to review this product!</p>
+    {% endif %}
+</div>
 </div>
 
 <style>

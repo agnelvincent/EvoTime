@@ -17,7 +17,7 @@ from Cart.models import Order , OrderItem
 from Wishlist.models import Wishlist
 from django.core.paginator import Paginator
 from datetime import timedelta
-from Cart.models import Wallet
+from Cart.models import Wallet , ProductReview
 from django.db import transaction
 from django.urls import reverse
 from decimal import Decimal
@@ -136,7 +136,7 @@ def user_signup(request):
 
 
 
-@login_required
+
 @never_cache
 def verify_otp(request):
     if request.method == 'POST':
@@ -180,7 +180,6 @@ def verify_otp(request):
     return render(request, 'verify_otp.html', {'user_data': user_data})
 
 
-@login_required
 @never_cache
 def resend_otp(request):
     user_data = request.session.get('user_data')
@@ -868,6 +867,38 @@ def search_products(request):
 def order_detail(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     return render(request, 'user_profile/order_detail.html', {'order': order})
+
+@login_required
+def submit_review(request, order_item_id):
+    if request.method == "POST":
+        rating = request.POST.get('rating')
+        review_text = request.POST.get('review')
+        product_id = request.POST.get('product_id')
+
+        print(rating, review_text, product_id)
+
+        if rating and review_text:
+            # Ensure the product exists
+            product = get_object_or_404(Product, id=product_id)
+
+            # Check if the user has already reviewed this specific product
+            existing_review = ProductReview.objects.filter(user=request.user, product=product).exists()
+            if not existing_review:
+                ProductReview.objects.create(
+                    user=request.user,
+                    product=product,
+                    rating=int(rating),
+                    review=review_text
+                )
+                messages.success(request, "Review submitted successfully!")
+            else:
+                messages.error(request, "You have already reviewed this product.")
+
+        else:
+            messages.error(request, "Rating and review text are required.")
+
+    return redirect('order_item_detail', item_id=order_item_id)
+
 
 
 @block_superuser_navigation

@@ -1,11 +1,13 @@
 from django.db import models
 from user_home.models import CustomUser, Address
-from Products.models import ProductVariant
+from Products.models import ProductVariant , Product
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.db import transaction
 from admin_home.models import Coupon
 from decimal import Decimal
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 
 # Cart model that is associated with a user
 class Cart(models.Model):
@@ -226,3 +228,16 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.transaction_type} - {self.amount} - {self.timestamp}"
+    
+class ProductReview(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reviews")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews")
+    rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    review = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product')  # Prevents duplicate reviews per order item
+
+    def __str__(self):
+        return f"{self.user.email} - {self.product.name} ({self.rating} Stars)"

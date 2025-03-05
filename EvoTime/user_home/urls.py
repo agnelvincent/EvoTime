@@ -39,6 +39,10 @@ urlpatterns = [
     path('orders/item/<int:item_id>/cancel/', views.cancel_order_item, name='cancel_order_item'),
     path('orders/item/<int:item_id>/return/', views.return_order_item, name='return_order_item'),
     path("wallet/", views.wallet_view, name="wallet_page"),
+    path('submit-review/<int:order_item_id>/', views.submit_review, name='submit_review'),
+
+
+
 ]
 # handler404 = views.custom_page_not_found_view
 

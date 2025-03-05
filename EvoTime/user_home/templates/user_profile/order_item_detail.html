@@ -247,6 +247,48 @@
         </div>
     </div>
 
+    {% if order_item.status == 'delivered' %}
+    <div class="mt-8 bg-gray-50 p-6 rounded-xl shadow-md">
+        <h4 class="text-lg font-semibold mb-4">Rate & Review This Product</h4>
+        
+        <form method="post" action="{% url 'submit_review' order_item.id %}">
+            {% csrf_token %}
+            
+            <!-- Star Rating -->
+            <div class="flex items-center space-x-2 mb-4">
+                <p class="text-sm text-gray-500">Your Rating:</p>
+                <div class="flex stars-container">
+                    <input type="radio" name="rating" value="1" id="star1" class="hidden star-input">
+                    <label for="star1" data-value="1" class="star-label cursor-pointer text-gray-400 text-2xl hover:text-yellow-500">&#9733;</label>
+                    
+                    <input type="radio" name="rating" value="2" id="star2" class="hidden star-input">
+                    <label for="star2" data-value="2" class="star-label cursor-pointer text-gray-400 text-2xl hover:text-yellow-500">&#9733;</label>
+
+                    <input type="radio" name="rating" value="3" id="star3" class="hidden star-input">
+                    <label for="star3" data-value="3" class="star-label cursor-pointer text-gray-400 text-2xl hover:text-yellow-500">&#9733;</label>
+
+                    <input type="radio" name="rating" value="4" id="star4" class="hidden star-input">
+                    <label for="star4" data-value="4" class="star-label cursor-pointer text-gray-400 text-2xl hover:text-yellow-500">&#9733;</label>
+
+                    <input type="radio" name="rating" value="5" id="star5" class="hidden star-input">
+                    <label for="star5" data-value="5" class="star-label cursor-pointer text-gray-400 text-2xl hover:text-yellow-500">&#9733;</label>
+                </div>
+            </div>
+            <input type="hidden" value="{{order_item.product_variant.product.id}}" name="product_id">
+            <!-- Review Input -->
+            <div class="mb-4">
+                <label for="review" class="block text-sm text-gray-500 mb-1">Write your review:</label>
+                <textarea name="review" id="review" rows="3" class="w-full border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                Submit Review
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+
     <!-- Additional Information Card -->
     {% if order_item.status == 'cancelled' %}
         <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
@@ -285,6 +327,8 @@
         </div>
     </div>
 </div>
+
+
 
 <script>
     function retryPayment(orderId) {
@@ -389,5 +433,30 @@
             }).showToast();
         });
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const starLabels = document.querySelectorAll('.star-label');
+        const starInputs = document.querySelectorAll('.star-input');
+
+        starLabels.forEach(label => {
+            label.addEventListener('click', () => {
+                const selectedValue = parseInt(label.getAttribute('data-value'));
+
+                // Update star colors
+                starLabels.forEach((starLabel, index) => {
+                    if (index < selectedValue) {
+                        starLabel.classList.remove('text-gray-400');
+                        starLabel.classList.add('text-yellow-500');
+                    } else {
+                        starLabel.classList.remove('text-yellow-500');
+                        starLabel.classList.add('text-gray-400');
+                    }
+                });
+
+                // Check the corresponding radio input
+                starInputs[selectedValue - 1].checked = true;
+            });
+        });
+    });
 </script>
 {% endblock user %}

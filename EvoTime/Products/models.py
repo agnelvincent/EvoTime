@@ -1,6 +1,8 @@
 from django.db import models
-from user_home.models import Address, CustomUser
 from django.core.exceptions import ValidationError
+from django.db.models import Avg
+
+
 
 
 class Brand(models.Model):
@@ -61,6 +63,12 @@ class Product(models.Model):
         if highest_offer > 0:
             return self.regular_price - (self.regular_price * highest_offer / 100)
         return self.regular_price  # No offer, revert to regular price
+    
+    def average_rating(self):
+        return self.reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+
+    def review_count(self):
+        return self.reviews.count()
 
 
     def clean(self):
@@ -107,4 +115,7 @@ class ProductVariant(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()  # Trigger validation before saving
         super().save(*args, **kwargs)
+
+
+
 
