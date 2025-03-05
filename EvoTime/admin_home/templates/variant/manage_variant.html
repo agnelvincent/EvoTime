@@ -76,6 +76,30 @@
         </div>
     </div>
 
+    <div id="imageCropperModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z--5=100">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6">
+            <h2 class="text-xl font-bold mb-4">Crop Image</h2>
+            <div class="flex">
+                <div class="w-3/4 pr-4">
+                    <img id="cropperImage" class="max-w-full" src="" alt="Image to crop">
+                </div>
+                <div class="w-1/4">
+                    <div class="preview-container overflow-hidden"></div>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button type="button" onclick="closeCropperModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">
+                    Cancel
+                </button>
+                <button type="button" onclick="confirmCrop()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    Confirm Crop
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
     <!-- Edit Variant Modal -->
     <div id="editVariantModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
@@ -192,6 +216,93 @@
         const parts = value.split(`; ${name}=`);
         if (parts.length === 2) return parts.pop().split(';').shift();
     }
+
+    let currentCropper = null;
+    let currentFileInput = null;
+
+    // Modify file input to trigger cropping
+    function setupImageCropping(fileInput) {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        // Close any open modals to prevent stacking
+        closeAddVariantModal();
+        closeEditVariantModal();
+
+        currentFileInput = fileInput;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const cropperImage = document.getElementById('cropperImage');
+            cropperImage.src = e.target.result;
+            
+            // Close any existing cropper
+            if (currentCropper) {
+                currentCropper.destroy();
+            }
+
+            // Open cropper modal
+            document.getElementById('imageCropperModal').classList.remove('hidden');
+
+            // Initialize cropper
+            currentCropper = new Cropper(cropperImage, {
+                aspectRatio: 1, // Square crop
+                viewMode: 1,
+                preview: '.preview-container'
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function confirmCrop() {
+        if (currentCropper && currentFileInput) {
+            // Get cropped canvas
+            const croppedCanvas = currentCropper.getCroppedCanvas({
+                width: 500, // Set a standard width
+                height: 500  // Set a standard height
+            });
+
+            // Convert canvas to blob
+            croppedCanvas.toBlob(function(blob) {
+                // Create a new File object with the cropped image
+                const croppedFile = new File([blob], 'cropped_image.jpg', {
+                    type: 'image/jpeg'
+                });
+
+                // Replace the original file in the input
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(croppedFile);
+                currentFileInput.files = dataTransfer.files;
+
+                // Close cropper
+                closeCropperModal();
+
+                // Reopen the original modal
+                if (currentFileInput.closest('#addVariantModal')) {
+                    openAddVariantModal();
+                } else if (currentFileInput.closest('#editVariantModal')) {
+                    const variantId = document.getElementById('editVariantId').value;
+                    const color = document.getElementById('editVariantColor').value;
+                    const stock = document.getElementById('editVariantStock').value;
+                    openEditVariantModal(variantId, color, stock);
+                }
+            }, 'image/jpeg');
+        }
+    }
+
+    function closeCropperModal() {
+        document.getElementById('imageCropperModal').classList.add('hidden');
+        if (currentCropper) {
+            currentCropper.destroy();
+            currentCropper = null;
+        }
+    }
+
+    // Modify existing file inputs to use cropping
+    document.querySelectorAll('input[type="file"]').forEach(fileInput => {
+        fileInput.addEventListener('change', function() {
+            setupImageCropping(this);
+        });
+    });
 </script>
 
 {% endblock %}

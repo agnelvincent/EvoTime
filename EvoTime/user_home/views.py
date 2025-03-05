@@ -429,7 +429,7 @@ def account_overview(request):
     if request.method == "POST":
         # Retrieve form data
         dob = request.POST.get("dob")
-        alternate_phone_number = request.POST.get("alternate_phone_number")
+        alternate_phone_number = request.POST.get("alternate_phone_number", "").strip()
         profile_image = request.FILES.get("profile_image")
 
         errors = False  # Flag to track validation errors
@@ -447,33 +447,62 @@ def account_overview(request):
                 messages.error(request, "Invalid date format! Use YYYY-MM-DD.")
                 errors = True
 
-        # Validate Alternate Phone Number (must be numeric and 10-15 digits)
+        # Validate Alternate Phone Number
         if alternate_phone_number:
-            if not re.match(r"^\d{10,15}$", alternate_phone_number):
+            # Remove any non-digit characters
+            cleaned_phone = re.sub(r'\D', '', alternate_phone_number)
+            
+            if not re.match(r'^\d{10,15}$', cleaned_phone):
                 messages.error(request, "Alternate phone number must be 10-15 digits long.")
                 errors = True
             else:
-                user.alternate_phone_number = alternate_phone_number
+                user.alternate_phone_number = cleaned_phone
+        else:
+            # If no phone number is provided, set to None or empty string
+            user.alternate_phone_number = None
 
-        # Validate Profile Image (optional, but must be an image file)
+        # Validate Profile Image
         if profile_image:
-            if not profile_image.content_type.startswith("image"):
-                messages.error(request, "Invalid file type! Please upload an image.")
+            try:
+                # Check file type
+                if not profile_image.content_type.startswith("image"):
+                    messages.error(request, "Invalid file type! Please upload an image.")
+                    errors = True
+                else:
+                    # Optional: Add file size validation
+                    if profile_image.size > 5 * 1024 * 1024:  # 5MB limit
+                        messages.error(request, "Image size should not exceed 5MB.")
+                        errors = True
+                    else:
+                        # Delete existing profile image if it exists
+                        if user.profile_image:
+                            try:
+                                user.profile_image.delete()
+                            except Exception as e:
+                                print(f"Error deleting existing profile image: {e}")
+                        
+                        # Save new profile image
+                        user.profile_image = profile_image
+
+            except Exception as e:
+                messages.error(request, f"Error uploading image: {str(e)}")
                 errors = True
-            else:
-                user.profile_image = profile_image  # Save uploaded image
 
         # If no errors, save the user model and redirect
         if not errors:
-            user.save()
-            messages.success(request, "Profile updated successfully!")
-            return redirect("account_overview")
+            try:
+                user.save()
+                messages.success(request, "Profile updated successfully!")
+                return redirect("account_overview")
+            except Exception as e:
+                messages.error(request, f"Error saving profile: {str(e)}")
+                errors = True
 
     # Prepopulate the form with existing data
     context = {
-        "profile_image": user.profile_image,
-        "dob": user.dob,
-        "alternate_phone_number": user.alternate_phone_number,
+        "user": user,
+        "dob": user.dob.strftime("%Y-%m-%d") if user.dob else None,
+        "alternate_phone_number": user.alternate_phone_number or "",
     }
 
     return render(request, "user_profile/account_overview.html", context)

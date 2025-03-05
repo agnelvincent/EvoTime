@@ -2,14 +2,58 @@
 
 {% block admin_side %}
 <div class="container mx-auto mt-10 px-4">
-    <!-- Buttons to Toggle Add Product and Add Brand Forms -->
-    <div class="mb-4 flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
-        <button id="toggleAddProduct" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200 w-full sm:w-auto">Add Product</button>
-        <button id="toggleAddBrand" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 w-full sm:w-auto">Add Brand</button>
+    <!-- Buttons to Trigger Modals -->
+    <div class="mb-4 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+        <button id="openAddProductModal" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200 w-full sm:w-auto">Add Product</button>
+        <button id="openAddBrandModal" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 w-full sm:w-auto">Add Brand</button>
     </div>
 
-    <!-- Add Product Form -->
-    <div id="addProductForm" class="hidden bg-white shadow-lg rounded-lg p-6 mb-4">
+    <!-- Product List -->
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Product List</h1>
+        <div class="overflow-x-auto">
+            <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-6 py-4 text-left">Name</th>
+                        <th class="px-6 py-4 text-left">Category</th>
+                        <th class="px-4 py-4 text-left">Price</th>
+                        <th class="px-4 py-4 text-left">Sales Price</th>
+                        <th class="px-6 py-4 text-left">Status</th>
+                        <th class="px-6 py-4 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for product in products %}
+                    <tr>
+                        <td class="px-6 py-4">{{ product.name }}</td>
+                        <td class="px-6 py-4">{{ product.category.name }}</td>
+                        <td class="px-6 py-4">₹{{ product.regular_price }}</td>
+                        <td class="px-6 py-4">₹{{ product.sales_price }}</td>
+                        <td class="px-6 py-4">
+                            {% if product.is_blocked %}
+                            <span class="text-red-600">Blocked</span>
+                            {% else %}
+                            <span class="text-green-600">Active</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <button class="edit-product-btn text-blue-600 hover:underline" data-product-id="{{ product.id }}">
+                                Edit
+                            </button>
+                            <a href="{% url 'manage_variants' product.id %}" class="text-purple-600 hover:underline">View Variants</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div id="addProductModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center p-4">
+    <div class="bg-white rounded-lg w-full max-w-2xl p-6 overflow-y-auto max-h-screen">
         <h2 class="text-xl font-bold mb-4">Add Product</h2>
         <form method="POST" action="{% url 'add_product' %}" enctype="multipart/form-data">
             {% csrf_token %}
@@ -56,15 +100,18 @@
                     <option value="{{ brand.id }}" data-offer="{{ brand.offer_percentage|default:0 }}">{{ brand.name }}</option>
                 {% endfor %}
             </select>
-            <input type="hidden" id="brand_offer" value="0">  <!-- Hidden input to store brand offer -->
+            <input type="hidden" id="brand_offer" value="0">
 
             <!-- Submit Button -->
             <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 w-full sm:w-auto">Add Product</button>
         </form>
+        <button id="closeAddProductModal" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Close</button>
     </div>
+</div>
 
-    <!-- Add Brand Form -->
-    <div id="addBrandForm" class="hidden bg-white shadow-lg rounded-lg p-6 mb-4">
+<!-- Add Brand Modal -->
+<div id="addBrandModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center p-4">
+    <div class="bg-white rounded-lg w-full max-w-md p-6">
         <h2 class="text-xl font-bold mb-4">Add Brand</h2>
         <form method="POST" action="{% url 'add_brand' %}">
             {% csrf_token %}
@@ -77,138 +124,177 @@
             <!-- Submit Button -->
             <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 w-full sm:w-auto">Add Brand</button>
         </form>
-    </div>
-
-    <!-- Product List -->
-    <div class="bg-white shadow-lg rounded-lg p-6 overflow-x-auto">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Product List</h1>
-        <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Name</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Category</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Price</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Sales Price</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                {% for product in products %}
-                <tr>
-                    <td class="px-4 py-3 text-sm text-gray-700">{{ product.name }}</td>
-                    <td class="px-4 py-3 text-sm text-gray-700">{{ product.category.name }}</td>
-                    <td class="px-4 py-3 text-sm text-gray-700">₹{{ product.regular_price }}</td>
-                    <td class="px-4 py-3 text-sm text-gray-700">₹{{ product.sales_price }}</td>
-                    <td class="px-4 py-3 text-sm">
-                        {% if product.is_blocked %}
-                        <span class="text-red-600">Blocked</span>
-                        {% else %}
-                        <span class="text-green-600">Active</span>
-                        {% endif %}
-                    </td>
-                    <td class="px-4 py-3 text-sm">
-                        <button class="edit-product-btn text-blue-600 hover:underline" data-product-id="{{ product.id }}">
-                            Edit
-                        </button>
-                        <a href="{% url 'manage_variants' product.id %}" class="text-purple-600 hover:underline ml-2">View Variants</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <button id="closeAddBrandModal" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Close</button>
     </div>
 </div>
 
-<!-- Edit Product Form Template -->
+<!-- Edit Product Modal -->
 {% for product in products %}
-<div id="editProductForm{{ product.id }}" class="hidden bg-white shadow-lg rounded-lg p-6 mb-4">
-    <h2 class="text-xl font-bold mb-4">Edit Product: {{ product.name }}</h2>
-    <form method="POST" action="{% url 'edit_product' product.id %}" enctype="multipart/form-data">
-        {% csrf_token %}
-        <!-- Product Name -->
-        <input type="text" name="name" value="{{ product.name }}" class="w-full border p-2 rounded mb-2" required>
+<div id="editProductModal{{ product.id }}" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center p-4">
+    <div class="bg-white rounded-lg w-full max-w-2xl p-6 overflow-y-auto max-h-screen">
+        <h2 class="text-xl font-bold mb-4">Edit Product: {{ product.name }}</h2>
+        <form method="POST" action="{% url 'edit_product' product.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <!-- Product Name -->
+            <input type="text" name="name" value="{{ product.name }}" class="w-full border p-2 rounded mb-2" required>
 
-        <!-- Category Dropdown -->
-        <select name="category" class="w-full border p-2 rounded mb-2" required>
-            <option value="">Select Category</option>
-            {% for category in categories %}
-                <option value="{{ category.id }}" {% if category.id == product.category.id %}selected{% endif %}>{{ category.name }}</option>
-            {% endfor %}
-        </select>
+            <!-- Category Dropdown -->
+            <select name="category" class="w-full border p-2 rounded mb-2" required>
+                <option value="">Select Category</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category.id == product.category.id %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
 
-        <!-- Description -->
-        <textarea name="description" class="w-full border p-2 rounded mb-2" required>{{ product.description }}</textarea>
+            <!-- Description -->
+            <textarea name="description" class="w-full border p-2 rounded mb-2" required>{{ product.description }}</textarea>
 
-        <!-- Regular Price -->
-        <input type="number" name="regular_price" id="regular_price{{ product.id }}" value="{{ product.regular_price }}" class="w-full border p-2 rounded mb-2" required>
+            <!-- Regular Price -->
+            <input type="number" name="regular_price" id="regular_price{{ product.id }}" value="{{ product.regular_price }}" class="w-full border p-2 rounded mb-2" required>
 
-        <!-- Offer Percentage -->
-        <input type="number" name="offer_percentage" id="offer_percentage{{ product.id }}" value="{{ product.offer_percentage }}" class="w-full border p-2 rounded mb-2" min="0" max="100">
+            <!-- Offer Percentage -->
+            <input type="number" name="offer_percentage" id="offer_percentage{{ product.id }}" value="{{ product.offer_percentage }}" class="w-full border p-2 rounded mb-2" min="0" max="100">
 
-        <!-- Sales Price (Readonly) -->
-        <input type="number" name="sales_price" id="sales_price{{ product.id }}" value="{{ product.sales_price }}" class="w-full border p-2 rounded mb-2" readonly>
+            <!-- Sales Price (Readonly) -->
+            <input type="number" name="sales_price" id="sales_price{{ product.id }}" value="{{ product.sales_price }}" class="w-full border p-2 rounded mb-2" readonly>
 
-        <!-- Image Upload and Cropping -->
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Upload Product Image</label>
-            <input type="file" id="imageInput{{ product.id }}" name="image" accept="image/*" class="w-full border p-2 rounded mb-2">
-            <div class="relative w-60 h-60 border rounded-md overflow-hidden mt-2">
-                <img id="imagePreview{{ product.id }}" class="hidden w-full h-full object-cover" src="{{ product.image.url }}">
+            <!-- Image Upload and Cropping -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Upload Product Image</label>
+                <input type="file" id="imageInput{{ product.id }}" name="image" accept="image/*" class="w-full border p-2 rounded mb-2">
+                <div class="relative w-60 h-60 border rounded-md overflow-hidden mt-2">
+                    <img id="imagePreview{{ product.id }}" class="w-full h-full object-cover" 
+                        src="{{ product.image.url }}" {% if not product.image %} style="display:none;" {% endif %}>
+                </div>
+                
+                <button type="button" id="cropButton{{ product.id }}" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Crop Image</button>
             </div>
-            <button type="button" id="cropButton{{ product.id }}" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Crop Image</button>
-        </div>
 
-        <!-- Hidden Input for Cropped Image -->
-        <input type="hidden" name="cropped_image" id="croppedImageInput{{ product.id }}">
+            <!-- Hidden Input for Cropped Image -->
+            <input type="hidden" name="cropped_image" id="croppedImageInput{{ product.id }}">
 
-        <select name="brand" id="brandSelect{{ product.id }}" class="w-full border p-2 rounded mb-2" required>
-            <option value="" disabled>Select Brand</option>
-            {% for brand in brands %}
-                <option value="{{ brand.id }}" data-offer="{{ brand.offer_percentage|default:0 }}" 
-                    {% if brand.id == product.brand.id %}selected{% endif %}>
-                    {{ brand.name }}
-                </option>
-            {% endfor %}
-        </select>
-        <input type="hidden" id="brand_offer{{ product.id }}" value="{{ product.brand.offer_percentage|default:0 }}">
+            <!-- Brand Dropdown -->
+            <select name="brand" id="brandSelect{{ product.id }}" class="w-full border p-2 rounded mb-2" required>
+                <option value="" disabled>Select Brand</option>
+                {% for brand in brands %}
+                    <option value="{{ brand.id }}" data-offer="{{ brand.offer_percentage|default:0 }}" 
+                        {% if brand.id == product.brand.id %}selected{% endif %}>
+                        {{ brand.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <input type="hidden" id="brand_offer{{ product.id }}" value="{{ product.brand.offer_percentage|default:0 }}">
 
-        <!-- Submit Button -->
-        <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 w-full sm:w-auto">Update Product</button>
-    </form>
+            <!-- Submit Button -->
+            <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 w-full sm:w-auto">Update Product</button>
+        </form>
+        <button id="closeEditProductModal{{ product.id }}" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Close</button>
+    </div>
 </div>
 {% endfor %}
 
-<!-- JavaScript for Toggles, Image Cropping, and Edit Product -->
+<!-- JavaScript for Modals, Image Cropping, and Price Calculation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Toggle Edit Product Form
-        function toggleEditProduct(productId) {
-            const editForm = document.getElementById(`editProductForm${productId}`);
-            if (editForm) {
-                editForm.classList.toggle("hidden");
-            }
+    document.addEventListener("DOMContentLoaded", function () {
+        // Modal Toggles
+        const openAddProductModal = document.getElementById('openAddProductModal');
+        const closeAddProductModal = document.getElementById('closeAddProductModal');
+        const addProductModal = document.getElementById('addProductModal');
+
+        const openAddBrandModal = document.getElementById('openAddBrandModal');
+        const closeAddBrandModal = document.getElementById('closeAddBrandModal');
+        const addBrandModal = document.getElementById('addBrandModal');
+
+        if (openAddProductModal && closeAddProductModal && addProductModal) {
+            openAddProductModal.addEventListener('click', () => addProductModal.classList.remove('hidden'));
+            closeAddProductModal.addEventListener('click', () => addProductModal.classList.add('hidden'));
         }
 
-        // Add event listeners to each "Edit" button
-        document.querySelectorAll(".edit-product-btn").forEach(button => {
-            button.addEventListener("click", function() {
-                const productId = this.getAttribute("data-product-id");
-                toggleEditProduct(productId);
+        if (openAddBrandModal && closeAddBrandModal && addBrandModal) {
+            openAddBrandModal.addEventListener('click', () => addBrandModal.classList.remove('hidden'));
+            closeAddBrandModal.addEventListener('click', () => addBrandModal.classList.add('hidden'));
+        }
+
+        // Edit Product Modal Toggles
+        document.querySelectorAll('.edit-product-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const productId = this.getAttribute('data-product-id');
+                const editModal = document.getElementById(`editProductModal${productId}`);
+                if (editModal) {
+                    editModal.classList.remove('hidden');
+                }
             });
         });
-    });
 
-    document.addEventListener("DOMContentLoaded", function () {
-        // Function to calculate sales price based on the highest offer (product or brand)
+        document.querySelectorAll('[id^="closeEditProductModal"]').forEach(button => {
+            button.addEventListener('click', function () {
+                const productId = this.id.replace('closeEditProductModal', '');
+                const editModal = document.getElementById(`editProductModal${productId}`);
+                if (editModal) {
+                    editModal.classList.add('hidden');
+                }
+            });
+        });
+
+        // Image Cropping
+        function initializeCropper(imageInputId, imagePreviewId, cropButtonId, croppedImageInputId) {
+            const imageInput = document.getElementById(imageInputId);
+            const imagePreview = document.getElementById(imagePreviewId);
+            const cropButton = document.getElementById(cropButtonId);
+            const croppedImageInput = document.getElementById(croppedImageInputId);
+
+            let cropper;
+
+            imageInput.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.classList.remove('hidden');
+
+                        if (cropper) {
+                            cropper.destroy();
+                        }
+                        cropper = new Cropper(imagePreview, {
+                            aspectRatio: 1,
+                            viewMode: 1,
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            cropButton.addEventListener('click', function () {
+                if (cropper) {
+                    const canvas = cropper.getCroppedCanvas();
+                    canvas.toBlob(function (blob) {
+                        const reader = new FileReader();
+                        reader.onloadend = function () {
+                            croppedImageInput.value = reader.result;
+                        };
+                        reader.readAsDataURL(blob);
+                    });
+                }
+            });
+        }
+
+        // Initialize Cropper for Add Product Form
+        initializeCropper('imageInput', 'imagePreview', 'cropButton', 'croppedImageInput');
+
+        // Initialize Cropper for Edit Product Forms
+        {% for product in products %}
+            initializeCropper('imageInput{{ product.id }}', 'imagePreview{{ product.id }}', 'cropButton{{ product.id }}', 'croppedImageInput{{ product.id }}');
+        {% endfor %}
+
+        // Price Calculation Logic
         function calculateSalesPrice(regularPrice, productOffer, brandOffer) {
-            let highestOffer = Math.max(productOffer || 0, brandOffer || 0);
+            const highestOffer = Math.max(productOffer || 0, brandOffer || 0);
             return regularPrice - (regularPrice * (highestOffer / 100));
         }
 
-        // Function to update sales price when inputs change
         function updateSalesPrice(regularPriceInput, offerPercentageInput, salesPriceInput, brandSelect, brandOfferInput) {
             function recalculate() {
                 const regularPrice = parseFloat(regularPriceInput.value) || 0;
@@ -217,36 +303,35 @@
                 salesPriceInput.value = calculateSalesPrice(regularPrice, productOffer, brandOffer).toFixed(2);
             }
 
-            // Add event listeners for input changes
-            regularPriceInput.addEventListener("input", recalculate);
-            offerPercentageInput.addEventListener("input", recalculate);
-            brandSelect.addEventListener("change", function () {
+            regularPriceInput.addEventListener('input', recalculate);
+            offerPercentageInput.addEventListener('input', recalculate);
+            brandSelect.addEventListener('change', function () {
                 const selectedBrand = brandSelect.options[brandSelect.selectedIndex];
-                brandOfferInput.value = selectedBrand.getAttribute("data-offer") || 0;
+                brandOfferInput.value = selectedBrand.getAttribute('data-offer') || 0;
                 recalculate();
             });
 
             recalculate(); // Initial calculation
         }
 
-        // Apply logic for Add Product form
-        const regularPriceInput = document.getElementById("regular_price");
-        const offerPercentageInput = document.getElementById("offer_percentage");
-        const salesPriceInput = document.getElementById("sales_price");
-        const brandSelect = document.getElementById("brandSelect");
-        const brandOfferInput = document.getElementById("brand_offer");
+        // Apply Price Calculation for Add Product Form
+        const regularPriceInput = document.getElementById('regular_price');
+        const offerPercentageInput = document.getElementById('offer_percentage');
+        const salesPriceInput = document.getElementById('sales_price');
+        const brandSelect = document.getElementById('brandSelect');
+        const brandOfferInput = document.getElementById('brand_offer');
 
         if (regularPriceInput && offerPercentageInput && salesPriceInput && brandSelect && brandOfferInput) {
             updateSalesPrice(regularPriceInput, offerPercentageInput, salesPriceInput, brandSelect, brandOfferInput);
         }
 
-        // Apply logic for each Edit Product form
+        // Apply Price Calculation for Edit Product Forms
         {% for product in products %}
-            const regularPriceInput{{ product.id }} = document.getElementById("regular_price{{ product.id }}");
-            const offerPercentageInput{{ product.id }} = document.getElementById("offer_percentage{{ product.id }}");
-            const salesPriceInput{{ product.id }} = document.getElementById("sales_price{{ product.id }}");
-            const brandSelect{{ product.id }} = document.getElementById("brandSelect{{ product.id }}");
-            const brandOfferInput{{ product.id }} = document.getElementById("brand_offer{{ product.id }}");
+            const regularPriceInput{{ product.id }} = document.getElementById('regular_price{{ product.id }}');
+            const offerPercentageInput{{ product.id }} = document.getElementById('offer_percentage{{ product.id }}');
+            const salesPriceInput{{ product.id }} = document.getElementById('sales_price{{ product.id }}');
+            const brandSelect{{ product.id }} = document.getElementById('brandSelect{{ product.id }}');
+            const brandOfferInput{{ product.id }} = document.getElementById('brand_offer{{ product.id }}');
 
             if (regularPriceInput{{ product.id }} && offerPercentageInput{{ product.id }} && salesPriceInput{{ product.id }} && brandSelect{{ product.id }} && brandOfferInput{{ product.id }}) {
                 updateSalesPrice(regularPriceInput{{ product.id }}, offerPercentageInput{{ product.id }}, salesPriceInput{{ product.id }}, brandSelect{{ product.id }}, brandOfferInput{{ product.id }});
@@ -254,5 +339,4 @@
         {% endfor %}
     });
 </script>
-
 {% endblock %}

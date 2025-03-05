@@ -489,7 +489,6 @@ def add_brand(request):
 @never_cache
 def add_product(request):
     if request.method == "POST":
-        # Collect all inputs
         name = request.POST.get('name', '').strip()
         category_id = request.POST.get('category')
         description = request.POST.get('description', '').strip()
@@ -498,116 +497,69 @@ def add_product(request):
         brand_id = request.POST.get('brand')
         image = request.FILES.get('image')
         cropped_image = request.POST.get('cropped_image')
-
-        # Comprehensive Error Tracking
+        
         errors = []
-
-        # Name Validation
-        if not name:
-            errors.append("Product name cannot be empty.")
-        elif len(name) < 3:
-            errors.append("Product name must be at least 3 characters long.")
-        elif len(name) > 200:
-            errors.append("Product name cannot exceed 200 characters.")
-        elif not re.match(r'^[A-Za-z0-9\s\-&.()]+$', name):
-            errors.append("Product name contains invalid characters.")
-
-        # Category Validation
+        
         try:
             category = Category.objects.get(id=category_id) if category_id else None
             if not category:
                 errors.append("Invalid category selected.")
         except (Category.DoesNotExist, ValueError):
             errors.append("Invalid category selected.")
-
-        # Brand Validation
+        
         try:
             brand = Brand.objects.get(id=brand_id) if brand_id else None
-            if not brand:
-                errors.append("Invalid brand selected.")
         except (Brand.DoesNotExist, ValueError):
             errors.append("Invalid brand selected.")
-
-        # Regular Price Validation
+        
         try:
             regular_price = Decimal(regular_price)
             if regular_price <= 0:
                 errors.append("Regular price must be a positive number.")
-            elif regular_price > 1000000:  # Reasonable max price limit
-                errors.append("Regular price is unrealistically high.")
         except (ValueError, TypeError, InvalidOperation):
-            errors.append("Regular price must be a valid positive number.")
-
-        # Offer Percentage Validation
+            errors.append("Invalid regular price.")
+        
         if offer_percentage:
             try:
                 offer_percentage = Decimal(offer_percentage)
                 if offer_percentage < 0 or offer_percentage > 100:
                     errors.append("Offer percentage must be between 0 and 100.")
             except (ValueError, TypeError, InvalidOperation):
-                errors.append("Offer percentage must be a valid number.")
+                errors.append("Invalid offer percentage.")
         else:
             offer_percentage = Decimal(0)
-
-        # Description Validation
-        if description and len(description) > 2000:
-            errors.append("Description cannot exceed 2000 characters.")
-
-        # Image Validation
+        
+        product_image = None
         if cropped_image:
             try:
-                # Base64 image processing with error handling
                 format, imgstr = cropped_image.split(';base64,')
                 ext = format.split('/')[-1]
                 imgdata = base64.b64decode(imgstr)
                 
-                # Additional image validation
                 with Image.open(BytesIO(imgdata)) as img:
-                    # Check image dimensions and format
                     if img.width > 2000 or img.height > 2000:
                         errors.append("Image dimensions are too large.")
                     if img.format not in ['JPEG', 'PNG', 'WEBP']:
                         errors.append("Unsupported image format.")
+                
+                product_image = ContentFile(imgdata, name=f'cropped_product_{name}.{ext}')
             except Exception as e:
                 errors.append(f"Error processing cropped image: {str(e)}")
         elif image:
-            # Standard image file validation
-            if image.size > MAX_IMAGE_SIZE:
-                errors.append("Image size should not exceed 5MB.")
-            
-            if not image.content_type.startswith('image/'):
-                errors.append("Invalid image format. Please upload a valid image file.")
-            
-            # Optional: Add dimension check
-            with Image.open(image) as img:
-                if img.width > 2000 or img.height > 2000:
-                    errors.append("Image dimensions are too large.")
-
-        # If any errors, return with error messages
+            product_image = image
+        
         if errors:
             for error in errors:
                 messages.error(request, error)
             return redirect('admin_product')
-
-        # Pricing Calculation with Error Handling
+        
         try:
-            # Get Brand Offer (if applicable)
             brand_offer = Decimal(brand.offer_percentage) if brand else Decimal(0)
             final_offer = max(offer_percentage, brand_offer)
-
-            # Calculate Sales Price
-            sales_price = (regular_price * (Decimal(100) - final_offer) / Decimal(100)) \
-                if final_offer > 0 else regular_price
-
-            # Prepare image
-            product_image = image if image else (
-                ContentFile(base64.b64decode(imgstr.split(';base64,')[1]), 
-                            name=f'product_{name}_image.{ext}') if cropped_image else None
-            )
-
-            # Create Product with Atomic Transaction
+            sales_price = (regular_price * (Decimal(100) - final_offer) / Decimal(100)) if final_offer > 0 else regular_price
+            
             with transaction.atomic():
-                product = Product.objects.create(
+                Product.objects.create(
                     name=name,
                     category=category,
                     description=description,
@@ -617,13 +569,13 @@ def add_product(request):
                     brand=brand,
                     image=product_image
                 )
-
             messages.success(request, f'Product "{name}" added successfully!')
         except Exception as e:
             messages.error(request, f'An error occurred: {str(e)}')
             return redirect('admin_product')
 
     return redirect('admin_product')
+
 
 
 
