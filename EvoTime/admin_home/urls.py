@@ -1,7 +1,8 @@
 from django.urls import path
 from . import views
 from .views import user_viewer, toggle_user_block
-
+from django.conf import settings
+from django.conf.urls.static import static
 urlpatterns = [
     # Authentication
     path('login/', views.admin_login, name='admin_login'),
@@ -51,4 +52,4 @@ urlpatterns = [
     path('coupons/', views.coupon_management, name='coupon_management'),
     path('coupons/details/<int:coupon_id>/', views.get_coupon_details, name='get_coupon_details'),
     path('coupons/delete/<int:coupon_id>/', views.delete_coupon, name='delete_coupon'),
-]
+]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

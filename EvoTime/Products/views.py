@@ -9,6 +9,7 @@ from django.db import transaction
 from django.http import JsonResponse
 
 @block_superuser_navigation
+@never_cache
 @login_required
 def product_detail_view(request, id):
     product = get_object_or_404(Product, id=id)

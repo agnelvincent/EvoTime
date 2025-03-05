@@ -11,7 +11,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = ["www.timeevo.life", "timeevo.life", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["www.timeevo.life", "timeevo.life", "localhost", "127.0.0.1" ,]
 
 AUTH_USER_MODEL = 'user_home.CustomUser'
 
@@ -107,7 +107,7 @@ ROOT_URLCONF = 'EvoTime.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

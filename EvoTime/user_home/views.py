@@ -136,6 +136,7 @@ def user_signup(request):
 
 
 
+@login_required
 @never_cache
 def verify_otp(request):
     if request.method == 'POST':
@@ -179,6 +180,7 @@ def verify_otp(request):
     return render(request, 'verify_otp.html', {'user_data': user_data})
 
 
+@login_required
 @never_cache
 def resend_otp(request):
     user_data = request.session.get('user_data')
@@ -199,6 +201,7 @@ def resend_otp(request):
     messages.success(request, "A new OTP has been sent to your email.")
     return redirect('verify_otp')
 
+@login_required
 @never_cache
 def forgot_password(request):
     if request.method == 'POST':
@@ -223,6 +226,7 @@ def forgot_password(request):
             messages.error(request, 'No account found with this email address.')
     return render(request, 'password/forgot_password.html')
 
+@login_required
 @never_cache
 def verify_reset_otp(request):
     if request.method == 'POST':
@@ -251,6 +255,7 @@ def verify_reset_otp(request):
     reset_data = request.session.get('reset_data')
     return render(request, 'password/verify_reset_otp.html', {'reset_data': reset_data})
 
+@login_required
 @never_cache
 def resend_reset_otp(request):
     reset_data = request.session.get('reset_data')
@@ -269,6 +274,7 @@ def resend_reset_otp(request):
     messages.success(request, "A new OTP has been sent to your email.")
     return redirect('verify_reset_otp')
 
+@login_required
 @never_cache
 def reset_password(request):
     reset_data = request.session.get('reset_data')
@@ -337,6 +343,9 @@ def home_view(request):
     return render(request, 'home.html', context)
 
 
+@block_superuser_navigation
+@never_cache
+@login_required
 def all_products(request):
     products = Product.objects.filter(is_blocked=False)
     brands = Brand.objects.all()
@@ -366,13 +375,17 @@ def all_products(request):
     return render(request, 'all_products.html', context)
 
 
-
+@block_superuser_navigation
+@never_cache
+@login_required
 def brand_list(request):
     brands = Brand.objects.all()  # Fetch all brands
     return render(request, 'brand.html', {'brands': brands})
 
 
-
+@block_superuser_navigation
+@never_cache
+@login_required
 def brand_products(request, brand_id):
     try:
         brand = Brand.objects.get(id=brand_id)
@@ -400,11 +413,16 @@ def brand_products(request, brand_id):
         })
     except Brand.DoesNotExist:
         return JsonResponse({'error': 'Brand not found'}, status=404)
-    
+
+@block_superuser_navigation
+@never_cache
+@login_required    
 def about_us(request):
     return render(request , 'about.html')
 
 
+@block_superuser_navigation
+@never_cache
 @login_required
 def account_overview(request):
     user = request.user  # Get the logged-in user
@@ -578,6 +596,7 @@ def delete_address(request, address_id):
 
 
 
+@block_superuser_navigation
 @never_cache
 @login_required
 def order_list_view(request):
@@ -587,7 +606,7 @@ def order_list_view(request):
     status = request.GET.get('status')
     if status:
         orders_list = orders_list.filter(status__status=status)
-    
+
     # Pagination
     paginator = Paginator(orders_list, 5)  # Show 10 orders per page
     page_number = request.GET.get('page')
@@ -595,6 +614,9 @@ def order_list_view(request):
     
     return render(request, 'user_profile/order_list.html', {'orders': orders})
 
+@block_superuser_navigation
+@never_cache
+@login_required
 def generate_invoice(request, item_id):
     item = get_object_or_404(OrderItem, id=item_id)
     user = item.order.user
@@ -689,6 +711,8 @@ def generate_invoice(request, item_id):
 
 
 
+@block_superuser_navigation
+@never_cache
 @login_required
 def order_item_detail(request, item_id):
     """
@@ -709,6 +733,8 @@ def order_item_detail(request, item_id):
     return render(request, 'user_profile/order_item_detail.html', context)
 
 
+@block_superuser_navigation
+@never_cache
 @login_required
 def cancel_order_item(request, item_id):
     """
@@ -763,6 +789,8 @@ def cancel_order_item(request, item_id):
 
 
 
+@block_superuser_navigation
+@never_cache
 @login_required
 def return_order_item(request, item_id):
     if request.method != 'POST':
@@ -795,6 +823,8 @@ def return_order_item(request, item_id):
 
 
 
+@block_superuser_navigation
+@never_cache
 @login_required
 def wallet_view(request):
     """Display wallet balance and transaction history with pagination"""
@@ -824,7 +854,9 @@ def wallet_view(request):
     return render(request, "user_profile/wallet_page.html", context)
 
 
-
+@block_superuser_navigation
+@never_cache
+@login_required
 def search_products(request):
     query = request.GET.get('q', '')
     if query:
@@ -840,9 +872,13 @@ def order_detail(request, order_id):
 
 @block_superuser_navigation
 @never_cache
+@login_required
 def user_logout(request):
     logout(request)
     return redirect('user_login')
+
+def custom_page_not_found_view(request, exception):
+    return render(request, '404page.html', status=404)
 
 
 

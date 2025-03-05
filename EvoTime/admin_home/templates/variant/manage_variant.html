@@ -1,129 +1,173 @@
 {% extends 'admin_dashboard.html' %}
 
 {% block admin_side %}
-<div class="max-w-7xl mx-auto p-6 bg-white shadow-lg rounded-lg relative">
-    <h1 class="text-2xl font-bold mb-4">Variants for {{ product.name }}</h1>
+<div class="max-w-7xl mx-auto p-4 sm:p-6 bg-white shadow-lg rounded-lg">
+    <!-- Page Title -->
+    <h1 class="text-2xl font-bold mb-6">Variants for {{ product.name }}</h1>
 
-    <!-- Add Variant Section -->
-    <a href="javascript:void(0);" onclick="toggleAddDropdown()" class="mb-4 inline-block px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+    <!-- Add Variant Button -->
+    <button onclick="openAddVariantModal()" class="mb-6 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200">
         Add New Variant
-    </a>
-    <div id="addVariantDropdown" class="hidden absolute border border-gray-300 p-4 rounded mt-2 w-full z-10">
-        <h2 class="text-lg font-semibold mb-4">Add New Variant</h2>
-        <form id="addVariantForm" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="add">
-            <input type="text" name="color" placeholder="Color" class="border border-gray-300 p-2 w-full mb-2" required>
-            <input type="number" name="stock" placeholder="Stock" class="border border-gray-300 p-2 w-full mb-2" required>
-            <input type="file" name="image1" class="border border-gray-300 p-2 w-full mb-2" accept="image/*">
-            <input type="file" name="image2" class="border border-gray-300 p-2 w-full mb-2" accept="image/*">
-            <input type="file" name="image3" class="border border-gray-300 p-2 w-full mb-2" accept="image/*">
-            <input type="file" name="image4" class="border border-gray-300 p-2 w-full mb-2" accept="image/*">
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Add Variant</button>
-            <button type="button" class="mt-2 text-red-500" onclick="toggleAddDropdown()">Cancel</button>
-        </form>
+    </button>
+
+    <!-- Variants Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Color</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Stock</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for variant in variants %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 text-gray-700 font-medium">{{ variant.color }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ variant.stock }}</td>
+                    <td class="px-4 py-3">
+                        <div class="flex space-x-4">
+                            <button 
+                                onclick="openEditVariantModal('{{ variant.id }}', '{{ variant.color }}', '{{ variant.stock }}')" 
+                                class="text-blue-600 hover:underline">
+                                Edit
+                            </button>
+                            <button 
+                                onclick="deleteVariant('{{ variant.id }}')" 
+                                class="text-red-500 hover:underline">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-gray-600 py-4">No variants found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
-    <!-- View Variants Table -->
-    <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden mt-4">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Color</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Stock</th>
-                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-            {% for variant in variants %}
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 text-gray-700 font-medium whitespace-nowrap">{{ variant.color }}</td>
-                <td class="px-6 py-4 text-gray-600 whitespace-nowrap">{{ variant.stock }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex items-center space-x-4">
-                        <button 
-                            class="edit-button text-blue-600 hover:underline" 
-                            data-id="{{ variant.id }}"
-                            data-color="{{ variant.color }}"
-                            data-stock="{{ variant.stock }}"
-                            onclick="toggleEditDropdown(this)">
-                            Edit
-                        </button>
-                        <button 
-                            class="delete-button text-red-500 hover:underline" 
-                            data-id="{{ variant.id }}">
-                            Delete
-                        </button>
-                    </div>
-                    <div class="edit-dropdown hidden absolute border border-gray-300 p-4 rounded mt-2 w-full z-10">
-                        <form class="editVariantForm" method="POST" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="edit">
- <input type="hidden" name="variant_id" value="{{ variant.id }}">
-                            <input type="text" name="color" placeholder="Color" class="border border-gray-300 p-2 w-full mb-2" required>
-                            <input type="number" name="stock" placeholder="Stock" class="border border-gray-300 p-2 w-full mb-2" required>
-                            <input type="file" name="image1" class="border border-gray-300 p-2 w-full mb-2" accept="image/*">
-                            <input type="file" name="image2" class="border border-gray-300 p-2 w-full mb-2" accept="image/*">
-                            <input type="file" name="image3" class="border border-gray-300 p-2 w-full mb-2" accept="image/*">
-                            <input type="file" name="image4" class="border border-gray-300 p-2 w-full mb-2" accept="image/*">
-                            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Update Variant</button>
-                            <button type="button" class="mt-2 text-red-500" onclick="toggleEditDropdown(this)">Cancel</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="3" class="text-gray-600 text-center">No variants found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <!-- Add Variant Modal -->
+    <div id="addVariantModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+            <h2 class="text-xl font-bold mb-4">Add New Variant</h2>
+            <form id="addVariantForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add">
+                <div class="space-y-4">
+                    <input type="text" name="color" placeholder="Color" class="w-full border border-gray-300 p-2 rounded" required>
+                    <input type="number" name="stock" placeholder="Stock" class="w-full border border-gray-300 p-2 rounded" required>
+                    <input type="file" name="image1" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
+                    <input type="file" name="image2" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
+                    <input type="file" name="image3" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
+                    <input type="file" name="image4" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" onclick="closeAddVariantModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Add Variant
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Variant Modal -->
+    <div id="editVariantModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+            <h2 class="text-xl font-bold mb-4">Edit Variant</h2>
+            <form id="editVariantForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="variant_id" id="editVariantId">
+                <div class="space-y-4">
+                    <input type="text" name="color" id="editVariantColor" placeholder="Color" class="w-full border border-gray-300 p-2 rounded" required>
+                    <input type="number" name="stock" id="editVariantStock" placeholder="Stock" class="w-full border border-gray-300 p-2 rounded" required>
+                    <input type="file" name="image1" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
+                    <input type="file" name="image2" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
+                    <input type="file" name="image3" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
+                    <input type="file" name="image4" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" onclick="closeEditVariantModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Update Variant
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>
     const productId = {{ product.id }};
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+    // Add Variant Modal Functions
+    function openAddVariantModal() {
+        document.getElementById('addVariantModal').classList.remove('hidden');
+    }
+
+    function closeAddVariantModal() {
+        document.getElementById('addVariantModal').classList.add('hidden');
+    }
+
+    // Edit Variant Modal Functions
+    function openEditVariantModal(variantId, color, stock) {
+        document.getElementById('editVariantId').value = variantId;
+        document.getElementById('editVariantColor').value = color;
+        document.getElementById('editVariantStock').value = stock;
+        document.getElementById('editVariantModal').classList.remove('hidden');
+    }
+
+    function closeEditVariantModal() {
+        document.getElementById('editVariantModal').classList.add('hidden');
+    }
+
+    // Delete Variant Function
+    async function deleteVariant(variantId) {
+        if (!confirm('Are you sure you want to delete this variant?')) return;
+
+        try {
+            const response = await fetch(`/admin-panel/variants/${variantId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
                 }
-            }
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to delete variant');
+
+            alert(data.message);
+            window.location.reload();
+        } catch (error) {
+            console.error('Error deleting variant:', error);
+            alert(error.message || 'An error occurred while deleting the variant');
         }
-        return cookieValue;
     }
 
-    function toggleAddDropdown() {
-        const dropdown = document.getElementById('addVariantDropdown');
-        dropdown.classList.toggle('hidden');
-    }
-
-    function toggleEditDropdown(button) {
-        const dropdown = button.closest('td').querySelector('.edit-dropdown');
-        const form = dropdown.querySelector('form');
-        
-        // Set form values when opening
-        if (dropdown.classList.contains('hidden')) {
-            const variantData = button.dataset;
-            form.querySelector('[name="color"]').value = variantData.color;
-            form.querySelector('[name="stock"]').value = variantData.stock;
-            form.querySelector('[name="variant_id"]').value = variantData.id;
-        }
-        
-        dropdown.classList.toggle('hidden');
-    }
-
-    // Add Variant Form Handler
+    // Form Submission Handlers
     document.getElementById('addVariantForm').addEventListener('submit', async function(e) {
         e.preventDefault();
+        await submitForm(e.target, `/admin-panel/products/${productId}/variants/add/`);
+    });
+
+    document.getElementById('editVariantForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const variantId = document.getElementById('editVariantId').value;
+        await submitForm(e.target, `/admin-panel/variants/${variantId}/edit/`);
+    });
+
+    async function submitForm(form, url) {
         try {
-            const formData = new FormData(this);
-            const response = await fetch(`/admin-panel/products/${productId}/variants/add/`, {
+            const formData = new FormData(form);
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken')
@@ -132,81 +176,22 @@
             });
 
             const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to add variant');
-            }
+            if (!response.ok) throw new Error(data.error || 'Failed to process request');
 
             alert(data.message);
             window.location.reload();
         } catch (error) {
-            console.error('Error adding variant:', error);
-            alert(error.message || 'An error occurred while adding the variant');
+            console.error('Error:', error);
+            alert(error.message || 'An error occurred');
         }
-    });
+    }
 
-    // Edit Variant Form Handler
-    document.addEventListener('submit', async function(e) {
-        if (e.target.classList.contains('editVariantForm')) {
-            e.preventDefault();
-            try {
-                const variantId = e.target.querySelector('input[name="variant_id"]').value;
-                const formData = new FormData(e.target);
-                
-                const response = await fetch(`/admin-panel/variants/${variantId}/edit/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: formData
-                });
-
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to update variant');
-                }
-
-                alert(data.message);
-                window.location.reload();
-            } catch (error) {
-                console.error('Error updating variant:', error);
-                alert(error.message || 'An error occurred while updating the variant');
-            }
-        }
-    });
-
-    // Delete Variant Handler
-    document.addEventListener('click', async function(e) {
-        if (e.target.classList.contains('delete -button')) {
-            const variantId = e.target.getAttribute('data-id');
-            
-            if (!confirm('Are you sure you want to delete this variant?')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/admin-panel/variants/${variantId}/delete/`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                });
-
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to delete variant');
-                }
-
-                alert(data.message);
-                window.location.reload();
-            } catch (error) {
-                console.error('Error deleting variant:', error);
-                alert(error.message || 'An error occurred while deleting the variant');
-            }
-        }
-    });
+    // Utility Function to Get CSRF Token
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
 </script>
 
 {% endblock %}

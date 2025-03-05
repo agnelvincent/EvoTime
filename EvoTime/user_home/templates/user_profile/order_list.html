@@ -60,8 +60,8 @@
                                             <img src="{{ item.product_variant.image1.url }}" alt="{{ item.product_variant.product.name }}" class="w-16 h-16 object-cover rounded-lg">
                                             <div>
                                                 <p class="text-sm font-medium text-gray-800">{{ item.product_variant.product.name }}</p>
-                                                <p class="text-sm text-gray-500">{{ item.quantity }} x ${{ item.product_variant.price }}</p>
-                                                <p class="text-sm text-gray-500">Total: ${{ order.total_amount }}</p>
+                                                <p class="text-sm text-gray-500">{{ item.quantity }} x ${{ item.product_variant.product.sales_price }}</p>
+                                                <p class="text-sm text-gray-500">Total: ${{ item.total_price  }}</p>
                                             </div>
                                         </div>
                                         <div class="flex space-x-2">

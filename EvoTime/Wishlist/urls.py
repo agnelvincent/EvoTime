@@ -1,9 +1,11 @@
 from django.urls import path
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.wishlist_view, name='wishlist'),
     path('add/<int:variant_id>/', views.add_to_wishlist, name='add_to_wishlist'),
     path('remove/<int:variant_id>/', views.remove_from_wishlist, name='remove_from_wishlist'),
     path('status/', views.wishlist_status, name='wishlist_status')
-]
+]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.view_cart, name='view_cart'),
@@ -17,4 +19,4 @@ urlpatterns = [
     path('verify-payment/<int:order_id>/', views.verify_payment, name='verify_payment'),
     path("apply-coupon/", views.apply_coupon, name="apply_coupon"),
     path('remove-coupon/', views.remove_coupon, name='remove_coupon')
-]
+]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from Products.views import product_detail_view
 from django.contrib.auth import views as auth_views
+from django.conf.urls import handler404
 
 
 urlpatterns = [
@@ -39,4 +40,5 @@ urlpatterns = [
     path('orders/item/<int:item_id>/return/', views.return_order_item, name='return_order_item'),
     path("wallet/", views.wallet_view, name="wallet_page"),
 ]
+# handler404 = views.custom_page_not_found_view
 

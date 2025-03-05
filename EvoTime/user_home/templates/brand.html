@@ -1,52 +1,80 @@
-{% extends 'home.html' %}  <!-- Inherit from the parent template -->
+{% extends 'home.html' %}
 
 {% block product %}
-<!-- Brand Section -->
-<section id="brandSection" class="container mx-auto px-4 py-12">
-    <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Our Brands</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {% for brand in brands %}
-        <div 
-            class="brand-card bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:scale-105 cursor-pointer"
-            onclick="showProducts('{{ brand.id }}')"
-        >
-            <div class="p-6 text-center">
-                <div class="bg-gray-100 rounded-full w-24 h-24 mx-auto flex items-center justify-center mb-4">
-                    <span class="text-2xl font-bold text-gray-800">{{ brand.name|slice:":2" }}</span>
+<!-- Brands Section -->
+<section id="brandSection" class="bg-gray-50 py-16 px-4">
+    <div class="container mx-auto max-w-7xl">
+        <h2 class="text-4xl font-extrabold text-center text-gray-900 mb-12 tracking-tight">
+            Our Premium Brands
+        </h2>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {% for brand in brands %}
+            <div class="group">
+                <div 
+                    class="bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer"
+                    onclick="showProducts('{{ brand.id }}')"
+                >
+                    <div class="p-6 text-center">
+                        <div class="bg-gradient-to-br from-blue-100 to-blue-200 rounded-full w-32 h-32 mx-auto mb-6 flex items-center justify-center shadow-md">
+                            <span class="text-4xl font-bold text-blue-800 opacity-80">
+                                {{ brand.name|slice:":2"|upper }}
+                            </span>
+                        </div>
+                        
+                        <h3 class="text-2xl font-semibold text-gray-800 mb-3 group-hover:text-blue-700 transition">
+                            {{ brand.name }}
+                        </h3>
+                        
+                        <p class="text-gray-600 text-sm line-clamp-3">
+                            {{ brand.description|truncatechars:120 }}
+                        </p>
+                        
+                        <div class="mt-4">
+                            <span class="inline-block px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-xs font-medium">
+                                View Products
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ brand.name }}</h3>
-                <p class="text-gray-600 text-sm">{{ brand.description|truncatechars:100 }}</p>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
 </section>
 
-<!-- Product Section (Hidden by default) -->
-<section id="productSection" class="container mx-auto px-4 py-12 hidden">
-    <div class="flex items-center justify-between mb-8">
-        <h2 id="brandName" class="text-3xl font-bold text-gray-800"></h2>
-        <button 
-            onclick="hideProducts()"
-            class="text-gray-600 hover:text-blue-600 transition flex items-center gap-2"
+<!-- Products Section -->
+<section id="productSection" class="bg-gray-50 py-16 px-4 hidden">
+    <div class="container mx-auto max-w-7xl">
+        <div class="flex flex-col md:flex-row items-center justify-between mb-12">
+            <h2 
+                id="brandName" 
+                class="text-4xl font-extrabold text-gray-900 mb-4 md:mb-0 tracking-tight"
+            ></h2>
+            
+            <button 
+                onclick="hideProducts()"
+                class="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors group"
+            >
+                <i class="fas fa-arrow-left group-hover:-translate-x-1 transition"></i>
+                <span class="font-medium">Back to Brands</span>
+            </button>
+        </div>
+        
+        <div 
+            id="productGrid" 
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
         >
-            <i class="fas fa-arrow-left"></i>
-            Back to Brands
-        </button>
-    </div>
-    <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <!-- Products will be dynamically loaded here -->
+            <!-- Products will be dynamically loaded here -->
+        </div>
     </div>
 </section>
 
 <script>
-    // Function to show products for a specific brand
     async function showProducts(brandId) {
         try {
             const response = await fetch(`/brand/${brandId}/`);
             const data = await response.json();
-    
-            console.log("API Response:", data);  // Debugging
     
             if (response.ok) {
                 document.getElementById('brandName').textContent = data.brand.name;
@@ -54,40 +82,60 @@
                 productGrid.innerHTML = '';
     
                 data.products.forEach(product => {
-                    console.log("Product:", product);  // Debugging
-    
                     const productCard = `
-                        <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:scale-105">
-                            <div class="relative">
-                                <img src="${product.image}" alt="${product.name}" class="w-full h-64 object-cover">
-                                <div class="absolute top-2 right-2">
-                                    <button class="bg-white p-2 rounded-full shadow hover:bg-gray-100">
-                                        <i class="far fa-heart text-gray-600"></i>
-                                    </button>
-                                </div>
-                                ${product.discount ? `<div class="absolute top-2 left-2"><span class="bg-red-500 text-white text-sm px-3 py-1 rounded-full font-medium">-${product.discount}%</span></div>` : ''}
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-medium text-gray-800 mb-2">${product.name}</h3>
-                                <div class="flex text-sm text-yellow-400 mb-2">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star-half-alt"></i>
-                                    <span class="text-gray-500 ml-1">(24)</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <span class="text-lg font-bold text-gray-800">₹${product.sales_price}</span>
-                                        ${product.sales_price < product.regular_price ? `<span class="text-gray-400 line-through">₹${product.regular_price}</span>` : ''}
+                        <div class="flex flex-col bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group">
+                            <div class="relative h-64 overflow-hidden">
+                                <img 
+                                    src="${product.image}" 
+                                    alt="${product.name}" 
+                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                >
+                                
+                                ${product.discount ? `
+                                    <div class="absolute top-4 left-4">
+                                        <span class="bg-red-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
+                                            -${product.discount}%
+                                        </span>
                                     </div>
+                                ` : ''}
+                                
+                                <button class="absolute top-4 right-4 bg-white p-2 rounded-full shadow hover:bg-gray-100 transition">
+                                    <i class="far fa-heart text-gray-600"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="flex flex-col flex-grow p-6">
+                                <h3 class="text-xl font-semibold text-gray-800 mb-2 group-hover:text-blue-700 transition h-12 line-clamp-2">
+                                    ${product.name}
+                                </h3>
+                                
+                                <div class="flex items-center mb-3">
+                                    <div class="flex text-yellow-400 mr-2">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star-half-alt"></i>
+                                    </div>
+                                    <span class="text-gray-500 text-sm">(24)</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center mt-auto">
+                                    <div>
+                                        <span class="text-xl font-bold text-gray-900">₹${product.sales_price}</span>
+                                        ${product.sales_price < product.regular_price ? `
+                                            <span class="text-gray-500 text-sm line-through ml-2">
+                                                ₹${product.regular_price}
+                                            </span>
+                                        ` : ''}
+                                    </div>
+                                    
                                     <button 
-                                        class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition flex items-center gap-2"
+                                        class="bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition flex items-center gap-2"
                                         onclick="addCartItem(${product.variants.length > 0 ? product.variants[0].id : 'null'})"
                                     >
                                         <i class="fas fa-shopping-cart"></i>
-                                        <span>Add</span>
+                                        <span>Add to Cart</span>
                                     </button>
                                 </div>
                             </div>
@@ -106,9 +154,7 @@
             showToast(error.message || 'An error occurred while loading products', 'error');
         }
     }
-    
 
-    // Function to hide products and show brands
     function hideProducts() {
         document.getElementById('productSection').classList.add('hidden');
         document.getElementById('brandSection').classList.remove('hidden');

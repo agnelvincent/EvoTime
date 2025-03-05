@@ -18,15 +18,18 @@ from datetime import timedelta
 from django.conf import settings
 import json
 import razorpay
-from .models import Wallet , Transaction
+from .models import Wallet
 from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
+from user_home.views import block_superuser_navigation
 
 # Create your views here.
 
+@block_superuser_navigation
+@never_cache
 @login_required
 def add_to_cart(request, variant_id):
-    print(f"Received request to add variant {variant_id} to cart.")
+
     if request.method == 'POST':
         if not variant_id:
             return JsonResponse({'success': False, 'error': 'Variant ID is missing'}, status=400)
@@ -68,7 +71,9 @@ def add_to_cart(request, variant_id):
 
 
 
-
+@block_superuser_navigation
+@never_cache
+@login_required
 @require_POST
 def update_quantity(request):
     try:
@@ -108,6 +113,9 @@ def update_quantity(request):
         return JsonResponse({'error': 'Invalid quantity value'}, status=400)
 
 
+@block_superuser_navigation
+@never_cache
+@login_required
 def remove_cart_item(request, item_id):
     if request.method == 'POST':
         # Fetch the CartItem object
@@ -128,8 +136,9 @@ def remove_cart_item(request, item_id):
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
 
-# View cart page (optional)
-
+@block_superuser_navigation
+@never_cache
+@login_required
 def view_cart(request):
     cart = Cart.objects.filter(user=request.user).first()
     if cart:
@@ -141,6 +150,8 @@ def view_cart(request):
 
 
 
+@block_superuser_navigation
+@never_cache
 @login_required
 def checkout(request):
     try:
@@ -176,8 +187,9 @@ def checkout(request):
                 
                 if cart_total >= applied_coupon.min_cart_value:
                     # Use the stored discount amount or recalculate
-                    discount = applied_coupon_data.get('discount_amount', applied_coupon.calculate_discount(cart_total))
-                    total_price = max(cart_total - discount, 0)
+                    cart_total = Decimal(cart_total)  # ✅ Ensure cart total is Decimal
+                    discount = Decimal(applied_coupon_data.get('discount_amount', applied_coupon.calculate_discount(cart_total)))
+                    total_price = max(cart_total - discount, Decimal(0))  # ✅ Use Decimal(0)
                 else:
                     request.session.pop("applied_coupon", None)  # Remove invalid coupon
 
@@ -200,7 +212,9 @@ def checkout(request):
             print("Discounted Total Price:", discounted_total_price)
 
             if discounted_total_price:
-                total_price = discounted_total_price + shipping_charge
+                shipping_charge = Decimal(100)  # ✅ Convert to Decimal
+                total_price = Decimal(discounted_total_price) + shipping_charge  # ✅ Convert both to Decimal
+
             else:
                 total_price = original_total_price + shipping_charge
 
@@ -356,10 +370,25 @@ def checkout(request):
     except Exception as e:
         print(f"Error in checkout: {str(e)}")
         messages.error(request, f"Error: {str(e)}")
-        return redirect("checkout")
+
+        # ✅ Instead of redirecting, render the checkout page with an error message
+        return render(request, "checkout.html", {
+            "cart_items": cart_items if not variant_id else [],
+            "cart_total": cart_total,
+            "discount": discount,
+            "total_price": total_price,
+            "shipping_charge": shipping_charge,
+            "wallet": wallet,
+            "addresses": Address.objects.filter(user=request.user),
+            "buy_now_item": single_variant if variant_id else None,
+            "error": str(e),  # ✅ Pass error to template
+        })
 
 
 
+
+@block_superuser_navigation
+@never_cache
 @login_required
 def buy_now(request, variant_id):
     try:
@@ -380,6 +409,9 @@ def buy_now(request, variant_id):
         return redirect('home')
 
 
+@block_superuser_navigation
+@never_cache
+@login_required
 def create_razorpay_order(request):
     if request.method == "POST":
         data = json.loads(request.body)
@@ -406,7 +438,9 @@ def create_razorpay_order(request):
 
 
 
-@csrf_exempt
+@block_superuser_navigation
+@never_cache
+@login_required
 def verify_razorpay_payment(request):
     if request.method == "POST":
         try:
@@ -456,6 +490,8 @@ def verify_razorpay_payment(request):
 
 
 @csrf_exempt
+@block_superuser_navigation
+@never_cache
 @login_required
 def pay_later(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -468,6 +504,8 @@ def pay_later(request, order_id):
         return JsonResponse({"success": False, "error": "Payment is already completed or not eligible for pay later."})
 
 @csrf_exempt
+@block_superuser_navigation
+@never_cache
 @login_required
 def retry_payment(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -499,6 +537,8 @@ def retry_payment(request, order_id):
     
 
 @csrf_exempt
+@block_superuser_navigation
+@never_cache
 @login_required
 def verify_payment(request, order_id):
     try:
@@ -537,7 +577,9 @@ def verify_payment(request, order_id):
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})
 
-
+@block_superuser_navigation
+@never_cache
+@login_required
 def razorpay_payment_success(request):
     return JsonResponse({"message": "Payment Successful"})
 
@@ -546,6 +588,9 @@ def razorpay_payment_success(request):
 
 
 @require_POST
+@block_superuser_navigation
+@never_cache
+@login_required
 def apply_coupon(request):
     data = json.loads(request.body)
     coupon_code = data.get("coupon_code", "").strip()
@@ -581,6 +626,9 @@ def apply_coupon(request):
 
 
 @require_POST
+@block_superuser_navigation
+@never_cache
+@login_required
 def remove_coupon(request):
     if 'applied_coupon' in request.session:
         del request.session['applied_coupon']
@@ -589,6 +637,8 @@ def remove_coupon(request):
     return JsonResponse({"success": False, "message": "No coupon applied."})
 
 
+@block_superuser_navigation
+@never_cache
 @login_required
 def order_success(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)

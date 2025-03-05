@@ -1,64 +1,78 @@
 {% extends 'admin_dashboard.html' %}
+
 {% block admin_side %}
-<div class="max-w-6xl mx-auto p-6 bg-white shadow-md rounded-md">
-    <h1 class="text-2xl font-bold text-gray-700 mb-4">Manage Categories</h1>
+<div class="flex-1 p-4 sm:p-6 overflow-y-auto">
+    <!-- Page Title -->
+    <h1 class="text-2xl font-bold text-gray-700 mb-6">Manage Categories</h1>
 
     <!-- Table for Categories -->
-    <table class="min-w-full bg-white border border-gray-300 mb-4">
-        <thead class="bg-gray-200">
-            <tr>
-                <th class="border px-4 py-2">#</th>
-                <th class="border px-4 py-2">Name</th>
-                <th class="border px-4 py-2">Status</th>
-                <th class="border px-4 py-2">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for category in categories %}
-            <tr>
-                <td class="border px-4 py-2">{{ forloop.counter }}</td>
-                <td class="border px-4 py-2">{{ category.name }}</td>
-                <td class="border px-4 py-2">
-                    <form method="POST" action="{% url 'edit_category' category.id %}" class="inline">
-                        {% csrf_token %}
-                        <button type="submit" class="px-4 py-1 text-sm text-white bg-blue-500 rounded">Update</button>
-                    </form>
-                </td>
-                <td class="border px-4 py-2">
-                    {% if category.is_active %}
-                    <span class="text-green-600 font-semibold">Active</span>
-                    {% else %}
-                    <span class="text-red-600 font-semibold">Blocked</span>
-                    {% endif %}
-                </td>
-                <td class="border px-4 py-2">
-                    <!-- Block/Unblock Form -->
-                    <form method="POST" action="{% url 'toggle_category' category.id %}" class="inline">
-                        {% csrf_token %}
-                        <button type="submit" class="px-4 py-1 text-sm text-white {% if category.is_active %}bg-red-500{% else %}bg-green-500{% endif %} rounded">
-                            {% if category.is_active %}Block{% else %}Unblock{% endif %}
-                        </button>
-                    </form>
-                    
-                    <!-- Edit Form -->
-                    <form method="POST" action="{% url 'edit_category' category.id %}" class="inline">
-                        {% csrf_token %}
-                        <input type="text" name="category_name" value="{{ category.name }}" required class="p-1 border rounded text-sm" />
-                        <button type="submit" class="px-4 py-1 text-sm text-white bg-blue-500 rounded">Save</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="overflow-x-auto shadow-lg rounded-lg mb-6">
+        <table class="min-w-full bg-white border border-gray-300">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="border px-4 py-3 text-left text-sm font-semibold text-gray-700">#</th>
+                    <th class="border px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
+                    <th class="border px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                    <th class="border px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr class="hover:bg-gray-50">
+                    <td class="border px-4 py-3 text-gray-700">{{ forloop.counter }}</td>
+                    <td class="border px-4 py-3 text-gray-700">{{ category.name }}</td>
+                    <td class="border px-4 py-3 text-gray-700">
+                        {% if category.is_active %}
+                        <span class="text-green-600 font-semibold">Active</span>
+                        {% else %}
+                        <span class="text-red-600 font-semibold">Blocked</span>
+                        {% endif %}
+                    </td>
+                    <td class="border px-4 py-3">
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                            <!-- Block/Unblock Button -->
+                            <form method="POST" action="{% url 'toggle_category' category.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="w-full sm:w-auto px-3 py-1 text-sm text-white {% if category.is_active %}bg-red-500 hover:bg-red-600{% else %}bg-green-500 hover:bg-green-600{% endif %} rounded transition duration-200">
+                                    {% if category.is_active %}Block{% else %}Unblock{% endif %}
+                                </button>
+                            </form>
+                            
+                            <!-- Edit Form -->
+                            <form method="POST" action="{% url 'edit_category' category.id %}" class="inline">
+                                {% csrf_token %}
+                                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                    <input type="text" name="category_name" value="{{ category.name }}" required class="w-full sm:w-auto p-1 border border-gray-300 rounded text-sm">
+                                    <button type="submit" class="w-full sm:w-auto px-3 py-1 text-sm text-white bg-blue-500 hover:bg-blue-600 rounded transition duration-200">
+                                        Save
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="border px-4 py-3 text-center text-gray-600">No categories found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-    <!-- Add New Category -->
+    <!-- Add New Category Section -->
     <h2 class="text-xl font-semibold text-gray-700 mb-4">Add New Category</h2>
-    <form method="POST">
+    <form method="POST" class="bg-gray-50 p-4 rounded-lg shadow-sm">
         {% csrf_token %}
-        <input type="text" name="category_name" placeholder="Enter category name" required class="block w-full p-2 border border-gray-300 rounded-md mb-4">
-        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700">Add Category</button>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Category Name:</label>
+                <input type="text" name="category_name" placeholder="Enter category name" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">
+                Add Category
+            </button>
+        </div>
     </form>
-    
 </div>
 {% endblock %}

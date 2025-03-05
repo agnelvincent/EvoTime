@@ -16,8 +16,10 @@ from django.http import JsonResponse
 from .models import Wishlist , WishlistItem
 from Products.models import Product , ProductVariant
 
-# Create your views here.
 
+@block_superuser_navigation
+@never_cache
+@login_required
 def wishlist_view(request):
     if request.user.is_authenticated:
         wishlist, created = Wishlist.objects.get_or_create(user=request.user)
@@ -25,6 +27,9 @@ def wishlist_view(request):
     return render(request, 'wishlist.html', {'wishlist': None})
 
 
+@block_superuser_navigation
+@never_cache
+@login_required
 def add_to_wishlist(request, variant_id):
     if request.method == 'POST':
         variant = get_object_or_404(ProductVariant, id=variant_id)
@@ -42,6 +47,8 @@ def add_to_wishlist(request, variant_id):
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
 
+@block_superuser_navigation
+@never_cache
 @login_required
 def remove_from_wishlist(request, variant_id):
     if request.method == "POST":
@@ -53,6 +60,9 @@ def remove_from_wishlist(request, variant_id):
     return JsonResponse({"success": False, "error": "Invalid request method"}, status=400)
 
 
+@block_superuser_navigation
+@never_cache
+@login_required
 def wishlist_status(request):
     """Return a list of product variant IDs in the user's wishlist"""
     if request.user.is_authenticated:

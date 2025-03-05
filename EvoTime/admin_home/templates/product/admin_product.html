@@ -1,11 +1,11 @@
 {% extends 'admin_dashboard.html' %}
 
 {% block admin_side %}
-<div class="container mx-auto mt-10">
+<div class="container mx-auto mt-10 px-4">
     <!-- Buttons to Toggle Add Product and Add Brand Forms -->
-    <div class="mb-4 flex justify-between items-center">
-        <button id="toggleAddProduct" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200">Add Product</button>
-        <button id="toggleAddBrand" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200">Add Brand</button>
+    <div class="mb-4 flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
+        <button id="toggleAddProduct" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200 w-full sm:w-auto">Add Product</button>
+        <button id="toggleAddBrand" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 w-full sm:w-auto">Add Brand</button>
     </div>
 
     <!-- Add Product Form -->
@@ -57,10 +57,9 @@
                 {% endfor %}
             </select>
             <input type="hidden" id="brand_offer" value="0">  <!-- Hidden input to store brand offer -->
-            
 
             <!-- Submit Button -->
-            <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Add Product</button>
+            <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 w-full sm:w-auto">Add Product</button>
         </form>
     </div>
 
@@ -71,50 +70,48 @@
             {% csrf_token %}
             <!-- Brand Name -->
             <input type="text" name="brand_name" placeholder="Brand Name" class="w-full border p-2 rounded mb-2" required>
-    
+
             <!-- Offer Percentage (Optional) -->
             <input type="number" name="offer_percentage" placeholder="Offer Percentage (%)" min="0" max="100" class="w-full border p-2 rounded mb-2">
-    
+
             <!-- Submit Button -->
-            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Add Brand</button>
+            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 w-full sm:w-auto">Add Brand</button>
         </form>
     </div>
-    
 
     <!-- Product List -->
-    <div class="bg-white shadow-lg rounded-lg p-6">
+    <div class="bg-white shadow-lg rounded-lg p-6 overflow-x-auto">
         <h1 class="text-3xl font-bold text-gray-800 mb-6">Product List</h1>
         <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
             <thead class="bg-gray-100">
                 <tr>
-                    <th class="px-6 py-4 text-left">Name</th>
-                    <th class="px-6 py-4 text-left">Category</th>
-                    <th class="px-4 py-4 text-left">Price</th>
-                    <th class="px-4 py-4 text-left">Sales Price</th>
-                    <th class="px-6 py-4 text-left">Status</th>
-                    <th class="px-6 py-4 text-left">Actions</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Name</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Category</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Price</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Sales Price</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 {% for product in products %}
                 <tr>
-                    <td class="px-6 py-4">{{ product.name }}</td>
-                    <td class="px-6 py-4">{{ product.category.name }}</td>
-                    <td class="px-6 py-4">₹{{ product.regular_price }}</td>
-                    <td class="px-6 py-4">₹{{ product.sales_price }}</td>
-                    <td class="px-6 py-4">
+                    <td class="px-4 py-3 text-sm text-gray-700">{{ product.name }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-700">{{ product.category.name }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-700">₹{{ product.regular_price }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-700">₹{{ product.sales_price }}</td>
+                    <td class="px-4 py-3 text-sm">
                         {% if product.is_blocked %}
                         <span class="text-red-600">Blocked</span>
                         {% else %}
                         <span class="text-green-600">Active</span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-4 py-3 text-sm">
                         <button class="edit-product-btn text-blue-600 hover:underline" data-product-id="{{ product.id }}">
                             Edit
                         </button>
-                        
-                        <a href="{% url 'manage_variants' product.id %}" class="text-purple-600 hover:underline">View Variants</a>
+                        <a href="{% url 'manage_variants' product.id %}" class="text-purple-600 hover:underline ml-2">View Variants</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -175,11 +172,9 @@
             {% endfor %}
         </select>
         <input type="hidden" id="brand_offer{{ product.id }}" value="{{ product.brand.offer_percentage|default:0 }}">
-        
-        
 
         <!-- Submit Button -->
-        <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Update Product</button>
+        <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 w-full sm:w-auto">Update Product</button>
     </form>
 </div>
 {% endfor %}
@@ -196,7 +191,7 @@
                 editForm.classList.toggle("hidden");
             }
         }
-    
+
         // Add event listeners to each "Edit" button
         document.querySelectorAll(".edit-product-btn").forEach(button => {
             button.addEventListener("click", function() {
@@ -205,14 +200,14 @@
             });
         });
     });
-    
+
     document.addEventListener("DOMContentLoaded", function () {
         // Function to calculate sales price based on the highest offer (product or brand)
         function calculateSalesPrice(regularPrice, productOffer, brandOffer) {
             let highestOffer = Math.max(productOffer || 0, brandOffer || 0);
             return regularPrice - (regularPrice * (highestOffer / 100));
         }
-    
+
         // Function to update sales price when inputs change
         function updateSalesPrice(regularPriceInput, offerPercentageInput, salesPriceInput, brandSelect, brandOfferInput) {
             function recalculate() {
@@ -221,7 +216,7 @@
                 const brandOffer = parseFloat(brandOfferInput.value) || 0;
                 salesPriceInput.value = calculateSalesPrice(regularPrice, productOffer, brandOffer).toFixed(2);
             }
-    
+
             // Add event listeners for input changes
             regularPriceInput.addEventListener("input", recalculate);
             offerPercentageInput.addEventListener("input", recalculate);
@@ -230,21 +225,21 @@
                 brandOfferInput.value = selectedBrand.getAttribute("data-offer") || 0;
                 recalculate();
             });
-    
+
             recalculate(); // Initial calculation
         }
-    
+
         // Apply logic for Add Product form
         const regularPriceInput = document.getElementById("regular_price");
         const offerPercentageInput = document.getElementById("offer_percentage");
         const salesPriceInput = document.getElementById("sales_price");
         const brandSelect = document.getElementById("brandSelect");
         const brandOfferInput = document.getElementById("brand_offer");
-    
+
         if (regularPriceInput && offerPercentageInput && salesPriceInput && brandSelect && brandOfferInput) {
             updateSalesPrice(regularPriceInput, offerPercentageInput, salesPriceInput, brandSelect, brandOfferInput);
         }
-    
+
         // Apply logic for each Edit Product form
         {% for product in products %}
             const regularPriceInput{{ product.id }} = document.getElementById("regular_price{{ product.id }}");
@@ -252,14 +247,12 @@
             const salesPriceInput{{ product.id }} = document.getElementById("sales_price{{ product.id }}");
             const brandSelect{{ product.id }} = document.getElementById("brandSelect{{ product.id }}");
             const brandOfferInput{{ product.id }} = document.getElementById("brand_offer{{ product.id }}");
-    
+
             if (regularPriceInput{{ product.id }} && offerPercentageInput{{ product.id }} && salesPriceInput{{ product.id }} && brandSelect{{ product.id }} && brandOfferInput{{ product.id }}) {
                 updateSalesPrice(regularPriceInput{{ product.id }}, offerPercentageInput{{ product.id }}, salesPriceInput{{ product.id }}, brandSelect{{ product.id }}, brandOfferInput{{ product.id }});
             }
         {% endfor %}
     });
-    
-    
 </script>
 
 {% endblock %}

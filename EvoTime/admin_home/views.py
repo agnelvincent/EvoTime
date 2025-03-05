@@ -12,13 +12,11 @@ from Cart.models import Order
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_http_methods
 from django.contrib.admin.views.decorators import staff_member_required
-from django.core.files.storage import default_storage
 from decimal import Decimal
 from io import BytesIO
 from PIL import Image
 from django.core.files.base import ContentFile
 import base64
-from django.utils.timezone import now
 from Cart.models import Order , OrderItem , Payment
 import pandas as pd
 from django.http import HttpResponse
@@ -26,21 +24,22 @@ import datetime
 from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter
 from django.db.models import Sum
-import json
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.pdfgen import canvas
 from django.utils import timezone
 from django.db.models import Count
 from datetime import datetime, timedelta, time
 from django.template.loader import get_template
-from xhtml2pdf import pisa
 from Cart.models import Wallet
 from django.db import transaction
+from django.db import transaction, IntegrityError
+from decimal import Decimal, InvalidOperation
+import re
 
 
 # Admin-only decorator
@@ -69,6 +68,8 @@ def admin_login(request):
 
     return render(request, 'admin_login.html')  # Render login page if not POST
 
+@admin_required
+@never_cache
 def admin_dashboard(request):
     today = timezone.now().date()
     start_of_month = today.replace(day=1)
@@ -169,6 +170,8 @@ def admin_dashboard(request):
 
     return render(request, "admin_dashboard.html", context)
 
+@admin_required
+@never_cache
 def sales_data(request):
     filter_type = request.GET.get('filter', 'month')
     today = timezone.now().date()
@@ -283,7 +286,8 @@ def sales_data(request):
     
     return JsonResponse(data)
 
-
+@admin_required
+@never_cache
 def generate_pdf(request):
     # Fetch data
     orders = Order.objects.all()
@@ -337,6 +341,9 @@ def generate_pdf(request):
     response['Content-Disposition'] = 'attachment; filename="sales_report.pdf"'
     return response
 
+
+@admin_required
+@never_cache
 def generate_excel(request):
     # Fetch data
     orders = Order.objects.all()
@@ -365,7 +372,8 @@ def generate_excel(request):
 
 
 
-
+@admin_required
+@never_cache
 def sales_report(request):
     today = timezone.now().date()
     last_7_days = today - timedelta(days=7)
@@ -420,33 +428,58 @@ def add_brand(request):
         brand_name = request.POST.get('brand_name', '').strip()
         offer_percentage = request.POST.get('offer_percentage', '').strip()
 
-        # Validations
+        # Comprehensive Validations
+        errors = []
+
+        # Brand Name Validations
         if not brand_name:
-            messages.error(request, 'Brand name cannot be empty!')
-        elif Brand.objects.filter(name__iexact=brand_name).exists():
-            messages.warning(request, 'Brand already exists!')
+            errors.append('Brand name cannot be empty!')
         elif len(brand_name) < 2:
-            messages.error(request, 'Brand name must be at least 2 characters long!')
-        else:
-            # Validate and Convert Offer Percentage
+            errors.append('Brand name must be at least 2 characters long!')
+        elif len(brand_name) > 100:
+            errors.append('Brand name cannot exceed 100 characters!')
+        elif not re.match(r'^[A-Za-z0-9\s\-&]+$', brand_name):
+            errors.append('Brand name can only contain letters, numbers, spaces, hyphens, and ampersands!')
+        elif Brand.objects.filter(name__iexact=brand_name).exists():
+            errors.append('A brand with this name already exists!')
+
+        # Offer Percentage Validations
+        if offer_percentage:
             try:
-                offer_percentage = int(offer_percentage) if offer_percentage else 0
+                offer_percentage = int(offer_percentage)
                 if offer_percentage < 0 or offer_percentage > 100:
-                    raise ValueError
+                    errors.append('Offer percentage must be between 0 and 100!')
             except ValueError:
-                messages.error(request, 'Offer percentage must be between 0 and 100!')
-                return redirect('admin_product')
+                errors.append('Offer percentage must be a valid integer!')
+        else:
+            offer_percentage = 0
 
-            # Create Brand
-            brand = Brand.objects.create(name=brand_name, offer_percentage=offer_percentage)
+        # Handle Validation Errors
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return redirect('admin_product')
 
-            # Apply Offer to All Associated Products
-            for product in brand.products.all():
-                product.save()  # This triggers price recalculation
+        # Create Brand
+        try:
+            with transaction.atomic():
+                brand = Brand.objects.create(
+                    name=brand_name, 
+                    offer_percentage=offer_percentage
+                )
 
-            messages.success(request, 'Brand added successfully!')
-        
-        return redirect('admin_product')
+                # Apply Offer to All Associated Products
+                # Use bulk_update for better performance
+                products = brand.products.all()
+                for product in products:
+                    product.save()  # This triggers price recalculation
+
+            messages.success(request, f'Brand "{brand_name}" added successfully!')
+            return redirect('admin_product')
+
+        except IntegrityError:
+            messages.error(request, 'An error occurred while creating the brand. Please try again.')
+            return redirect('admin_product')
 
     return render(request, 'product/admin_product.html')
 
@@ -456,6 +489,7 @@ def add_brand(request):
 @never_cache
 def add_product(request):
     if request.method == "POST":
+        # Collect all inputs
         name = request.POST.get('name', '').strip()
         category_id = request.POST.get('category')
         description = request.POST.get('description', '').strip()
@@ -465,93 +499,130 @@ def add_product(request):
         image = request.FILES.get('image')
         cropped_image = request.POST.get('cropped_image')
 
-        # Validate inputs
-        if not name or len(name) < 3:
-            messages.error(request, "Product name must be at least 3 characters long.")
-            return redirect('admin_product')
+        # Comprehensive Error Tracking
+        errors = []
 
-        if not category_id or not Category.objects.filter(id=category_id).exists():
-            messages.error(request, "Invalid category selected.")
-            return redirect('admin_product')
+        # Name Validation
+        if not name:
+            errors.append("Product name cannot be empty.")
+        elif len(name) < 3:
+            errors.append("Product name must be at least 3 characters long.")
+        elif len(name) > 200:
+            errors.append("Product name cannot exceed 200 characters.")
+        elif not re.match(r'^[A-Za-z0-9\s\-&.()]+$', name):
+            errors.append("Product name contains invalid characters.")
 
-        if not brand_id or not Brand.objects.filter(id=brand_id).exists():
-            messages.error(request, "Invalid brand selected.")
-            return redirect('admin_product')
+        # Category Validation
+        try:
+            category = Category.objects.get(id=category_id) if category_id else None
+            if not category:
+                errors.append("Invalid category selected.")
+        except (Category.DoesNotExist, ValueError):
+            errors.append("Invalid category selected.")
 
+        # Brand Validation
+        try:
+            brand = Brand.objects.get(id=brand_id) if brand_id else None
+            if not brand:
+                errors.append("Invalid brand selected.")
+        except (Brand.DoesNotExist, ValueError):
+            errors.append("Invalid brand selected.")
+
+        # Regular Price Validation
         try:
             regular_price = Decimal(regular_price)
-            if regular_price < 0:
-                raise ValueError
-        except (ValueError, TypeError):
-            messages.error(request, "Regular price must be a valid positive number.")
-            return redirect('admin_product')
+            if regular_price <= 0:
+                errors.append("Regular price must be a positive number.")
+            elif regular_price > 1000000:  # Reasonable max price limit
+                errors.append("Regular price is unrealistically high.")
+        except (ValueError, TypeError, InvalidOperation):
+            errors.append("Regular price must be a valid positive number.")
 
-        # Validate Offer Percentage
+        # Offer Percentage Validation
         if offer_percentage:
             try:
                 offer_percentage = Decimal(offer_percentage)
                 if offer_percentage < 0 or offer_percentage > 100:
-                    raise ValueError
-            except (ValueError, TypeError):
-                messages.error(request, "Offer percentage must be between 0 and 100.")
-                return redirect('admin_product')
+                    errors.append("Offer percentage must be between 0 and 100.")
+            except (ValueError, TypeError, InvalidOperation):
+                errors.append("Offer percentage must be a valid number.")
         else:
-            offer_percentage = Decimal(0)  # Default to 0 if no product offer is provided
+            offer_percentage = Decimal(0)
 
-        # Get Category & Brand
-        category = get_object_or_404(Category, id=category_id)
-        brand = get_object_or_404(Brand, id=brand_id)
+        # Description Validation
+        if description and len(description) > 2000:
+            errors.append("Description cannot exceed 2000 characters.")
 
-        # 🔥 **Check Brand Offer & Apply the Higher Discount**
-        brand_offer = Decimal(brand.offer_percentage) if brand else Decimal(0)
-        final_offer = max(offer_percentage, brand_offer)
-
-        # **Calculate Sales Price**
-        if final_offer > 0:
-            sales_price = regular_price - (regular_price * (final_offer / 100))
-        else:
-            sales_price = regular_price  # No offer applied, use regular price
-
-        # Handle Image Processing
+        # Image Validation
         if cropped_image:
             try:
+                # Base64 image processing with error handling
                 format, imgstr = cropped_image.split(';base64,')
                 ext = format.split('/')[-1]
                 imgdata = base64.b64decode(imgstr)
-                image_file = BytesIO(imgdata)
-                image = Image.open(image_file)
-                file_name = 'cropped_image.' + ext
-                image_file = ContentFile(imgdata, name=file_name)
-                product_image = image_file
+                
+                # Additional image validation
+                with Image.open(BytesIO(imgdata)) as img:
+                    # Check image dimensions and format
+                    if img.width > 2000 or img.height > 2000:
+                        errors.append("Image dimensions are too large.")
+                    if img.format not in ['JPEG', 'PNG', 'WEBP']:
+                        errors.append("Unsupported image format.")
             except Exception as e:
-                messages.error(request, f"Error processing image: {e}")
-                return redirect('admin_product')
+                errors.append(f"Error processing cropped image: {str(e)}")
         elif image:
+            # Standard image file validation
             if image.size > MAX_IMAGE_SIZE:
-                messages.error(request, "Image size should not exceed 5MB.")
-                return redirect('admin_product')
-
+                errors.append("Image size should not exceed 5MB.")
+            
             if not image.content_type.startswith('image/'):
-                messages.error(request, "Invalid image format. Please upload a valid image file.")
-                return redirect('admin_product')
+                errors.append("Invalid image format. Please upload a valid image file.")
+            
+            # Optional: Add dimension check
+            with Image.open(image) as img:
+                if img.width > 2000 or img.height > 2000:
+                    errors.append("Image dimensions are too large.")
 
-            product_image = image
-        else:
-            product_image = None
+        # If any errors, return with error messages
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return redirect('admin_product')
 
-        # Create Product with Correct Pricing
-        Product.objects.create(
-            name=name,
-            category=category,
-            description=description,
-            regular_price=regular_price,
-            sales_price=sales_price,
-            offer_percentage=offer_percentage,  # Save product-level offer only
-            brand=brand,
-            image=product_image
-        )
+        # Pricing Calculation with Error Handling
+        try:
+            # Get Brand Offer (if applicable)
+            brand_offer = Decimal(brand.offer_percentage) if brand else Decimal(0)
+            final_offer = max(offer_percentage, brand_offer)
 
-        messages.success(request, 'Product added successfully!')
+            # Calculate Sales Price
+            sales_price = (regular_price * (Decimal(100) - final_offer) / Decimal(100)) \
+                if final_offer > 0 else regular_price
+
+            # Prepare image
+            product_image = image if image else (
+                ContentFile(base64.b64decode(imgstr.split(';base64,')[1]), 
+                            name=f'product_{name}_image.{ext}') if cropped_image else None
+            )
+
+            # Create Product with Atomic Transaction
+            with transaction.atomic():
+                product = Product.objects.create(
+                    name=name,
+                    category=category,
+                    description=description,
+                    regular_price=regular_price,
+                    sales_price=sales_price,
+                    offer_percentage=offer_percentage,
+                    brand=brand,
+                    image=product_image
+                )
+
+            messages.success(request, f'Product "{name}" added successfully!')
+        except Exception as e:
+            messages.error(request, f'An error occurred: {str(e)}')
+            return redirect('admin_product')
+
     return redirect('admin_product')
 
 
@@ -639,7 +710,8 @@ def edit_product(request, product_id):
     return redirect("admin_product")
 
 
-@staff_member_required
+@admin_required
+@never_cache
 def manage_variants(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     
@@ -684,6 +756,8 @@ def manage_variants(request, product_id):
         return JsonResponse({'message': 'Variant added successfully!'})
 
 @require_http_methods(["POST"])
+@admin_required
+@never_cache
 def add_variant(request, product_id):
     try:
         product = get_object_or_404(Product, id=product_id)
@@ -733,6 +807,8 @@ def add_variant(request, product_id):
         return JsonResponse({'error': str(e)}, status=500)
 
 @staff_member_required
+@admin_required
+@never_cache
 @require_http_methods(["POST"])
 def edit_variant(request, variant_id):
     variant = get_object_or_404(ProductVariant, id=variant_id)
@@ -767,6 +843,8 @@ def edit_variant(request, variant_id):
     return JsonResponse({'message': 'Variant updated successfully!'})
 
 @staff_member_required
+@admin_required
+@never_cache
 @require_http_methods(["DELETE"])
 def delete_variant(request, variant_id):
     variant = get_object_or_404(ProductVariant, id=variant_id)
@@ -783,50 +861,133 @@ def manage_categories(request):
     if request.method == 'POST':
         category_name = request.POST.get('category_name', '').strip()
 
-        # Validate inputs
+        # Comprehensive Validations
+        errors = []
+
+        # Name Validation
         if not category_name:
-            messages.error(request, "Category name cannot be empty!")
+            errors.append("Category name cannot be empty!")
+        elif len(category_name) < 2:
+            errors.append("Category name must be at least 2 characters long!")
+        elif len(category_name) > 100:
+            errors.append("Category name cannot exceed 100 characters!")
+        elif not re.match(r'^[A-Za-z0-9\s\-&.()]+$', category_name):
+            errors.append("Category name contains invalid characters!")
+        
+        # Check for Duplicate Category (case-insensitive)
+        if Category.objects.filter(name__iexact=category_name).exists():
+            errors.append("A category with this name already exists!")
+
+        # Handle Errors
+        if errors:
+            for error in errors:
+                messages.error(request, error)
             return redirect('manage_categories')
 
-
-        # Create category with optional offer
-        Category.objects.create(name=category_name)
-        messages.success(request, "Category added successfully!")
+        # Create Category with Transaction
+        try:
+            with transaction.atomic():
+                Category.objects.create(name=category_name)
+            messages.success(request, f"Category '{category_name}' added successfully!")
+        except IntegrityError:
+            messages.error(request, "An error occurred while creating the category.")
+        
         return redirect('manage_categories')
 
-    categories = Category.objects.all()
+    # Fetch categories with ordering
+    categories = Category.objects.all().order_by('-created_at')
     return render(request, 'category/admin_category.html', {'categories': categories})
 
 
 @admin_required
 @never_cache
 def toggle_category_status(request, category_id):
-    if request.method == 'POST':
+    try:
+        # Validate category ID
+        category_id = int(category_id)
         category = get_object_or_404(Category, id=category_id)
-        category.is_active = not category.is_active
-        category.save()
+
+        # Check if category has associated products before deactivation
+        if not category.is_active:
+            # Check for active products in this category
+            active_products_count = category.products.filter(is_active=True).count()
+            if active_products_count > 0:
+                messages.warning(request, 
+                    f"Cannot deactivate category with {active_products_count} active products!")
+                return redirect('manage_categories')
+
+        # Toggle status with transaction
+        with transaction.atomic():
+            category.is_active = not category.is_active
+            category.save()
+
+        # Success message based on new status
+        status_message = "activated" if category.is_active else "deactivated"
+        messages.success(request, f"Category {status_message} successfully!")
+        
         return redirect('manage_categories')
+
+    except ValueError:
+        messages.error(request, "Invalid category ID!")
+        return redirect('manage_categories')
+    except Exception as e:
+        messages.error(request, f"An unexpected error occurred: {str(e)}")
+        return redirect('manage_categories')
+
 
 @admin_required
 @never_cache
 def edit_category(request, category_id):
-    category = get_object_or_404(Category, id=category_id)
+    try:
+        # Validate and fetch category
+        category_id = int(category_id)
+        category = get_object_or_404(Category, id=category_id)
 
-    if request.method == 'POST':
-        new_name = request.POST.get('category_name', '').strip()
+        if request.method == 'POST':
+            new_name = request.POST.get('category_name', '').strip()
 
-        # Validate inputs
-        if not new_name:
-            messages.error(request, "Category name cannot be empty!")
+            # Comprehensive Validations
+            errors = []
+
+            # Name Validation
+            if not new_name:
+                errors.append("Category name cannot be empty!")
+            elif len(new_name) < 2:
+                errors.append("Category name must be at least 2 characters long!")
+            elif len(new_name) > 100:
+                errors.append("Category name cannot exceed 100 characters!")
+            elif not re.match(r'^[A-Za-z0-9\s\-&.()]+$', new_name):
+                errors.append("Category name contains invalid characters!")
+            
+            # Check for Duplicate Category (case-insensitive, excluding current category)
+            if Category.objects.exclude(id=category_id).filter(name__iexact=new_name).exists():
+                errors.append("A category with this name already exists!")
+
+            # Handle Errors
+            if errors:
+                for error in errors:
+                    messages.error(request, error)
+                return redirect('manage_categories')
+
+            # Update Category with Transaction
+            try:
+                with transaction.atomic():
+                    category.name = new_name
+                    category.save()
+                messages.success(request, "Category updated successfully!")
+            except IntegrityError:
+                messages.error(request, "An error occurred while updating the category.")
+            
             return redirect('manage_categories')
 
-        # Update category
-        category.name = new_name
-        category.save()
-        messages.success(request, "Category updated successfully!")
-        return redirect('manage_categories')
+        return render(request, 'product/edit_category.html', {'category': category})
 
-    return render(request, 'product/edit_category.html', {'category': category})
+    except ValueError:
+        messages.error(request, "Invalid category ID!")
+        return redirect('manage_categories')
+    except Exception as e:
+        messages.error(request, f"An unexpected error occurred: {str(e)}")
+        return redirect('manage_categories')
 
 
 @admin_required
@@ -912,26 +1073,76 @@ def admin_order_list_view(request):
 
 
 @admin_required
+@never_cache   
 def admin_change_order_item_status_view(request, order_item_id):
-    order_item = get_object_or_404(OrderItem, id=order_item_id)
+    try:
+        # Fetch the order item with related order and payment
+        order_item = get_object_or_404(OrderItem, id=order_item_id)
+        order = order_item.order
 
-    if request.method == 'POST':
-        new_status = request.POST.get('status', '')
+        if request.method == 'POST':
+            new_status = request.POST.get('status', '').strip()
 
-        if new_status in dict(OrderItem.STATUS_CHOICES).keys():  # Validate status choice
-            order_item.status = new_status
-            order_item.save()
+            # Validate status choice
+            if new_status not in dict(OrderItem.STATUS_CHOICES).keys():
+                messages.error(request, "Invalid status selected.")
+                return redirect('admin_order_list_view')
 
-            return redirect('admin_order_list_view')  # Redirect instead of returning JSON
+            # Prevent changing to 'cancelled' status
+            if new_status == 'cancelled':
+                messages.error(request, "Cannot manually change status to cancelled.")
+                return redirect('admin_order_list_view')
 
-    return redirect('admin_order_list_view')  # Redirect even on error
+            # Comprehensive Status Change Logic
+            try:
+                with transaction.atomic():
+                    # Update Order Item Status
+                    order_item.status = new_status
+                    order_item.save()
 
-@staff_member_required
+                    # Handle Payment Status for COD Orders
+                    try:
+                        payment = order.payment
+                        
+                        # Update payment status based on order item status and payment method
+                        if payment.payment_method == 'cod':
+                            if new_status in ['shipped', 'delivered']:
+                                payment.status = 'completed'
+                            payment.save()
+
+                    except Payment.DoesNotExist:
+                        # Log or handle case where payment doesn't exist
+                        messages.warning(request, "No payment record found for this order.")
+
+                    # Optional: Update overall order status if all items are in same status
+                    order_statuses = order.items.values_list('status', flat=True).distinct()
+                    if len(order_statuses) == 1:
+                        # If all items have same status, potentially update order status
+                        if new_status == 'delivered':
+                            # Mark order as fully delivered
+                            order.status = 'completed'
+                            order.save()
+
+                messages.success(request, f"Order item status updated to {new_status}.")
+            
+            except Exception as e:
+                messages.error(request, f"An error occurred: {str(e)}")
+
+        return redirect('admin_order_list_view')
+
+    except Exception as e:
+        messages.error(request, f"An unexpected error occurred: {str(e)}")
+        return redirect('admin_order_list_view')
+
+@admin_required
+@never_cache   
 def admin_return_requests(request):
     return_requests = OrderItem.objects.filter(return_status="requested")
     return render(request, 'orders/admin_return_requests.html', {'return_requests': return_requests})
 
-@staff_member_required
+
+@admin_required
+@never_cache   
 def admin_handle_return_request(request, item_id):
     if request.method != 'POST':
         messages.error(request, "Invalid request method.")
@@ -991,7 +1202,8 @@ def admin_handle_return_request(request, item_id):
 
 
 
-
+@admin_required
+@never_cache   
 def coupon_management(request):
     """Handles adding, updating, and listing coupons"""
     coupons = Coupon.objects.all()
@@ -1038,6 +1250,8 @@ def coupon_management(request):
     return render(request, "coupon/manage_coupon.html", {"coupons": coupons})
 
 
+@admin_required
+@never_cache   
 def get_coupon_details(request, coupon_id):
     """Fetch coupon details via AJAX for editing"""
     coupon = get_object_or_404(Coupon, id=coupon_id)
@@ -1053,6 +1267,8 @@ def get_coupon_details(request, coupon_id):
     return JsonResponse(data)
 
 
+@admin_required
+@never_cache   
 def delete_coupon(request, coupon_id):
     """Deletes a coupon"""
     coupon = get_object_or_404(Coupon, id=coupon_id)
@@ -1061,7 +1277,8 @@ def delete_coupon(request, coupon_id):
 
 
 
-@never_cache
+@admin_required
+@never_cache   
 def admin_logout(request):
     logout(request)
     return redirect('admin_login')
