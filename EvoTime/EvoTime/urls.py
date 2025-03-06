@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from user_home.views import custom_page_not_found_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,7 +30,7 @@ urlpatterns = [
     path('auth/', include('social_django.urls', namespace='social')),
     path('accounts/', include('allauth.urls'))
 ]
-
+handler404 = custom_page_not_found_view
 
 
 # Serve static and media files during development
