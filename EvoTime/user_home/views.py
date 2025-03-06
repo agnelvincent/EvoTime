@@ -336,13 +336,13 @@ def home_view(request):
         category.save()
 
 
-    # Set up pagination
-    paginator = Paginator(products.order_by('id'), 12)  # Ensure a consistent order /Show 12 products per page
-    page_number = request.GET.get('page')  # Get the page number from the URL
-    products_page = paginator.get_page(page_number)  # Get the products for the current page
+    # # Set up pagination
+    # paginator = Paginator(products.order_by('id'), 12)  # Ensure a consistent order /Show 12 products per page
+    # page_number = request.GET.get('page')  # Get the page number from the URL
+    # products_page = paginator.get_page(page_number)  # Get the products for the current page
 
     context = {
-        'products': products_page,  # Pass the paginated products to the template
+        # 'products': products_page,  # Pass the paginated products to the template
         'brands': Brand.objects.all(),  # Pass all brands for filtering
         'categories': Category.objects.all(),  # Pass all categories for filtering
         'user_wishlist_variant_ids': user_wishlist_variant_ids,
