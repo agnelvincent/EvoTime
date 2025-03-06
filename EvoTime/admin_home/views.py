@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.cache import never_cache
 from Products.models import Product, Brand, Category, ProductVariant
-from .models import UsedCoupon,Coupon
+from .models import Coupon
 from user_home.models import CustomUser
 from Cart.models import Order
 from django.core.paginator import Paginator
@@ -18,7 +18,6 @@ from PIL import Image
 from django.core.files.base import ContentFile
 import base64
 from Cart.models import Order , OrderItem , Payment
-import pandas as pd
 from django.http import HttpResponse
 import datetime
 from openpyxl import Workbook
@@ -30,7 +29,6 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.pdfgen import canvas
 from django.utils import timezone
 from django.db.models import Count
 from datetime import datetime, timedelta, time
@@ -40,7 +38,7 @@ from django.db import transaction
 from django.db import transaction, IntegrityError
 from decimal import Decimal, InvalidOperation
 import re
-
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 # Admin-only decorator
 def admin_required(view_func):
@@ -412,14 +410,27 @@ MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
 @admin_required
 @never_cache
 def admin_product_view(request):
-    products = Product.objects.all()
+    products_list = Product.objects.all().order_by('id')  # Ensure consistent ordering
     categories = Category.objects.all()
     brands = Brand.objects.all()
+
+    # Pagination
+    paginator = Paginator(products_list, 10)  # Show 10 products per page
+    page = request.GET.get('page')
+
+    try:
+        products = paginator.page(page)
+    except PageNotAnInteger:
+        products = paginator.page(1)  # Default to the first page
+    except EmptyPage:
+        products = paginator.page(paginator.num_pages)  # Deliver the last page if page is out of range
+
     return render(request, 'product/admin_product.html', {
         'products': products,
         'categories': categories,
         'brands': brands
     })
+
 
 @admin_required
 @never_cache
@@ -668,7 +679,19 @@ def manage_variants(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     
     if request.method == 'GET':
-        variants = ProductVariant.objects.filter(product=product)
+        variants_list = ProductVariant.objects.filter(product=product)
+        
+        # Pagination
+        page = request.GET.get('page', 1)
+        paginator = Paginator(variants_list, 10)  # Show 10 variants per page
+
+        try:
+            variants = paginator.page(page)
+        except PageNotAnInteger:
+            variants = paginator.page(1)
+        except EmptyPage:
+            variants = paginator.page(paginator.num_pages)
+
         context = {
             'product': product,
             'variants': variants,
@@ -812,6 +835,7 @@ def delete_variant(request, variant_id):
 def manage_categories(request):
     if request.method == 'POST':
         category_name = request.POST.get('category_name', '').strip()
+        catimg = request.POST.get('catimg')
 
         # Comprehensive Validations
         errors = []
@@ -839,7 +863,7 @@ def manage_categories(request):
         # Create Category with Transaction
         try:
             with transaction.atomic():
-                Category.objects.create(name=category_name)
+                Category.objects.create(name=category_name , Category_image = catimg)
             messages.success(request, f"Category '{category_name}' added successfully!")
         except IntegrityError:
             messages.error(request, "An error occurred while creating the category.")
@@ -848,6 +872,18 @@ def manage_categories(request):
 
     # Fetch categories with ordering
     categories = Category.objects.all().order_by('-created_at')
+    categories_list = Category.objects.all().order_by('-created_at')
+
+    # Pagination
+    paginator = Paginator(categories_list, 10)  # Show 10 categories per page
+    page = request.GET.get('page')
+
+    try:
+        categories = paginator.page(page)
+    except PageNotAnInteger:
+        categories = paginator.page(1)  # Default to the first page
+    except EmptyPage:
+        categories = paginator.page(paginator.num_pages)  # Deliver the last page if page is out of range
     return render(request, 'category/admin_category.html', {'categories': categories})
 
 
@@ -1017,9 +1053,15 @@ def admin_order_list_view(request):
     # Fetch all orders with related user and order items
     orders_list = Order.objects.select_related('user').prefetch_related('items__product_variant__product').order_by('-created_at')
     
-    paginator = Paginator(orders_list, 10)  # Show 10 orders per page
+
+    paginator = Paginator(orders_list, 5)  # Show 10 orders per page
     page_number = request.GET.get('page')
-    orders = paginator.get_page(page_number)
+    try:
+        orders = paginator.page(page_number)
+    except PageNotAnInteger:
+        orders = paginator.page(1)
+    except EmptyPage:
+        orders = paginator.page(paginator.num_pages)
 
     return render(request, 'orders/admin_order.html', {'orders': orders})
 
@@ -1159,6 +1201,17 @@ def admin_handle_return_request(request, item_id):
 def coupon_management(request):
     """Handles adding, updating, and listing coupons"""
     coupons = Coupon.objects.all()
+    coupons_list = Coupon.objects.all()
+        # Pagination
+    page = request.GET.get('page', 1)
+    paginator = Paginator(coupons_list, 10)  # Show 10 coupons per page
+
+    try:
+        coupons = paginator.page(page)
+    except PageNotAnInteger:
+        coupons = paginator.page(1)
+    except EmptyPage:
+        coupons = paginator.page(paginator.num_pages)
 
     if request.method == "POST":
         coupon_id = request.POST.get("coupon_id")

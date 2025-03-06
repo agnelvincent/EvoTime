@@ -49,6 +49,24 @@
             </table>
         </div>
     </div>
+    <!-- Pagination Controls -->
+<div class="flex justify-center mt-6">
+    <nav class="inline-flex rounded-md shadow-sm">
+        {% if products.has_previous %}
+            <a href="?page=1" class="px-4 py-2 border rounded-l-md bg-white text-gray-700 hover:bg-gray-50">First</a>
+            <a href="?page={{ products.previous_page_number }}" class="px-4 py-2 border bg-white text-gray-700 hover:bg-gray-50">Previous</a>
+        {% endif %}
+
+        <span class="px-4 py-2 border bg-white text-gray-700">
+            Page {{ products.number }} of {{ products.paginator.num_pages }}
+        </span>
+
+        {% if products.has_next %}
+            <a href="?page={{ products.next_page_number }}" class="px-4 py-2 border bg-white text-gray-700 hover:bg-gray-50">Next</a>
+            <a href="?page={{ products.paginator.num_pages }}" class="px-4 py-2 border rounded-r-md bg-white text-gray-700 hover:bg-gray-50">Last</a>
+        {% endif %}
+    </nav>
+</div>
 </div>
 
 <!-- Add Product Modal -->

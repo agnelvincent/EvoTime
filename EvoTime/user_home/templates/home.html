@@ -120,10 +120,15 @@
                     <a href="{% url 'wishlist' %}" class="text-gray-600 hover:text-blue-600 transition">
                         <i class="far fa-heart text-xl"></i>
                     </a>
-                    <a href="{% url 'view_cart' %}" class="text-gray-600 hover:text-blue-600 transition relative">
-                        <i class="fas fa-shopping-cart text-xl"></i>
-                        <span class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
-                    </a>
+<a href="{% url 'view_cart' %}" class="text-gray-600 hover:text-blue-600 transition relative">
+    <i class="fas fa-shopping-cart text-xl"></i>
+    {% if cart_item_count > 0 %}
+        <span class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {{ cart_item_count }}
+        </span>
+    {% endif %}
+</a>
+
                     <a href="{% url 'account_overview' %}" class="text-gray-600 hover:text-blue-600 transition">
                         <i class="far fa-user text-xl"></i>
                     </a>
@@ -188,12 +193,6 @@
                 <span class="flex items-center justify-center">
                     <i class="fas fa-compass mr-2 group-hover:rotate-45 transition-transform duration-300"></i>
                     Explore Collection
-                </span>
-            </a>
-            <a href="#" class="group bg-transparent backdrop-blur-sm bg-white/10 hover:bg-white/20 border-2 border-white/30 text-white font-bold py-4 px-10 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
-                <span class="flex items-center justify-center">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    Learn More
                 </span>
             </a>
         </div>
@@ -287,139 +286,118 @@
         </div>
     </section>
 
-    <!-- Collections Section -->
-    <section id="collections" class="py-16 bg-gray-50">
-        <div class="container mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 data-aos="fade-up" class="text-3xl font-bold text-gray-800 mb-4">Our Collections</h2>
-                <p data-aos="fade-up" data-aos-delay="200" class="text-gray-600 max-w-2xl mx-auto">
-                    Discover the perfect timepiece from our curated collections, each crafted to complement your unique lifestyle.
-                </p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div data-aos="fade-up" data-aos-delay="0" class="group cursor-pointer relative overflow-hidden rounded-xl">
-                    <img src="{% static 'home_banner/analog.webp' %}" alt="Analog Watches" class="w-full h-96 object-cover transform transition duration-500 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-80"></div>
-                    <div class="absolute bottom-0 left-0 p-6">
-                        <h3 class="text-xl font-semibold text-white mb-2">Analog Watches</h3>
-                        <p class="text-gray-300 mb-4">Timeless elegance with precision craftsmanship</p>
-                        <a href="#" class="inline-block bg-white text-indigo-600 py-2 px-4 rounded-full text-sm font-medium transform transition duration-300 hover:scale-105">Explore</a>
-                    </div>
-                </div>
-                <div data-aos="fade-up" data-aos-delay="200" class="group cursor-pointer relative overflow-hidden rounded-xl">
-                    <img src="{% static 'home_banner/digital.webp' %}" alt="Digital Watches" class="w-full h-96 object-cover transform transition duration-500 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-80"></div>
-                    <div class="absolute bottom-0 left-0 p-6">
-                        <h3 class="text-xl font-semibold text-white mb-2">Digital Watches</h3>
-                        <p class="text-gray-300 mb-4">Modern functionality with retro appeal</p>
-                        <a href="#" class="inline-block bg-white text-indigo-600 py-2 px-4 rounded-full text-sm font-medium transform transition duration-300 hover:scale-105">Explore</a>
-                    </div>
-                </div>
-                <div data-aos="fade-up" data-aos-delay="400" class="group cursor-pointer relative overflow-hidden rounded-xl">
-                    <img src="{% static 'home_banner/smart.webp' %}" alt="Smart Watches" class="w-full h-96 object-cover transform transition duration-500 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-80"></div>
-                    <div class="absolute bottom-0 left-0 p-6">
-                        <h3 class="text-xl font-semibold text-white mb-2">Smart Watches</h3>
-                        <p class="text-gray-300 mb-4">Connected innovation for the tech-forward</p>
-                        <a href="#" class="inline-block bg-white text-indigo-600 py-2 px-4 rounded-full text-sm font-medium transform transition duration-300 hover:scale-105">Explore</a>
-                    </div>
-                </div>
-                <div data-aos="fade-up" data-aos-delay="600" class="group cursor-pointer relative overflow-hidden rounded-xl">
-                    <img src="{% static 'home_banner/hybrid.webp' %}" alt="Hybrid Watches" class="w-full h-96 object-cover transform transition duration-500 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-80"></div>
-                    <div class="absolute bottom-0 left-0 p-6">
-                        <h3 class="text-xl font-semibold text-white mb-2">Hybrid Watches</h3>
-                        <p class="text-gray-300 mb-4">Classic aesthetics with smart capabilities</p>
-                        <a href="#" class="inline-block bg-white text-indigo-600 py-2 px-4 rounded-full text-sm font-medium transform transition duration-300 hover:scale-105">Explore</a>
-                    </div>
-                </div>
-            </div>
+<!-- Collections Section -->
+<section id="collections" class="py-16 bg-gray-50">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+            <h2 data-aos="fade-up" class="text-3xl font-bold text-gray-800 mb-4">Our Collections</h2>
+            <p data-aos="fade-up" data-aos-delay="200" class="text-gray-600 max-w-2xl mx-auto">
+                Discover the perfect timepiece from our curated collections, each crafted to complement your unique lifestyle.
+            </p>
         </div>
-    </section>
-    
-    <!-- Featured Products Section -->
-    <section id="featured" class="py-16 bg-white">
-        <div class="container mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 data-aos="fade-up" class="text-3xl font-bold text-gray-800 mb-4">Featured Timepieces</h2>
-                <p data-aos="fade-up" data-aos-delay="200" class="text-gray-600 max-w-2xl mx-auto">Discover our most coveted designs that blend artistry with precision engineering.</p>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {% for category in categories %}
+            <div data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:0 }}" class="group cursor-pointer relative overflow-hidden rounded-xl">
+                <img src="#" alt="{{ category.name }}" class="w-full h-96 object-cover transform transition duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-80"></div>
+                <div class="absolute bottom-0 left-0 p-6">
+                    <h3 class="text-xl font-semibold text-white mb-2">{{ category.name }}</h3>
+                    <p class="text-gray-300 mb-4">{{ category.description }}</p>
+                    <a href="#featured" data-category="{{ category.id }}" class="inline-block bg-white text-indigo-600 py-2 px-4 rounded-full text-sm font-medium transform transition duration-300 hover:scale-105 category-link">Explore</a>
+                </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {% for product in products %}
-                <a href="{% url 'product_detail' product.id %}" class="block">
-                    <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300 hover:shadow-lg">
-                        <div class="relative">
-                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-64 object-cover">
-                            
-                            <!-- Discount Percentage Badge -->
-                            {% if product.offer_percentage > 0 %}
-                            <div class="absolute top-2 left-2">
-                                <span class="bg-blue-600 text-white text-sm px-3 py-1 rounded-full font-medium shadow-lg">
-                                    {{ product.offer_percentage }}% OFF
-                                </span>
-                            </div>
-                            {% endif %}
-                            
-                            <!-- Wishlist Button -->
-                            <div class="absolute top-2 right-2">
-                                <button 
-                                    class="wishlist-btn bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transform hover:scale-110 transition duration-300"
-                                    onclick="event.stopPropagation(); event.preventDefault(); toggleWishlist({{ product.variants.first.id }})"
-                                    data-variant-id="{{ product.variants.first.id }}"
-                                    data-in-wishlist="false"
-                                >
-                                    <i class="far fa-heart text-red-500 text-lg"></i>
-                                </button>
-                            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+    
+<section id="featured" class="py-16 bg-white">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+            <h2 data-aos="fade-up" class="text-3xl font-bold text-gray-800 mb-4">Featured Timepieces</h2>
+            <p data-aos="fade-up" data-aos-delay="200" class="text-gray-600 max-w-2xl mx-auto">Discover our most coveted designs that blend artistry with precision engineering.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="product-grid">
+            {% for product in products %}
+            <a href="{% url 'product_detail' product.id %}" class="block">
+                <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300 hover:shadow-lg">
+                    <div class="relative">
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-64 object-cover">
+                        
+                        <!-- Discount Percentage Badge -->
+                        {% if product.offer_percentage > 0 %}
+                        <div class="absolute top-2 left-2">
+                            <span class="bg-blue-600 text-white text-sm px-3 py-1 rounded-full font-medium shadow-lg">
+                                {{ product.offer_percentage }}% OFF
+                            </span>
                         </div>
-                        <div class="p-4">
-                            <h3 class="font-medium text-gray-800 mb-2">{{ product.name }}</h3>
-                            <!-- Dynamic Rating Section -->
-                            <div class="flex text-sm text-yellow-400 mb-2">
-                                {% for i in "12345" %}
-                                    {% if i|add:0 <= product.average_rating %}
-                                        <i class="fas fa-star"></i>  <!-- Full star -->
-                                    {% else %}
-                                        <i class="far fa-star"></i>  <!-- Empty star -->
-                                    {% endif %}
-                                {% endfor %}
-                                <span class="text-gray-500 ml-1">({{ product.reviews.count }})</span>
+                        {% endif %}
+                        
+                        <!-- Wishlist Button -->
+                        <div class="absolute top-2 right-2">
+                            <button 
+                                class="wishlist-btn bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transform hover:scale-110 transition duration-300"
+                                onclick="event.stopPropagation(); event.preventDefault(); toggleWishlist({{ product.variants.first.id }})"
+                                data-variant-id="{{ product.variants.first.id }}"
+                                data-in-wishlist="false"
+                            >
+                                <i class="far fa-heart text-red-500 text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-medium text-gray-800 mb-2">{{ product.name }}</h3>
+                        <!-- Dynamic Rating Section -->
+                        <div class="flex text-sm text-yellow-400 mb-2">
+                            {% for i in "12345" %}
+                                {% if i|add:0 <= product.average_rating %}
+                                    <i class="fas fa-star"></i>  <!-- Full star -->
+                                {% else %}
+                                    <i class="far fa-star"></i>  <!-- Empty star -->
+                                {% endif %}
+                            {% endfor %}
+                            <span class="text-gray-500 ml-1">({{ product.reviews.count }})</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                {% if product.sales_price < product.regular_price %}
+                                    <span class="text-gray-400 line-through">₹{{ product.regular_price }}</span>
+                                    <span class="text-lg font-bold text-gray-800 ml-2">₹{{ product.sales_price }}</span>
+                                {% else %}
+                                    <span class="text-lg font-bold text-gray-800">₹{{ product.sales_price }}</span>
+                                {% endif %}
                             </div>
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    {% if product.sales_price < product.regular_price %}
-                                        <span class="text-gray-400 line-through">₹{{ product.regular_price }}</span>
-                                        <span class="text-lg font-bold text-gray-800 ml-2">₹{{ product.sales_price }}</span>
-                                    {% else %}
-                                        <span class="text-lg font-bold text-gray-800">₹{{ product.sales_price }}</span>
-                                    {% endif %}
-                                </div>
-                                {% if product.variants.all %}
+                            {% if product.variants.all %}
+                            {% with first_variant=product.variants.first %}
                                 <button 
                                     id="addToCartBtn_{{ product.id }}"
-                                    onclick="event.stopPropagation(); event.preventDefault(); addCartItem({{ product.variants.first.id }})"
-                                    data-stock="{{ product.variants.first.stock }}"
-                                    class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transform hover:scale-105 transition duration-300 flex items-center gap-2 shadow-md"
+                                    onclick="event.stopPropagation(); event.preventDefault(); addCartItem({{ first_variant.id }})"
+                                    data-stock="{{ first_variant.stock }}"
+                                    class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transform hover:scale-105 transition duration-300 flex items-center gap-2 shadow-md
+                                           {% if first_variant.stock == 0 %} opacity-50 cursor-not-allowed {% endif %}"
+                                    {% if first_variant.stock == 0 %} disabled {% endif %}
                                 >
                                     <i class="fas fa-shopping-cart text-lg"></i>
                                     <span class="text-sm font-medium">Add</span>
                                 </button>
-                                {% else %}
-                                    <span class="text-red-500 text-sm font-medium">Out of Stock</span>
-                                {% endif %}
-                            </div>
+                            {% endwith %}
+                        {% else %}
+                            <span class="text-red-500 text-sm font-medium">Out of Stock</span>
+                        {% endif %}
+                        
                         </div>
                     </div>
-                </a>
-                {% endfor %}
-            </div>
-            <div class="text-center mt-12">
-                <a href="{% url "all_products" %}" data-aos="fade-up" class="inline-block border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white font-bold py-3 px-8 rounded-full transition duration-300">
-                    View All Products
-                </a>
-            </div>
+                </div>
+            </a>
+            {% endfor %}
         </div>
-    </section>
+        <div class="text-center mt-12">
+            <a href="{% url "all_products" %}" data-aos="fade-up" class="inline-block border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white font-bold py-3 px-8 rounded-full transition duration-300">
+                View All Products
+            </a>
+        </div>
+    </div>
+</section>
 
 
 
@@ -840,6 +818,95 @@ document.addEventListener('DOMContentLoaded', function() {
             once: true
         });
     }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const categoryLinks = document.querySelectorAll('.category-link');
+    const productGrid = document.getElementById('product-grid');
+
+    categoryLinks.forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault();
+            const categoryId = this.getAttribute('data-category');
+
+            // Fetch products for the selected category
+            fetch(`/api/products/?category=${categoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Clear existing products
+                    productGrid.innerHTML = '';
+
+                    // Add new products
+                    data.products.forEach(product => {
+                        const productCard = `
+                            <a href="/product/${product.id}/" class="block">
+                                <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300 hover:shadow-lg">
+                                    <div class="relative">
+                                        <img src="${product.image}" alt="${product.name}" class="w-full h-64 object-cover">
+                                        ${product.offer_percentage > 0 ? `
+                                        <div class="absolute top-2 left-2">
+                                            <span class="bg-blue-600 text-white text-sm px-3 py-1 rounded-full font-medium shadow-lg">
+                                                ${product.offer_percentage}% OFF
+                                            </span>
+                                        </div>
+                                        ` : ''}
+                                        <div class="absolute top-2 right-2">
+                                            <button 
+                                                class="wishlist-btn bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transform hover:scale-110 transition duration-300"
+                                                onclick="event.stopPropagation(); event.preventDefault(); toggleWishlist(${product.variants[0].id})"
+                                                data-variant-id="${product.variants[0].id}"
+                                                data-in-wishlist="false"
+                                            >
+                                                <i class="far fa-heart text-red-500 text-lg"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="p-4">
+                                        <h3 class="font-medium text-gray-800 mb-2">${product.name}</h3>
+                                        <div class="flex text-sm text-yellow-400 mb-2">
+                                            ${Array.from({ length: 5 }, (_, i) => `
+                                                <i class="${i < product.average_rating ? 'fas' : 'far'} fa-star"></i>
+                                            `).join('')}
+                                            <span class="text-gray-500 ml-1">(${product.reviews.length})</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <div>
+                                                ${product.sales_price < product.regular_price ? `
+                                                <span class="text-gray-400 line-through">₹${product.regular_price}</span>
+                                                <span class="text-lg font-bold text-gray-800 ml-2">₹${product.sales_price}</span>
+                                                ` : `
+                                                <span class="text-lg font-bold text-gray-800">₹${product.sales_price}</span>
+                                                `}
+                                            </div>
+                                            ${product.variants.length > 0 ? `
+                                            <button 
+                                                id="addToCartBtn_${product.id}"
+                                                onclick="event.stopPropagation(); event.preventDefault(); addCartItem(${product.variants[0].id})"
+                                                data-stock="${product.variants[0].stock}"
+                                                class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transform hover:scale-105 transition duration-300 flex items-center gap-2 shadow-md
+                                                       ${product.variants[0].stock == 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                                                ${product.variants[0].stock == 0 ? 'disabled' : ''}
+                                            >
+                                                <i class="fas fa-shopping-cart text-lg"></i>
+                                                <span class="text-sm font-medium">Add</span>
+                                            </button>
+                                            ` : `
+                                            <span class="text-red-500 text-sm font-medium">Out of Stock</span>
+                                            `}
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                        productGrid.insertAdjacentHTML('beforeend', productCard);
+                    });
+                })
+                .catch(error => console.error('Error fetching products:', error));
+
+            // Scroll to the featured section
+            document.getElementById('featured').scrollIntoView({ behavior: 'smooth' });
+        });
+    });
 });
     </script>
 </body>

@@ -4,6 +4,8 @@ from Products.views import product_detail_view
 from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
+from .import context_processors
+from .views import ProductAPI
 
 
 urlpatterns = [
@@ -41,6 +43,7 @@ urlpatterns = [
     path('orders/item/<int:item_id>/return/', views.return_order_item, name='return_order_item'),
     path("wallet/", views.wallet_view, name="wallet_page"),
     path('submit-review/<int:order_item_id>/', views.submit_review, name='submit_review'),
+    path('api/products/', ProductAPI.as_view(), name='product_api')
 
 
 

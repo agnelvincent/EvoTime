@@ -69,10 +69,31 @@
                 <label class="block text-sm font-medium text-gray-700">Category Name:</label>
                 <input type="text" name="category_name" placeholder="Enter category name" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
             </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Category Image:</label>
+                <input type="file" name="catimg" placeholder="Enter category image" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" accept = "image/*">
+            </div>
             <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">
                 Add Category
             </button>
         </div>
     </form>
+
+    <nav class="inline-flex rounded-md shadow-sm">
+        {% if categories.has_previous %}
+            <a href="?page=1" class="px-4 py-2 border rounded-l-md bg-white text-gray-700 hover:bg-gray-50">First</a>
+            <a href="?page={{ categories.previous_page_number }}" class="px-4 py-2 border bg-white text-gray-700 hover:bg-gray-50">Previous</a>
+        {% endif %}
+
+        <span class="px-4 py-2 border bg-white text-gray-700">
+            Page {{ categories.number }} of {{ categories.paginator.num_pages }}
+        </span>
+
+        {% if categories.has_next %}
+            <a href="?page={{ categories.next_page_number }}" class="px-4 py-2 border bg-white text-gray-700 hover:bg-gray-50">Next</a>
+            <a href="?page={{ categories.paginator.num_pages }}" class="px-4 py-2 border rounded-r-md bg-white text-gray-700 hover:bg-gray-50">Last</a>
+        {% endif %}
+    </nav>
 </div>
+
 {% endblock %}

@@ -23,6 +23,8 @@ class Category(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    Category_image = models.ImageField(upload_to='category_images/', blank=True, null=True)
+
 
 
     def __str__(self):

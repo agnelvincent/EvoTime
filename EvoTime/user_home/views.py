@@ -29,6 +29,10 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from Cart.models import Cart
+from django.views import View
+from django.db.models import Q
+from django.template.loader import render_to_string
 
 
 def block_superuser_navigation(view_func):
@@ -327,9 +331,13 @@ def home_view(request):
         if wishlist:
             user_wishlist_variant_ids = wishlist.items.values_list('variant_id', flat=True)
 
+    for category in Category.objects.filter(Category_image=''):
+        category.Category_image = 'home_banner/analog.webp'  # Ensure this file exists
+        category.save()
+
 
     # Set up pagination
-    paginator = Paginator(products, 12)  # Show 12 products per page
+    paginator = Paginator(products.order_by('id'), 12)  # Ensure a consistent order /Show 12 products per page
     page_number = request.GET.get('page')  # Get the page number from the URL
     products_page = paginator.get_page(page_number)  # Get the products for the current page
 
@@ -342,36 +350,90 @@ def home_view(request):
     return render(request, 'home.html', context)
 
 
+class ProductAPI(View):
+    def get(self, request):
+        category_id = request.GET.get('category')
+        products = Product.objects.filter(category_id=category_id, is_blocked=False)
+        product_list = []
+        for product in products:
+            product_list.append({
+                'id': product.id,
+                'name': product.name,
+                'regular_price': str(product.regular_price),
+                'sales_price': str(product.sales_price),
+                'image': product.image.url,
+                'offer_percentage': product.offer_percentage,
+                'average_rating': product.average_rating(),
+                'reviews': list(product.reviews.values()),
+                'variants': list(product.variants.values()),
+            })
+        return JsonResponse({'products': product_list})
+
+
 @block_superuser_navigation
 @never_cache
 @login_required
 def all_products(request):
-    products = Product.objects.filter(is_blocked=False)
+    # Fetch all products initially
+    products = Product.objects.all()
     brands = Brand.objects.all()
-    categories = Category.objects.filter(is_active=True)
+    categories = Category.objects.all()
 
-    # Apply filters
-    brand_id = request.GET.get('brand')
-    category_id = request.GET.get('category')
-    price_range = request.GET.get('price')
+    # for i in products:
+    #     print(i.name)
 
-    if brand_id:
-        products = products.filter(brand_id=brand_id)
-    if category_id:
-        products = products.filter(category_id=category_id)
-    if price_range:
-        min_price, max_price = price_range.split('-')
-        if min_price:
-            products = products.filter(regular_price__gte=min_price)
-        if max_price:
-            products = products.filter(regular_price__lte=max_price)
+    # for i in brands:
+    #     print(i.name)
 
+    # for i in categories:
+    #     print(i.name)
+    
+    # # Initialize filter variables
+    # selected_brands = [b for b in request.GET.getlist('brand') if b]  # Remove empty values
+    # selected_categories = [c for c in request.GET.getlist('category') if c]  # Remove empty values
+    # selected_price = request.GET.get('price', '')
+    # search_query = request.GET.get('search', '')
+
+    #     # Apply filters if they exist
+    #     # Apply filters if they exist
+    # if selected_brands:
+    #     products = products.filter(brand__id__in=selected_brands)
+
+    # if selected_categories:
+    #     products = products.filter(category__id__in=selected_categories)
+
+    # if selected_price:
+    #     if selected_price == "0-100":
+    #         products = products.filter(sales_price__lte=100)
+    #     elif selected_price == "100-500":
+    #         products = products.filter(sales_price__range=(100, 500))
+    #     elif selected_price == "500-1000":
+    #         products = products.filter(sales_price__range=(500, 1000))
+    #     elif selected_price == "1000-":
+    #         products = products.filter(sales_price__gte=1000)
+
+    # if search_query:
+    #     products = products.filter(
+    #         Q(name__icontains=search_query) |
+    #         Q(description__icontains=search_query) |
+    #         Q(brand__name__icontains=search_query) |
+    #         Q(category__name__icontains=search_query)
+    #     )
+    # print("Final Product List After Filtering:")
+    # for i in products:
+    #     print(i.name)
     context = {
         'products': products,
         'brands': brands,
         'categories': categories,
+        # 'selected_brands': selected_brands,
+        # 'selected_categories': selected_categories,
+        # 'selected_price': selected_price,
+        # 'search_query': search_query,
     }
+
     return render(request, 'all_products.html', context)
+
 
 
 @block_superuser_navigation
@@ -418,6 +480,15 @@ def brand_products(request, brand_id):
 @login_required    
 def about_us(request):
     return render(request , 'about.html')
+
+def get_cart_item_count(request):
+    cart_item_count = 0
+    if request.user.is_authenticated:
+        cart = Cart.objects.filter(user=request.user).first()
+        if cart:
+            cart_item_count = cart.items.count()  # Count distinct items, not quantity
+    return {"cart_item_count": cart_item_count}
+
 
 
 @block_superuser_navigation
@@ -636,7 +707,7 @@ def order_list_view(request):
         orders_list = orders_list.filter(status__status=status)
 
     # Pagination
-    paginator = Paginator(orders_list, 5)  # Show 10 orders per page
+    paginator = Paginator(orders_list.order_by('id'), 5)  # Show 10 orders per page
     page_number = request.GET.get('page')
     orders = paginator.get_page(page_number)
     
@@ -859,7 +930,7 @@ def wallet_view(request):
     wallet, created = Wallet.objects.get_or_create(user=request.user)
     
     # Get all transactions ordered by most recent first
-    transactions_list = wallet.transactions.all().order_by("-timestamp")
+    transactions_list = wallet.transactions.all().order_by("-timestamp", "id")
     
     # Set up pagination
     page = request.GET.get('page', 1)
