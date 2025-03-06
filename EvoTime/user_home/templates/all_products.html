@@ -24,17 +24,17 @@
         </form>
     </div>
 
-    <!-- Filters Section -->
+    <!-- Filters and Sorting Section -->
     <div class="mb-8 bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold text-gray-700 mb-4">Filters</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Filters and Sorting</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <!-- Brand Filter -->
             <div>
                 <label for="brand" class="block text-sm font-medium text-gray-700">Brand</label>
-                <select id="brand" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                <select id="brand" name="brand" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                     <option value="">All Brands</option>
                     {% for brand in brands %}
-                        <option value="{{ brand.id }}">{{ brand.name }}</option>
+                        <option value="{{ brand.id }}" {% if brand_filter == brand.id|stringformat:"s" %}selected{% endif %}>{{ brand.name }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -42,10 +42,10 @@
             <!-- Category Filter -->
             <div>
                 <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
-                <select id="category" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                <select id="category" name="category" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                     <option value="">All Categories</option>
                     {% for category in categories %}
-                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        <option value="{{ category.id }}" {% if category_filter == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -53,12 +53,24 @@
             <!-- Price Filter -->
             <div>
                 <label for="price" class="block text-sm font-medium text-gray-700">Price Range</label>
-                <select id="price" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                <select id="price" name="price" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                     <option value="">All Prices</option>
-                    <option value="0-100">Under $100</option>
-                    <option value="100-500">$100 - $500</option>
-                    <option value="500-1000">$500 - $1000</option>
-                    <option value="1000-">Over $1000</option>
+                    <option value="0-100" {% if price_filter == "0-100" %}selected{% endif %}>Under $100</option>
+                    <option value="100-500" {% if price_filter == "100-500" %}selected{% endif %}>$100 - $500</option>
+                    <option value="500-1000" {% if price_filter == "500-1000" %}selected{% endif %}>$500 - $1000</option>
+                    <option value="1000-" {% if price_filter == "1000-" %}selected{% endif %}>Over $1000</option>
+                </select>
+            </div>
+
+            <!-- Sorting -->
+            <div>
+                <label for="sort" class="block text-sm font-medium text-gray-700">Sort By</label>
+                <select id="sort" name="sort" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                    <option value="">Default</option>
+                    <option value="price_asc" {% if sort_by == "price_asc" %}selected{% endif %}>Price: Low to High</option>
+                    <option value="price_desc" {% if sort_by == "price_desc" %}selected{% endif %}>Price: High to Low</option>
+                    <option value="name_asc" {% if sort_by == "name_asc" %}selected{% endif %}>Name: A to Z</option>
+                    <option value="name_desc" {% if sort_by == "name_desc" %}selected{% endif %}>Name: Z to A</option>
                 </select>
             </div>
         </div>
@@ -136,27 +148,31 @@
             </a>
             {% endfor %}
         </div>
+    </div>
 </div>
 
-<!-- JavaScript for Filters -->
+<!-- JavaScript for Filters and Sorting -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const brandFilter = document.getElementById('brand');
         const categoryFilter = document.getElementById('category');
         const priceFilter = document.getElementById('price');
+        const sortFilter = document.getElementById('sort');
 
         function applyFilters() {
             const brand = brandFilter.value;
             const category = categoryFilter.value;
             const price = priceFilter.value;
+            const sort = sortFilter.value;
 
             // Redirect or fetch filtered products (you can use AJAX for a smoother experience)
-            window.location.href = `?brand=${brand}&category=${category}&price=${price}`;
+            window.location.href = `?brand=${brand}&category=${category}&price=${price}&sort=${sort}`;
         }
 
         brandFilter.addEventListener('change', applyFilters);
         categoryFilter.addEventListener('change', applyFilters);
         priceFilter.addEventListener('change', applyFilters);
+        sortFilter.addEventListener('change', applyFilters);
     });
 </script>
 {% endblock %}

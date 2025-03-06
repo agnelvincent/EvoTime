@@ -371,57 +371,47 @@ def all_products(request):
     brands = Brand.objects.all()
     categories = Category.objects.all()
 
-    # for i in products:
-    #     print(i.name)
+    # Filtering
+    search_query = request.GET.get('search', '')
+    brand_filter = request.GET.get('brand', '')
+    category_filter = request.GET.get('category', '')
+    price_filter = request.GET.get('price', '')
 
-    # for i in brands:
-    #     print(i.name)
+    if search_query:
+        products = products.filter(Q(name__icontains=search_query) | Q(description__icontains=search_query))
 
-    # for i in categories:
-    #     print(i.name)
-    
-    # # Initialize filter variables
-    # selected_brands = [b for b in request.GET.getlist('brand') if b]  # Remove empty values
-    # selected_categories = [c for c in request.GET.getlist('category') if c]  # Remove empty values
-    # selected_price = request.GET.get('price', '')
-    # search_query = request.GET.get('search', '')
+    if brand_filter:
+        products = products.filter(brand_id=brand_filter)
 
-    #     # Apply filters if they exist
-    #     # Apply filters if they exist
-    # if selected_brands:
-    #     products = products.filter(brand__id__in=selected_brands)
+    if category_filter:
+        products = products.filter(category_id=category_filter)
 
-    # if selected_categories:
-    #     products = products.filter(category__id__in=selected_categories)
+    if price_filter:
+        if price_filter == '0-100':
+            products = products.filter(sales_price__lt=100)
+        elif price_filter == '100-500':
+            products = products.filter(sales_price__gte=100, sales_price__lt=500)
+        elif price_filter == '500-1000':
+            products = products.filter(sales_price__gte=500, sales_price__lt=1000)
+        elif price_filter == '1000-':
+            products = products.filter(sales_price__gte=1000)
 
-    # if selected_price:
-    #     if selected_price == "0-100":
-    #         products = products.filter(sales_price__lte=100)
-    #     elif selected_price == "100-500":
-    #         products = products.filter(sales_price__range=(100, 500))
-    #     elif selected_price == "500-1000":
-    #         products = products.filter(sales_price__range=(500, 1000))
-    #     elif selected_price == "1000-":
-    #         products = products.filter(sales_price__gte=1000)
+    # Sorting
+    sort_by = request.GET.get('sort', '')
+    if sort_by == 'price_asc':
+        products = products.order_by('sales_price')
+    elif sort_by == 'price_desc':
+        products = products.order_by('-sales_price')
+    elif sort_by == 'name_asc':
+        products = products.order_by('name')
+    elif sort_by == 'name_desc':
+        products = products.order_by('-name')
 
-    # if search_query:
-    #     products = products.filter(
-    #         Q(name__icontains=search_query) |
-    #         Q(description__icontains=search_query) |
-    #         Q(brand__name__icontains=search_query) |
-    #         Q(category__name__icontains=search_query)
-    #     )
-    # print("Final Product List After Filtering:")
-    # for i in products:
-    #     print(i.name)
     context = {
         'products': products,
         'brands': brands,
         'categories': categories,
-        # 'selected_brands': selected_brands,
-        # 'selected_categories': selected_categories,
-        # 'selected_price': selected_price,
-        # 'search_query': search_query,
+        'search_query': search_query,
     }
 
     return render(request, 'all_products.html', context)

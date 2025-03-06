@@ -39,6 +39,8 @@ from django.db import transaction, IntegrityError
 from decimal import Decimal, InvalidOperation
 import re
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+import json
+from django.views.decorators.csrf import csrf_exempt
 
 # Admin-only decorator
 def admin_required(view_func):
@@ -431,6 +433,27 @@ def admin_product_view(request):
         'brands': brands
     })
 
+def list_brands(request):
+    brands = Brand.objects.all()
+    return render(request, 'brands/brands.html', {'brands': brands})
+
+@csrf_exempt  # Only for testing; use CSRF protection in production
+def edit_brand(request, brand_id):
+    if request.method == "POST":
+        brand = get_object_or_404(Brand, id=brand_id)  # Ensures ID exists, otherwise returns 404
+        data = json.loads(request.body)  # Parse JSON request body
+        brand.name = data.get('name', brand.name)
+        brand.offer_percentage = data.get('offer_percentage', brand.offer_percentage)
+        brand.save()
+        return JsonResponse({"message": "Brand updated successfully"})
+    
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+def toggle_brand_status(request, brand_id):
+    brand = get_object_or_404(Brand, id=brand_id)
+    brand.is_blocked = not brand.is_blocked
+    brand.save()
+    return JsonResponse({"success": True, "message": f"Brand {'blocked' if brand.is_blocked else 'unblocked'} successfully!"})
 
 @admin_required
 @never_cache
@@ -493,6 +516,7 @@ def add_brand(request):
             return redirect('admin_product')
 
     return render(request, 'product/admin_product.html')
+
 
 
 
