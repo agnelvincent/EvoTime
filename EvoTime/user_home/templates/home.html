@@ -298,7 +298,7 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             {% for category in categories %}
             <div data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:0 }}" class="group cursor-pointer relative overflow-hidden rounded-xl">
-                <img src="#" alt="{{ category.name }}" class="w-full h-96 object-cover transform transition duration-500 group-hover:scale-110">
+                <img src="{% if category.Category_image %}{{ category.Category_image.url }}{%endif%}" alt="{{ category.name }}" class="w-full h-96 object-cover transform transition duration-500 group-hover:scale-110">
                 <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-80"></div>
                 <div class="absolute bottom-0 left-0 p-6">
                     <h3 class="text-xl font-semibold text-white mb-2">{{ category.name }}</h3>

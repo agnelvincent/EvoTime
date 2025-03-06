@@ -62,7 +62,7 @@
 
     <!-- Add New Category Section -->
     <h2 class="text-xl font-semibold text-gray-700 mb-4">Add New Category</h2>
-    <form method="POST" class="bg-gray-50 p-4 rounded-lg shadow-sm">
+    <form method="POST" class="bg-gray-50 p-4 rounded-lg shadow-sm" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="space-y-4">
             <div>
@@ -71,8 +71,7 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Category Image:</label>
-                <input type="file" name="catimg" placeholder="Enter category image" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" accept = "image/*">
-            </div>
+                <input type="file" name="Category_image" placeholder="Enter category image" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" accept="image/*">            </div>
             <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">
                 Add Category
             </button>

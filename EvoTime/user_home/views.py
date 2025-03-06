@@ -319,35 +319,27 @@ def reset_password(request):
 @never_cache
 @login_required
 def home_view(request):
+    try:
+        # Fetch products with related variants
+        products = Product.objects.prefetch_related('variants').all()
+        new_products = Product.objects.all().order_by('-created_at')[:8]
+
+        user_wishlist_variant_ids = []
+        if request.user.is_authenticated:
+            wishlist = Wishlist.objects.filter(user=request.user).first()
+            if wishlist:
+                user_wishlist_variant_ids = wishlist.items.values_list('variant_id', flat=True)
 
 
-    # Fetch products with related variants
-    products = Product.objects.prefetch_related('variants').all()
-    new_products = Product.objects.all().order_by('-created_at')[:8]
-
-    user_wishlist_variant_ids = []
-    if request.user.is_authenticated:
-        wishlist = Wishlist.objects.filter(user=request.user).first()
-        if wishlist:
-            user_wishlist_variant_ids = wishlist.items.values_list('variant_id', flat=True)
-
-    for category in Category.objects.filter(Category_image=''):
-        category.Category_image = 'home_banner/analog.webp'  # Ensure this file exists
-        category.save()
-
-
-    # # Set up pagination
-    # paginator = Paginator(products.order_by('id'), 12)  # Ensure a consistent order /Show 12 products per page
-    # page_number = request.GET.get('page')  # Get the page number from the URL
-    # products_page = paginator.get_page(page_number)  # Get the products for the current page
-
-    context = {
-        # 'products': products_page,  # Pass the paginated products to the template
-        'brands': Brand.objects.all(),  # Pass all brands for filtering
-        'categories': Category.objects.all(),  # Pass all categories for filtering
-        'user_wishlist_variant_ids': user_wishlist_variant_ids,
-    }
-    return render(request, 'home.html', context)
+        context = {
+            'brands': Brand.objects.all(),
+            'categories': Category.objects.all(),
+            'user_wishlist_variant_ids': user_wishlist_variant_ids,
+        }
+        return render(request, 'home.html', context)
+    except Exception as e:
+        print(f"Error in home_view: {e}")  # Log the error
+        raise  # Re-raise the exception to see it in the logs
 
 
 class ProductAPI(View):

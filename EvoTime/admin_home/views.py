@@ -835,7 +835,7 @@ def delete_variant(request, variant_id):
 def manage_categories(request):
     if request.method == 'POST':
         category_name = request.POST.get('category_name', '').strip()
-        catimg = request.POST.get('catimg')
+        image = request.FILES.get('Category_image')
 
         # Comprehensive Validations
         errors = []
@@ -859,11 +859,15 @@ def manage_categories(request):
             for error in errors:
                 messages.error(request, error)
             return redirect('manage_categories')
+        
+        print("Form submitted!")
+        print(f"POST data: {request.POST}")
+        print(f"FILES data: {request.FILES}")
 
         # Create Category with Transaction
         try:
             with transaction.atomic():
-                Category.objects.create(name=category_name , Category_image = catimg)
+                Category.objects.create(name=category_name , Category_image = image)
             messages.success(request, f"Category '{category_name}' added successfully!")
         except IntegrityError:
             messages.error(request, "An error occurred while creating the category.")

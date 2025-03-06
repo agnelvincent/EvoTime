@@ -52,4 +52,7 @@ urlpatterns = [
     path('coupons/', views.coupon_management, name='coupon_management'),
     path('coupons/details/<int:coupon_id>/', views.get_coupon_details, name='get_coupon_details'),
     path('coupons/delete/<int:coupon_id>/', views.delete_coupon, name='delete_coupon'),
-]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
