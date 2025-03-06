@@ -330,22 +330,25 @@ def home_view(request):
             if wishlist:
                 user_wishlist_variant_ids = wishlist.items.values_list('variant_id', flat=True)
 
-
         context = {
             'brands': Brand.objects.all(),
             'categories': Category.objects.all(),
             'user_wishlist_variant_ids': user_wishlist_variant_ids,
+            'new_products': new_products,  # Add new products to the context
         }
         return render(request, 'home.html', context)
     except Exception as e:
-        print(f"Error in home_view: {e}")  # Log the error
-        raise  # Re-raise the exception to see it in the logs
+        raise  
 
 
 class ProductAPI(View):
     def get(self, request):
         category_id = request.GET.get('category')
-        products = Product.objects.filter(category_id=category_id, is_blocked=False)
+        if category_id:
+            products = Product.objects.filter(category_id=category_id, is_blocked=False)
+        else:
+            products = Product.objects.filter(is_blocked=False).order_by('-created_at')[:8]  # Fetch latest products
+
         product_list = []
         for product in products:
             product_list.append({

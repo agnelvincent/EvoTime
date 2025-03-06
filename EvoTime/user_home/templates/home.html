@@ -318,7 +318,7 @@
             <p data-aos="fade-up" data-aos-delay="200" class="text-gray-600 max-w-2xl mx-auto">Discover our most coveted designs that blend artistry with precision engineering.</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="product-grid">
-            {% for product in products %}
+            {% for product in new_products %}
             <a href="{% url 'product_detail' product.id %}" class="block">
                 <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300 hover:shadow-lg">
                     <div class="relative">
@@ -824,86 +824,91 @@ document.addEventListener('DOMContentLoaded', function() {
     const categoryLinks = document.querySelectorAll('.category-link');
     const productGrid = document.getElementById('product-grid');
 
+    // Function to load products
+    function loadProducts(categoryId = null) {
+        fetch(`/api/products/?category=${categoryId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Clear existing products
+                productGrid.innerHTML = '';
+
+                // Add new products
+                data.products.forEach(product => {
+                    const productCard = `
+                        <a href="/product/${product.id}/" class="block">
+                            <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300 hover:shadow-lg">
+                                <div class="relative">
+                                    <img src="${product.image}" alt="${product.name}" class="w-full h-64 object-cover">
+                                    ${product.offer_percentage > 0 ? `
+                                    <div class="absolute top-2 left-2">
+                                        <span class="bg-blue-600 text-white text-sm px-3 py-1 rounded-full font-medium shadow-lg">
+                                            ${product.offer_percentage}% OFF
+                                        </span>
+                                    </div>
+                                    ` : ''}
+                                    <div class="absolute top-2 right-2">
+                                        <button 
+                                            class="wishlist-btn bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transform hover:scale-110 transition duration-300"
+                                            onclick="event.stopPropagation(); event.preventDefault(); toggleWishlist(${product.variants[0].id})"
+                                            data-variant-id="${product.variants[0].id}"
+                                            data-in-wishlist="false"
+                                        >
+                                            <i class="far fa-heart text-red-500 text-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <h3 class="font-medium text-gray-800 mb-2">${product.name}</h3>
+                                    <div class="flex text-sm text-yellow-400 mb-2">
+                                        ${Array.from({ length: 5 }, (_, i) => `
+                                            <i class="${i < product.average_rating ? 'fas' : 'far'} fa-star"></i>
+                                        `).join('')}
+                                        <span class="text-gray-500 ml-1">(${product.reviews.length})</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            ${product.sales_price < product.regular_price ? `
+                                            <span class="text-gray-400 line-through">₹${product.regular_price}</span>
+                                            <span class="text-lg font-bold text-gray-800 ml-2">₹${product.sales_price}</span>
+                                            ` : `
+                                            <span class="text-lg font-bold text-gray-800">₹${product.sales_price}</span>
+                                            `}
+                                        </div>
+                                        ${product.variants.length > 0 ? `
+                                        <button 
+                                            id="addToCartBtn_${product.id}"
+                                            onclick="event.stopPropagation(); event.preventDefault(); addCartItem(${product.variants[0].id})"
+                                            data-stock="${product.variants[0].stock}"
+                                            class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transform hover:scale-105 transition duration-300 flex items-center gap-2 shadow-md
+                                                   ${product.variants[0].stock == 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                                            ${product.variants[0].stock == 0 ? 'disabled' : ''}
+                                        >
+                                            <i class="fas fa-shopping-cart text-lg"></i>
+                                            <span class="text-sm font-medium">Add</span>
+                                        </button>
+                                        ` : `
+                                        <span class="text-red-500 text-sm font-medium">Out of Stock</span>
+                                        `}
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                    productGrid.insertAdjacentHTML('beforeend', productCard);
+                });
+            })
+            .catch(error => console.error('Error fetching products:', error));
+    }
+
+    // Load latest products by default
+    loadProducts();
+
+    // Add event listeners to category links
     categoryLinks.forEach(link => {
         link.addEventListener('click', function(event) {
             event.preventDefault();
             const categoryId = this.getAttribute('data-category');
-
-            // Fetch products for the selected category
-            fetch(`/api/products/?category=${categoryId}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Clear existing products
-                    productGrid.innerHTML = '';
-
-                    // Add new products
-                    data.products.forEach(product => {
-                        const productCard = `
-                            <a href="/product/${product.id}/" class="block">
-                                <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300 hover:shadow-lg">
-                                    <div class="relative">
-                                        <img src="${product.image}" alt="${product.name}" class="w-full h-64 object-cover">
-                                        ${product.offer_percentage > 0 ? `
-                                        <div class="absolute top-2 left-2">
-                                            <span class="bg-blue-600 text-white text-sm px-3 py-1 rounded-full font-medium shadow-lg">
-                                                ${product.offer_percentage}% OFF
-                                            </span>
-                                        </div>
-                                        ` : ''}
-                                        <div class="absolute top-2 right-2">
-                                            <button 
-                                                class="wishlist-btn bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transform hover:scale-110 transition duration-300"
-                                                onclick="event.stopPropagation(); event.preventDefault(); toggleWishlist(${product.variants[0].id})"
-                                                data-variant-id="${product.variants[0].id}"
-                                                data-in-wishlist="false"
-                                            >
-                                                <i class="far fa-heart text-red-500 text-lg"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="p-4">
-                                        <h3 class="font-medium text-gray-800 mb-2">${product.name}</h3>
-                                        <div class="flex text-sm text-yellow-400 mb-2">
-                                            ${Array.from({ length: 5 }, (_, i) => `
-                                                <i class="${i < product.average_rating ? 'fas' : 'far'} fa-star"></i>
-                                            `).join('')}
-                                            <span class="text-gray-500 ml-1">(${product.reviews.length})</span>
-                                        </div>
-                                        <div class="flex justify-between items-center">
-                                            <div>
-                                                ${product.sales_price < product.regular_price ? `
-                                                <span class="text-gray-400 line-through">₹${product.regular_price}</span>
-                                                <span class="text-lg font-bold text-gray-800 ml-2">₹${product.sales_price}</span>
-                                                ` : `
-                                                <span class="text-lg font-bold text-gray-800">₹${product.sales_price}</span>
-                                                `}
-                                            </div>
-                                            ${product.variants.length > 0 ? `
-                                            <button 
-                                                id="addToCartBtn_${product.id}"
-                                                onclick="event.stopPropagation(); event.preventDefault(); addCartItem(${product.variants[0].id})"
-                                                data-stock="${product.variants[0].stock}"
-                                                class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transform hover:scale-105 transition duration-300 flex items-center gap-2 shadow-md
-                                                       ${product.variants[0].stock == 0 ? 'opacity-50 cursor-not-allowed' : ''}"
-                                                ${product.variants[0].stock == 0 ? 'disabled' : ''}
-                                            >
-                                                <i class="fas fa-shopping-cart text-lg"></i>
-                                                <span class="text-sm font-medium">Add</span>
-                                            </button>
-                                            ` : `
-                                            <span class="text-red-500 text-sm font-medium">Out of Stock</span>
-                                            `}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        `;
-                        productGrid.insertAdjacentHTML('beforeend', productCard);
-                    });
-                })
-                .catch(error => console.error('Error fetching products:', error));
-
-            // Scroll to the featured section
+            loadProducts(categoryId);
             document.getElementById('featured').scrollIntoView({ behavior: 'smooth' });
         });
     });
