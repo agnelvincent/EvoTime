@@ -39,10 +39,11 @@
                             </form>
                             
                             <!-- Edit Form -->
-                            <form method="POST" action="{% url 'edit_category' category.id %}" class="inline">
+                            <form method="POST" action="{% url 'edit_category' category.id %}" class="inline" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                                     <input type="text" name="category_name" value="{{ category.name }}" required class="w-full sm:w-auto p-1 border border-gray-300 rounded text-sm">
+                                    <input type="file" name="category_image" class="w-full sm:w-auto p-1 border border-gray-300 rounded text-sm">
                                     <button type="submit" class="w-full sm:w-auto px-3 py-1 text-sm text-white bg-blue-500 hover:bg-blue-600 rounded transition duration-200">
                                         Save
                                     </button>
@@ -71,7 +72,8 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Category Image:</label>
-                <input type="file" name="Category_image" placeholder="Enter category image" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" accept="image/*">            </div>
+                <input type="file" name="Category_image" placeholder="Enter category image" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" accept="image/*">
+            </div>
             <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">
                 Add Category
             </button>

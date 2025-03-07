@@ -3,6 +3,7 @@
 <html lang="en">
 <head>
     <meta name="csrf-token" content="{{ csrf_token }}">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EvoTime - Elegant Timepieces</title>
@@ -10,59 +11,28 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.0/cdn.min.js" defer></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
         
         body {
             font-family: 'Poppins', sans-serif;
-            scroll-behavior: smooth;
         }
-
-        .card-hover:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        
+        .banner-section {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/api/placeholder/1400/500');
+            background-size: cover;
+            background-position: center;
         }
-
-        .scroll-indicator {
-            animation: bounce 2s infinite;
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0);
-            }
-            40% {
-                transform: translateY(-20px);
-            }
-            60% {
-                transform: translateY(-10px);
-            }
-        }
-
-        .custom-shape-divider {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            overflow: hidden;
-            line-height: 0;
-        }
-
-        .custom-shape-divider svg {
-            position: relative;
-            display: block;
-            width: calc(100% + 1.3px);
-            height: 70px;
-        }
-
-        .custom-shape-divider .shape-fill {
-            fill: #FFFFFF;
-        }
+        
         .nav-link {
             position: relative;
         }
@@ -104,32 +74,27 @@
                     <div class="text-blue-600 text-3xl">
                         <img src="{% static 'evo_time.jpg' %}" alt="EvoTime Logo" class="w-10 h-10 rounded-full">
                     </div>
-                    <a href="{% url 'home' %}" class="text-2xl font-bold text-gray-800">EvoTime</a>
+                    <a href="{% url "home" %}" class="text-2xl font-bold text-gray-800">EvoTime</a>
                 </div>
                 
                 <!-- Navigation Links - Desktop -->
                 <nav class="hidden md:flex space-x-8">
-                    <a href="{% url 'home' %}" class="nav-link font-medium text-gray-800 hover:text-blue-600 transition pb-1">Home</a>
-                    <a href="{% url 'brand_list' %}" class="nav-link font-medium text-gray-600 hover:text-blue-600 transition pb-1">Brands</a>
-                    <a href="{% url "all_products" %}" class="nav-link font-medium text-gray-600 hover:text-blue-600 transition pb-1">All Products</a>
-                    <a href="{% url "about" %}" class="nav-link font-medium text-gray-600 hover:text-blue-600 transition pb-1">About Us</a>
+                    <a href="{% url "home" %}" class="nav-link font-medium text-gray-800 hover:text-blue-600 transition pb-1">Home</a>
+                    <a href="{% url "brand_list" %}" class="nav-link font-medium text-gray-600 hover:text-blue-600 transition pb-1">Brands</a>
+                    <a href="#" class="nav-link font-medium text-gray-600 hover:text-blue-600 transition pb-1">About</a>
+                    <a href="#" class="nav-link font-medium text-gray-600 hover:text-blue-600 transition pb-1">Contact</a>
                 </nav>
                 
                 <!-- Icons -->
                 <div class="flex items-center space-x-6">
-                    <a href="{% url 'wishlist' %}" class="text-gray-600 hover:text-blue-600 transition">
+                    <a href="{% url "wishlist" %}" class="text-gray-600 hover:text-blue-600 transition">
                         <i class="far fa-heart text-xl"></i>
                     </a>
-<a href="{% url 'view_cart' %}" class="text-gray-600 hover:text-blue-600 transition relative">
-    <i class="fas fa-shopping-cart text-xl"></i>
-    {% if cart_item_count > 0 %}
-        <span class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {{ cart_item_count }}
-        </span>
-    {% endif %}
-</a>
-
-                    <a href="{% url 'account_overview' %}" class="text-gray-600 hover:text-blue-600 transition">
+                    <a href="{% url "view_cart" %}" class="text-gray-600 hover:text-blue-600 transition relative">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        <span class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                    </a>
+                    <a href="{% url "account_overview" %}" class="text-gray-600 hover:text-blue-600 transition">
                         <i class="far fa-user text-xl"></i>
                     </a>
                     
@@ -143,7 +108,7 @@
             <!-- Mobile Navigation - Hidden by default -->
             <div class="md:hidden hidden mt-4 pb-2">
                 <a href="{% url 'home' %}" class="block py-2 text-gray-800 font-medium">Home</a>
-                <a href="{% url 'brand_list' %}" class="block py-2 text-gray-600">Brands</a>
+                <a href="{% url "brand_list" %}" class="block py-2 text-gray-600">Brands</a>
                 <a href="#" class="block py-2 text-gray-600">About</a>
                 <a href="#" class="block py-2 text-gray-600">Contact</a>
             </div>
@@ -151,477 +116,533 @@
     </header>
 
     <div id="toast-container" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 z-50 space-y-2"></div>
+
     {% block product %}
 
+    <!-- Main Content -->
+    <main>
 
-<!-- Hero Section -->
-<section class="hero-section h-screen flex items-center justify-center text-white relative pt-16 overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-    <!-- Animated Background Elements -->
-    <div class="absolute inset-0 overflow-hidden">
-        <!-- Clock Hand Animation -->
-        <div class="clock-hand absolute top-1/4 left-1/4 w-1 h-20 bg-white opacity-20 origin-bottom transform -rotate-45"></div>
-        <!-- Clock Circle Animation -->
-        <div class="clock-circle absolute top-1/3 right-1/4 w-32 h-32 border-4 border-white rounded-full opacity-10"></div>
-        <!-- Clock Dot Animation -->
-        <div class="clock-dot absolute bottom-1/3 left-1/3 w-4 h-4 bg-white rounded-full opacity-30"></div>
-        <!-- Gear Animation -->
-        <div class="gear absolute top-1/2 right-1/3 w-16 h-16 border-2 border-white rounded-full opacity-15">
-            <div class="absolute inset-0 border-2 border-white rounded-full transform rotate-45"></div>
-        </div>
-    </div>
-    
-    <!-- Content -->
-    <div class="container mx-auto px-6 text-center relative z-10">
-        <!-- Watch Icon -->
-        <div class="watch-icon mb-6 opacity-90">
-            <i data-aos="zoom-in" data-aos-duration="1200" class="fas fa-watch text-5xl text-indigo-400"></i>
-        </div>
-        
-        <!-- Main Heading -->
-        <h1 data-aos="fade-up" data-aos-duration="1000" class="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-            Time Evolves with <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 font-extrabold">EvoTime</span>
-        </h1>
-        
-        <!-- Subheading -->
-        <p data-aos="fade-up" data-aos-delay="200" data-aos-duration="1000" class="text-xl md:text-2xl mb-10 max-w-3xl mx-auto leading-relaxed font-light text-gray-300">
-            Discover a new dimension of elegance with our premium collection of watches crafted for the modern connoisseur.
-        </p>
-        
-        <!-- Call-to-Action Buttons -->
-        <div data-aos="fade-up" data-aos-delay="400" data-aos-duration="1000" class="flex flex-col sm:flex-row justify-center gap-6">
-            <a href="#collections" class="group bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-10 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
-                <span class="flex items-center justify-center">
-                    <i class="fas fa-compass mr-2 group-hover:rotate-45 transition-transform duration-300"></i>
-                    Explore Collection
-                </span>
-            </a>
-        </div>
-        
-        <!-- Featured Watch Highlight -->
-        <div data-aos="fade-up" data-aos-delay="600" class="mt-16 inline-block">
-            <div class="text-xs uppercase tracking-widest text-indigo-400 mb-2 animate-pulse">Featured Collection</div>
-            <div class="flex items-center justify-center gap-2">
-                <div class="h-px w-12 bg-white/30"></div>
-                <span class="text-lg text-white/90 font-medium">Swiss Precision Series</span>
-                <div class="h-px w-12 bg-white/30"></div>
+        <div class="swiper-container my-8 relative">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide relative">
+                    <img src="{% static 'home_banner/banner2.webp' %}" alt="Banner 1" class="w-full h-97 object-cover">
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-white text-center bg-black/30">
+                        <h2 class="text-4xl font-semibold mb-2 animate-fade-in">Discover Timeless Elegance</h2>
+                        <p class="text-lg opacity-80 animate-fade-in delay-200">Crafted for those who appreciate perfection.</p>
+                    </div>
+                </div>
+                <div class="swiper-slide relative">
+                    <img src="{% static 'home_banner/banner4.webp' %}" alt="Banner 2" class="w-full h-97 object-cover">
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-white text-center bg-black/30">
+                        <h2 class="text-4xl font-semibold mb-2 animate-fade-in">Luxury Meets Precision</h2>
+                        <p class="text-lg opacity-80 animate-fade-in delay-200">Designed to redefine sophistication.</p>
+                    </div>
+                </div>
+                <div class="swiper-slide relative">
+                    <img src="{% static 'home_banner/banner5.webp' %}" alt="Banner 3" class="w-full h-97 object-cover">
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-white text-center bg-black/30">
+                        <h2 class="text-4xl font-semibold mb-2 animate-fade-in">Elevate Your Style</h2>
+                        <p class="text-lg opacity-80 animate-fade-in delay-200">Uncompromised quality, unmatched beauty.</p>
+                    </div>
+                </div>
             </div>
+            <div class="swiper-pagination"></div>
         </div>
-    </div>
-    
-    <!-- Scroll Indicator -->
-    <div class="scroll-indicator absolute bottom-16 left-1/2 transform -translate-x-1/2 text-white animate-bounce">
-        <i class="fas fa-chevron-down text-2xl"></i>
-    </div>
-    
-    <!-- Wave Divider -->
-    <div class="custom-shape-divider">
-        <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill" fill="rgba(255,255,255,0.1)"></path>
-        </svg>
-    </div>
-    
-    <!-- Optional: Add this style section in your head or stylesheet -->
-    <style>
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        .hero-section .clock-hand {
-            animation: rotate 20s linear infinite;
-        }
-        
-        .hero-section .gear {
-            animation: rotate 30s linear infinite;
-        }
-        
-        .hero-section .clock-circle {
-            animation: pulse 5s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.1; }
-            50% { transform: scale(1.1); opacity: 0.2; }
-        }
-        
-        .text-gradient {
-            background: linear-gradient(to right, #818cf8, #a78bfa, #f472b6);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-    </style>
-</section>
 
-    <!-- Features Section -->
-    <section class="py-16 bg-white">
-        <div class="container mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 data-aos="fade-up" class="text-3xl font-bold text-gray-800 mb-4">Why Choose EvoTime?</h2>
-                <p data-aos="fade-up" data-aos-delay="200" class="text-gray-600 max-w-2xl mx-auto">We combine traditional craftsmanship with cutting-edge technology to deliver timepieces that stand the test of time.</p>
+        <!-- Filter Section -->
+<section class="container mx-auto px-4 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Filters</h3>
+        <form method="GET" action="{% url 'home' %}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Price Range -->
+            <div>
+                <label for="min_price" class="block text-sm font-medium text-gray-700">Min Price</label>
+                <input type="number" name="min_price" id="min_price" value="{{ request.GET.min_price }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div data-aos="fade-up" data-aos-delay="0" class="bg-gray-50 p-8 rounded-xl shadow-lg transform transition duration-500 hover:-translate-y-2">
-                    <div class="text-indigo-600 mb-4">
-                        <i class="fas fa-gem text-4xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Premium Quality</h3>
-                    <p class="text-gray-600">Each watch is crafted with precision using only the finest materials available in the market.</p>
-                </div>
-                <div data-aos="fade-up" data-aos-delay="200" class="bg-gray-50 p-8 rounded-xl shadow-lg transform transition duration-500 hover:-translate-y-2">
-                    <div class="text-indigo-600 mb-4">
-                        <i class="fas fa-sync text-4xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Swiss Movement</h3>
-                    <p class="text-gray-600">Powered by authentic Swiss movements known for precision, reliability and exceptional performance.</p>
-                </div>
-                <div data-aos="fade-up" data-aos-delay="400" class="bg-gray-50 p-8 rounded-xl shadow-lg transform transition duration-500 hover:-translate-y-2">
-                    <div class="text-indigo-600 mb-4">
-                        <i class="fas fa-water text-4xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Water Resistant</h3>
-                    <p class="text-gray-600">All our timepieces feature robust water resistance, ensuring reliability in any environment or adventure.</p>
-                </div>
+            <div>
+                <label for="max_price" class="block text-sm font-medium text-gray-700">Max Price</label>
+                <input type="number" name="max_price" id="max_price" value="{{ request.GET.max_price }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
             </div>
-        </div>
-    </section>
 
-<!-- Collections Section -->
-<section id="collections" class="py-16 bg-gray-50">
-    <div class="container mx-auto px-6">
-        <div class="text-center mb-16">
-            <h2 data-aos="fade-up" class="text-3xl font-bold text-gray-800 mb-4">Our Collections</h2>
-            <p data-aos="fade-up" data-aos-delay="200" class="text-gray-600 max-w-2xl mx-auto">
-                Discover the perfect timepiece from our curated collections, each crafted to complement your unique lifestyle.
-            </p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {% for category in categories %}
-            <div data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:0 }}" class="group cursor-pointer relative overflow-hidden rounded-xl">
-                <img src="{% if category.Category_image %}{{ category.Category_image.url }}{%endif%}" alt="{{ category.name }}" class="w-full h-96 object-cover transform transition duration-500 group-hover:scale-110">
-                <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-80"></div>
-                <div class="absolute bottom-0 left-0 p-6">
-                    <h3 class="text-xl font-semibold text-white mb-2">{{ category.name }}</h3>
-                    <p class="text-gray-300 mb-4">{{ category.description }}</p>
-                    <a href="#featured" data-category="{{ category.id }}" class="inline-block bg-white text-indigo-600 py-2 px-4 rounded-full text-sm font-medium transform transition duration-300 hover:scale-105 category-link">Explore</a>
-                </div>
+            <!-- Brand Filter -->
+            <div>
+                <label for="brand" class="block text-sm font-medium text-gray-700">Brand</label>
+                <select name="brand" id="brand" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Brands</option>
+                    {% for brand in brands %}
+                        <option value="{{ brand.name }}" {% if request.GET.brand == brand.name %}selected{% endif %}>{{ brand.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            {% endfor %}
-        </div>
+
+            <!-- Category Filter -->
+            <div>
+                <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                <select name="category" id="category" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category.name }}" {% if request.GET.category == category.name %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Sorting -->
+            <div>
+                <label for="sort_by" class="block text-sm font-medium text-gray-700">Sort By</label>
+                <select name="sort_by" id="sort_by" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="name_a_to_z" {% if request.GET.sort_by == 'name_a_to_z' %}selected{% endif %}>Name: A to Z</option>
+                    <option value="name_z_to_a" {% if request.GET.sort_by == 'name_z_to_a' %}selected{% endif %}>Name: Z to A</option>
+                    <option value="price_low_to_high" {% if request.GET.sort_by == 'price_low_to_high' %}selected{% endif %}>Price: Low to High</option>
+                    <option value="price_high_to_low" {% if request.GET.sort_by == 'price_high_to_low' %}selected{% endif %}>Price: High to Low</option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="sm:col-span-2 md:col-span-4">
+                <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Apply Filters</button>
+            </div>
+        </form>
     </div>
 </section>
-    
-<section id="featured" class="py-16 bg-white">
-    <div class="container mx-auto px-6">
-        <div class="text-center mb-16">
-            <h2 data-aos="fade-up" class="text-3xl font-bold text-gray-800 mb-4">Featured Timepieces</h2>
-            <p data-aos="fade-up" data-aos-delay="200" class="text-gray-600 max-w-2xl mx-auto">Discover our most coveted designs that blend artistry with precision engineering.</p>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="product-grid">
-            {% for product in new_products %}
-            <a href="{% url 'product_detail' product.id %}" class="block">
-                <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300 hover:shadow-lg">
-                    <div class="relative">
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-64 object-cover">
-                        
-                        <!-- Discount Percentage Badge -->
-                        {% if product.offer_percentage > 0 %}
-                        <div class="absolute top-2 left-2">
-                            <span class="bg-blue-600 text-white text-sm px-3 py-1 rounded-full font-medium shadow-lg">
-                                {{ product.offer_percentage }}% OFF
-                            </span>
-                        </div>
-                        {% endif %}
-                        
-                        <!-- Wishlist Button -->
-                        <div class="absolute top-2 right-2">
-                            <button 
-                                class="wishlist-btn bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transform hover:scale-110 transition duration-300"
-                                onclick="event.stopPropagation(); event.preventDefault(); toggleWishlist({{ product.variants.first.id }})"
-                                data-variant-id="{{ product.variants.first.id }}"
-                                data-in-wishlist="false"
-                            >
-                                <i class="far fa-heart text-red-500 text-lg"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-medium text-gray-800 mb-2">{{ product.name }}</h3>
-                        <!-- Dynamic Rating Section -->
-                        <div class="flex text-sm text-yellow-400 mb-2">
-                            {% for i in "12345" %}
-                                {% if i|add:0 <= product.average_rating %}
-                                    <i class="fas fa-star"></i>  <!-- Full star -->
-                                {% else %}
-                                    <i class="far fa-star"></i>  <!-- Empty star -->
-                                {% endif %}
-                            {% endfor %}
-                            <span class="text-gray-500 ml-1">({{ product.reviews.count }})</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <div>
-                                {% if product.sales_price < product.regular_price %}
-                                    <span class="text-gray-400 line-through">₹{{ product.regular_price }}</span>
-                                    <span class="text-lg font-bold text-gray-800 ml-2">₹{{ product.sales_price }}</span>
-                                {% else %}
-                                    <span class="text-lg font-bold text-gray-800">₹{{ product.sales_price }}</span>
-                                {% endif %}
+<div class="sm:col-span-2 md:col-span-4 flex justify-between">
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Apply Filters</button>
+    <a href="{% url 'home' %}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Clear Filters</a>
+</div>
+
+
+        <!-- Product Section -->
+        <section class="container mx-auto px-4 mb-16">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-800">Featured Products</h2>
+                <a href="#" class="text-blue-600 hover:text-blue-800 flex items-center">
+                    View All <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {% for product in products %}
+                <a href="{% url 'product_detail' product.id %}" class="block">
+                    <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300 hover:shadow-lg">
+                        <div class="relative">
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-64 object-cover">
+                            
+                            <!-- Discount Percentage Badge -->
+                            {% if product.offer_percentage > 0 %}
+                            <div class="absolute top-2 left-2">
+                                <span class="bg-blue-600 text-white text-sm px-3 py-1 rounded-full font-medium shadow-lg">
+                                    {{ product.offer_percentage }}% OFF
+                                </span>
                             </div>
-                            {% if product.variants.all %}
-                            {% with first_variant=product.variants.first %}
+                            {% endif %}
+                            
+                            <!-- Wishlist Button -->
+                            <div class="absolute top-2 right-2">
+                                <button 
+                                    class="wishlist-btn bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transform hover:scale-110 transition duration-300"
+                                    onclick="event.stopPropagation(); event.preventDefault(); toggleWishlist({{ product.variants.first.id }})"
+                                    data-variant-id="{{ product.variants.first.id }}"
+                                    data-in-wishlist="false"
+                                >
+                                    <i class="far fa-heart text-red-500 text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-medium text-gray-800 mb-2">{{ product.name }}</h3>
+                            <div class="flex text-sm text-yellow-400 mb-2">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                                <span class="text-gray-500 ml-1">(24)</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    {% if product.sales_price < product.regular_price %}
+                                        <span class="text-gray-400 line-through">₹{{ product.regular_price }}</span>
+                                        <span class="text-lg font-bold text-gray-800 ml-2">₹{{ product.sales_price }}</span>
+                                    {% else %}
+                                        <span class="text-lg font-bold text-gray-800">₹{{ product.sales_price }}</span>
+                                    {% endif %}
+                                </div>
+                                {% if product.variants.all %}
                                 <button 
                                     id="addToCartBtn_{{ product.id }}"
-                                    onclick="event.stopPropagation(); event.preventDefault(); addCartItem({{ first_variant.id }})"
-                                    data-stock="{{ first_variant.stock }}"
-                                    class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transform hover:scale-105 transition duration-300 flex items-center gap-2 shadow-md
-                                           {% if first_variant.stock == 0 %} opacity-50 cursor-not-allowed {% endif %}"
-                                    {% if first_variant.stock == 0 %} disabled {% endif %}
+                                    onclick="event.stopPropagation(); event.preventDefault(); addCartItem({{ product.variants.first.id }})"
+                                    data-stock="{{ product.variants.first.stock }}"
+                                    class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transform hover:scale-105 transition duration-300 flex items-center gap-2 shadow-md"
                                 >
                                     <i class="fas fa-shopping-cart text-lg"></i>
                                     <span class="text-sm font-medium">Add</span>
                                 </button>
-                            {% endwith %}
+                                {% else %}
+                                    <span class="text-red-500 text-sm font-medium">Out of Stock</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            
+            
+        </section>
+        
+        <!-- Secondary Banner -->
+        <section class="bg-blue-600 py-16 mb-16">
+            <div class="container mx-auto px-4 text-center text-white">
+                <h2 class="text-3xl font-bold mb-4">Get 20% Off Your First Order</h2>
+                <p class="text-lg mb-8 max-w-xl mx-auto">Sign up for our newsletter and receive an exclusive discount code</p>
+                <div class="max-w-md mx-auto flex flex-col sm:flex-row gap-4">
+                    <input type="email" placeholder="Your email address" class="flex-grow py-3 px-4 rounded-lg focus:outline-none text-gray-800">
+                    <button class="bg-white text-blue-600 hover:bg-gray-100 font-medium py-3 px-6 rounded-lg transition">Subscribe</button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Trending Now Section -->
+<!-- Trending Now Section -->
+<section class="container mx-auto px-4 mb-16">
+    <div class="flex justify-between items-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-800">Trending Now</h2>
+        <a href="#" class="text-blue-600 hover:text-blue-800 flex items-center">
+            View All <i class="fas fa-arrow-right ml-2"></i>
+        </a>
+    </div>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for product in new_products %}
+        <a href="{% url 'product_detail' product.id %}" class="block">
+            <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300 hover:shadow-lg">
+                <div class="relative">
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-64 object-cover">
+                    
+                    <!-- Discount Percentage Badge -->
+                    {% if product.offer_percentage > 0 %}
+                    <div class="absolute top-2 left-2">
+                        <span class="bg-blue-600 text-white text-sm px-3 py-1 rounded-full font-medium shadow-lg">
+                            {{ product.offer_percentage }}% OFF
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Wishlist Button -->
+                    <div class="absolute top-2 right-2">
+                        <button 
+                            class="wishlist-btn bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transform hover:scale-110 transition duration-300"
+                            onclick="event.stopPropagation(); event.preventDefault(); toggleWishlist({{ product.variants.first.id }})"
+                            data-variant-id="{{ product.variants.first.id }}"
+                            data-in-wishlist="false"
+                        >
+                            <i class="far fa-heart text-red-500 text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h3 class="font-medium text-gray-800 mb-2">{{ product.name }}</h3>
+                    <div class="flex text-sm text-yellow-400 mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <span class="text-gray-500 ml-1">(24)</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            {% if product.sales_price < product.regular_price %}
+                                <span class="text-gray-400 line-through">₹{{ product.regular_price }}</span>
+                                <span class="text-lg font-bold text-gray-800 ml-2">₹{{ product.sales_price }}</span>
+                            {% else %}
+                                <span class="text-lg font-bold text-gray-800">₹{{ product.sales_price }}</span>
+                            {% endif %}
+                        </div>
+                        {% if product.variants.all %}
+                        <button 
+                            id="addToCartBtn_{{ product.id }}"
+                            onclick="event.stopPropagation(); event.preventDefault(); addCartItem({{ product.variants.first.id }})"
+                            data-stock="{{ product.variants.first.stock }}"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transform hover:scale-105 transition duration-300 flex items-center gap-2 shadow-md"
+                        >
+                            <i class="fas fa-shopping-cart text-lg"></i>
+                            <span class="text-sm font-medium">Add</span>
+                        </button>
                         {% else %}
                             <span class="text-red-500 text-sm font-medium">Out of Stock</span>
                         {% endif %}
-                        
-                        </div>
                     </div>
                 </div>
-            </a>
-            {% endfor %}
-        </div>
-        <div class="text-center mt-12">
-            <a href="{% url "all_products" %}" data-aos="fade-up" class="inline-block border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white font-bold py-3 px-8 rounded-full transition duration-300">
-                View All Products
-            </a>
-        </div>
+            </div>
+        </a>
+        {% endfor %}
     </div>
 </section>
+    </main>
 
+    <div class="mt-8">
+        <nav class="flex justify-center">
+            <ul class="inline-flex -space-x-px">
+                {% if products_page.has_previous %}
+                    <li>
+                        <a href="?page={{ products_page.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700">Previous</a>
+                    </li>
+                {% endif %}
+                {% for num in products_page.paginator.page_range %}
+                    <li>
+                        <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 {% if products_page.number == num %}bg-blue-50 text-blue-600{% endif %}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                {% if products_page.has_next %}
+                    <li>
+                        <a href="?page={{ products_page.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
 
-
-    <!-- Contact Section -->
-    <section id="contact" class="py-16 bg-white">
-        <div class="container mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 data-aos="fade-up" class="text-3xl font-bold text-gray-800 mb-4">Contact Us</h2>
-                <p data-aos="fade-up" data-aos-delay="200" class="text-gray-600 max-w-2xl mx-auto">Have questions or need assistance? Our team is here to help. Reach out to us anytime!</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                <div data-aos="fade-up" data-aos-delay="0" class="bg-gray-50 p-8 rounded-xl shadow-lg">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Get in Touch</h3>
-                    <form>
-                        <div class="space-y-4">
-                            <input type="text" placeholder="Your Name" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                            <input type="email" placeholder="Your Email" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                            <textarea placeholder="Your Message" rows="5" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"></textarea>
-                            <button type="submit" class="bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 transition duration-300">
-                                Send Message
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                <div data-aos="fade-up" data-aos-delay="200" class="space-y-6">
-                    <div class="flex items-center space-x-4">
-                        <div class="bg-indigo-600 text-white w-12 h-12 rounded-full flex items-center justify-center">
-                            <i class="fas fa-map-marker-alt text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-800">Our Location</h4>
-                            <p class="text-gray-600">123 Fashion Street, New York, NY 10001</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <div class="bg-indigo-600 text-white w-12 h-12 rounded-full flex items-center justify-center">
-                            <i class="fas fa-phone-alt text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-800">Call Us</h4>
-                            <p class="text-gray-600">+1 (555) 123-4567</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <div class="bg-indigo-600 text-white w-12 h-12 rounded-full flex items-center justify-center">
-                            <i class="fas fa-envelope text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-800">Email Us</h4>
-                            <p class="text-gray-600">support@evotime.com</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
     {% endblock product %}
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-12">
-        <div class="container mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer class="bg-gray-800 text-white pt-12 pb-6">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <!-- Company Info -->
                 <div>
-                    <div class="text-xl font-bold mb-4">
-                        <span class="text-indigo-600">Evo</span>Time
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="text-blue-400 text-2xl">
+                            <i class="fas fa-shopping-bag"></i>
+                        </div>
+                        <span class="text-xl font-bold">StyleShop</span>
                     </div>
-                    <p class="text-gray-400">Your destination for premium timepieces that redefine elegance and precision.</p>
+                    <p class="text-gray-400 mb-4">Your one-stop destination for fashion, accessories, and lifestyle products.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition">
+                            <i class="fab fa-pinterest"></i>
+                        </a>
+                    </div>
                 </div>
+                
+                <!-- Quick Links -->
                 <div>
-                    <h4 class="font-semibold mb-4">Quick Links</h4>
+                    <h3 class="font-bold text-lg mb-4">Quick Links</h3>
                     <ul class="space-y-2">
-                        <li><a href="{% url 'home' %}" class="text-gray-400 hover:text-white transition">Home</a></li>
-                        <li><a href="{% url 'brand_list' %}" class="text-gray-400 hover:text-white transition">Brands</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition">About</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition">Contact</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-4">Support</h4>
-                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Contact Us</a></li>
                         <li><a href="#" class="text-gray-400 hover:text-white transition">Shipping Policy</a></li>
                         <li><a href="#" class="text-gray-400 hover:text-white transition">Return Policy</a></li>
                         <li><a href="#" class="text-gray-400 hover:text-white transition">FAQs</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition">Privacy Policy</a></li>
                     </ul>
                 </div>
+                
+                <!-- Contact Info -->
                 <div>
-                    <h4 class="font-semibold mb-4">Follow Us</h4>
-                    <div class="flex space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-white transition">
-                            <i class="fab fa-facebook-f text-xl"></i>
-                        </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition">
-                            <i class="fab fa-twitter text-xl"></i>
-                        </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition">
-                            <i class="fab fa-instagram text-xl"></i>
-                        </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition">
-                            <i class="fab fa-pinterest text-xl"></i>
-                        </a>
-                    </div>
+                    <h3 class="font-bold text-lg mb-4">Contact Us</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li class="flex items-start">
+                            <i class="fas fa-map-marker-alt mt-1 mr-2"></i>
+                            <span>123 Fashion Street, New York, NY 10001</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-phone-alt mr-2"></i>
+                            <span>+1 (555) 123-4567</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope mr-2"></i>
+                            <span>support@styleshop.com</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
-            <div class="border-t border-gray-700 mt-8 pt-8 text-center">
-                <p class="text-gray-400">&copy; 2024 EvoTime. All rights reserved.</p>
+            
+            <!-- Copyright -->
+            <div class="pt-8 border-t border-gray-700 text-center">
+                <p class="text-gray-400">&copy; 2025 StyleShop. All rights reserved.</p>
+                <div class="flex justify-center space-x-4 mt-4 text-sm text-gray-500">
+                    <a href="#" class="hover:text-gray-400">Privacy Policy</a>
+                    <a href="#" class="hover:text-gray-400">Terms of Service</a>
+                    <a href="#" class="hover:text-gray-400">Cookie Policy</a>
+                </div>
             </div>
         </div>
     </footer>
 
     <script>
-/// Initialize AOS
-if (typeof AOS !== 'undefined') {
-    AOS.init();
-}
+        // Simple mobile menu toggle
 
-function getCSRFToken() {
-    const cookieValue = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrftoken='))
-        ?.split('=')[1];
-    return cookieValue;
-}
-
-// Add item to cart with stock checking
-async function addCartItem(variantId) {
-    try {
-        // Find the button and disable it during request
-        const button = document.getElementById(`addToCartBtn_${variantId}`);
-        if (button) {
-            button.disabled = true;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin text-lg"></i>';
-        }
-
-        // First, check stock availability
-        const stockResponse = await fetch(`/api/check-stock/${variantId}/`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            },
-            credentials: 'same-origin'
-        }).catch(() => {
-            // If endpoint doesn't exist, proceed with the add to cart request
-            return null;
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterForm = document.querySelector('form[method="GET"]');
+            if (filterForm) {
+                filterForm.addEventListener('change', function() {
+                    const formData = new FormData(filterForm);
+                    const params = new URLSearchParams(formData).toString();
+                    window.location.href = `${window.location.pathname}?${params}`;
+                });
+            }
         });
 
-        let stockAvailable = true;
-        if (stockResponse && stockResponse.ok) {
-            const stockData = await stockResponse.json();
-            if (stockData.stock <= 0) {
-                stockAvailable = false;
-                showToast('Item is out of stock', 'error');
-                if (button) {
-                    button.disabled = false;
-                    button.innerHTML = '<i class="fas fa-shopping-cart text-lg"></i><span class="text-sm font-medium">Out of Stock</span>';
-                }
-                return;
-            }
-        }
-
-        if (stockAvailable) {
-            const response = await fetch(`/cart/add_to_cart/${variantId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCSRFToken(),
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+        document.addEventListener("DOMContentLoaded", function () {
+            var swiper = new Swiper(".swiper-container", {
+                loop: true,
+                autoplay: {
+                    delay: 2000,
+                    disableOnInteraction: false,
                 },
-                credentials: 'same-origin'
+                speed: 800,
+                effect: "slide",
             });
+        });
 
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                // Update cart count in the header
-                const cartCountElement = document.querySelector('.fa-shopping-cart + span');
-                if (cartCountElement) {
-                    cartCountElement.textContent = data.cart_item_count;
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuButton = document.querySelector('.md\\:hidden.text-gray-600');
+            const mobileMenu = document.querySelector('.md\\:hidden.hidden');
+            
+            menuButton.addEventListener('click', function() {
+                if (mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.remove('hidden');
+                } else {
+                    mobileMenu.classList.add('hidden');
                 }
+            });
+        });
 
-                // Show success toast
-                showToast('Item added to cart', 'success');
-                
-                // Add a brief animation to the button
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[id^="addToCartBtn_"]').forEach(button => {
+                const stock = parseInt(button.getAttribute('data-stock'), 10);
+                if (stock < 1) {
+                    button.disabled = true;
+                    button.textContent = "Out of Stock";
+                    button.classList.add('bg-gray-400', 'cursor-not-allowed');
+                    button.classList.remove('bg-gray-900', 'hover:bg-gray-700');
+                }
+            });
+        });
+
+        function getCSRFToken() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        }
+
+        function showToast(message, type = 'success') {
+            // Define toast colors
+            const colors = {
+                success: 'linear-gradient(to right, #10B981, #059669)',
+                error: 'linear-gradient(to right, #EF4444, #DC2626)'
+            };
+        
+            Toastify({
+                text: message,
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                stopOnFocus: true,
+                style: {
+                    background: colors[type],
+                    borderRadius: '8px',
+                    padding: '12px 24px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center'
+                },
+                onClick: function(){} // Callback after click
+            }).showToast();
+        }
+        
+        // Function to add item to cart
+        async function addCartItem(variantId) {
+            try {
+                // Validate variant ID
+                if (!variantId) {
+                    showToast('Invalid product variant', 'error');
+                    return;
+                }
+        
+                // Show loading state on button
+                const button = event.target;
+                button.disabled = true; // Disable the button
+        
+                const response = await fetch(`/cart/add_to_cart/${variantId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken(),
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                });
+        
+                const data = await response.json();
+        
+                if (response.ok && data.success) {
+                    showToast('Item added to cart successfully', 'success');
+                    
+                    // Update cart count if present
+                    const cartCounter = document.querySelector('.cart-counter');
+                    if (cartCounter) {
+                        cartCounter.textContent = data.cart_item_count;
+                    }
+        
+                    // Handle low stock warning
+                    if (data.stock_warning) {
+                        button.textContent = 'Low Stock';
+                        button.classList.add('bg-yellow-500');
+                    } else {
+                        button.textContent = 'Add to Cart'; // Keep the original text
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to add item to cart');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast(error.message || 'An error occurred while adding to cart', 'error');
+            } finally {
+                // Restore button state if it exists
+                const button = event.target;
                 if (button) {
-                    button.classList.add('bg-green-600');
-                    setTimeout(() => {
-                        button.classList.remove('bg-green-600');
-                    }, 1000);
+                    button.disabled = false; // Re-enable the button
+                    if (!button.classList.contains('bg-yellow-500')) {
+                        button.textContent = 'Add to Cart'; // Reset to original text
+                    }
                 }
-            } else {
-                throw new Error(data.error || 'Failed to add item to cart');
             }
         }
-    } catch (error) {
-        console.error('Error adding to cart:', error);
-        showToast(error.message || 'Failed to add item to cart', 'error');
-    } finally {
-        // Re-enable the button and restore its original text
-        const button = document.getElementById(`addToCartBtn_${variantId}`);
-        if (button) {
-            button.disabled = false;
-            button.innerHTML = '<i class="fas fa-shopping-cart text-lg"></i><span class="text-sm font-medium">Add</span>';
-        }
-    }
-}
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prevent default form submission for cart buttons
+            document.body.addEventListener('click', function(e) {
+                if (e.target.matches('[onclick^="addCartItem"]')) {
+                    e.preventDefault();
+                }
+            });
+        });
 
-// Toggle item in wishlist with proper state management
+        // Function to toggle wishlist
 async function toggleWishlist(variantId) {
     try {
         const button = document.querySelector(`.wishlist-btn[data-variant-id="${variantId}"]`);
-        if (!button) return;
-        
         const isInWishlist = button.getAttribute('data-in-wishlist') === 'true';
 
         // Show loading state
         button.disabled = true;
         button.innerHTML = '<i class="fas fa-spinner fa-spin text-lg"></i>';
 
-        // Determine URL based on current wishlist status
         const url = isInWishlist ? `/wishlist/remove/${variantId}/` : `/wishlist/add/${variantId}/`;
-        
+        const method = 'POST';
+
         const response = await fetch(url, {
-            method: 'POST',
+            method: method,
             headers: {
                 'X-CSRFToken': getCSRFToken(),
                 'Content-Type': 'application/json',
@@ -633,286 +654,31 @@ async function toggleWishlist(variantId) {
         const data = await response.json();
 
         if (response.ok && data.success) {
-            // Toggle the wishlist state
-            const newWishlistState = !isInWishlist;
-            
-            // Update all matching buttons for this variant to ensure consistency
-            document.querySelectorAll(`.wishlist-btn[data-variant-id="${variantId}"]`).forEach(btn => {
-                btn.setAttribute('data-in-wishlist', newWishlistState.toString());
-                btn.innerHTML = newWishlistState 
-                    ? '<i class="fas fa-heart text-red-500 text-lg"></i>' 
-                    : '<i class="far fa-heart text-red-500 text-lg"></i>';
-            });
+            // Update button state
+            button.setAttribute('data-in-wishlist', !isInWishlist);
+            button.innerHTML = isInWishlist 
+                ? '<i class="far fa-heart text-gray-500 text-lg"></i>' 
+                : '<i class="fas fa-heart text-red-500 text-lg"></i>';
 
-            // Add/remove from client-side wishlist tracking
-            updateLocalWishlistTracking(variantId, newWishlistState);
-
-            // Show appropriate toast
-            showToast(newWishlistState ? 'Added to wishlist' : 'Removed from wishlist', 'success');
+            // Show toast notification
+            showToast(
+                isInWishlist ? 'Removed from wishlist' : 'Added to wishlist',
+                isInWishlist ? 'success' : 'success'
+            );
         } else {
             throw new Error(data.error || 'Failed to update wishlist');
         }
     } catch (error) {
-        console.error('Error updating wishlist:', error);
-        // If there's an authentication error, redirect to login
-        if (error.message && error.message.includes('authentication')) {
-            window.location.href = '/accounts/login/?next=' + window.location.pathname;
-        } else {
-            showToast(error.message || 'Failed to update wishlist', 'error');
-        }
+        console.error('Error:', error);
+        showToast(error.message || 'An error occurred', 'error');
     } finally {
-        // Ensure button is re-enabled if it wasn't properly handled above
-        document.querySelectorAll(`.wishlist-btn[data-variant-id="${variantId}"]`).forEach(btn => {
-            if (btn.disabled) {
-                btn.disabled = false;
-                const isInWishlist = btn.getAttribute('data-in-wishlist') === 'true';
-                btn.innerHTML = isInWishlist 
-                    ? '<i class="fas fa-heart text-red-500 text-lg"></i>' 
-                    : '<i class="far fa-heart text-red-500 text-lg"></i>';
-            }
-        });
+        // Restore button state
+        if (button) {
+            button.disabled = false;
+        }
     }
 }
-
-// Helper function to maintain local wishlist tracking
-function updateLocalWishlistTracking(variantId, isInWishlist) {
-    try {
-        // Get current wishlist from localStorage
-        let wishlistItems = [];
-        const storedWishlist = localStorage.getItem('userWishlist');
         
-        if (storedWishlist) {
-            wishlistItems = JSON.parse(storedWishlist);
-        }
-        
-        // Add or remove the variant ID
-        if (isInWishlist && !wishlistItems.includes(variantId)) {
-            wishlistItems.push(variantId);
-        } else if (!isInWishlist) {
-            wishlistItems = wishlistItems.filter(id => id !== variantId);
-        }
-        
-        // Save back to localStorage
-        localStorage.setItem('userWishlist', JSON.stringify(wishlistItems));
-    } catch (e) {
-        console.error('Error updating local wishlist tracking:', e);
-    }
-}
-
-// Function to show toast notifications
-function showToast(message, type = 'info') {
-    const toastContainer = document.getElementById('toast-container');
-    if (!toastContainer) return;
-
-    const toast = document.createElement('div');
-    toast.className = `rounded-lg py-3 px-4 shadow-lg flex items-center space-x-3 mb-3 transform transition-all duration-300 ease-out translate-y-10 opacity-0`;
-    
-    // Set toast color based on type
-    if (type === 'success') {
-        toast.classList.add('bg-green-600', 'text-white');
-    } else if (type === 'error') {
-        toast.classList.add('bg-red-600', 'text-white');
-    } else {
-        toast.classList.add('bg-blue-600', 'text-white');
-    }
-
-    // Set toast icon based on type
-    let icon = 'fa-info-circle';
-    if (type === 'success') icon = 'fa-check-circle';
-    if (type === 'error') icon = 'fa-exclamation-circle';
-
-    toast.innerHTML = `
-        <i class="fas ${icon}"></i>
-        <span>${message}</span>
-    `;
-
-    toastContainer.appendChild(toast);
-
-    // Trigger animation
-    setTimeout(() => {
-        toast.classList.remove('translate-y-10', 'opacity-0');
-    }, 10);
-
-    // Auto dismiss after 3 seconds
-    setTimeout(() => {
-        toast.classList.add('translate-y-10', 'opacity-0');
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }, 3000);
-}
-
-// Enhanced wishlist status checking that works with both server and local data
-document.addEventListener('DOMContentLoaded', function() {
-    // Function to check wishlist status and update icons
-    async function checkWishlistStatus() {
-        try {
-            const response = await fetch('/wishlist/status/', {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' },
-                credentials: 'same-origin'
-            });
-    
-            let wishlistItems = new Set();
-    
-            if (response.ok) {
-                const data = await response.json();
-                if (data.items && Array.isArray(data.items)) {
-                    data.items.forEach(id => wishlistItems.add(parseInt(id)));
-                    localStorage.setItem('userWishlist', JSON.stringify([...wishlistItems]));
-                }
-            } else {
-                fallbackToLocalWishlist();
-            }
-    
-            // Update buttons
-            document.querySelectorAll('.wishlist-btn').forEach(button => {
-                const variantId = parseInt(button.getAttribute('data-variant-id'));
-                if (!isNaN(variantId)) {
-                    const isInWishlist = wishlistItems.has(variantId);
-                    button.setAttribute('data-in-wishlist', isInWishlist.toString());
-                    button.innerHTML = isInWishlist 
-                        ? '<i class="fas fa-heart text-red-500 text-lg"></i>'
-                        : '<i class="far fa-heart text-red-500 text-lg"></i>';
-                }
-            });
-    
-        } catch (error) {
-            console.error('Error checking wishlist status:', error);
-            fallbackToLocalWishlist();
-        }
-    }
-    
-    
-    // Helper function to use local storage wishlist when server request fails
-    function fallbackToLocalWishlist() {
-        try {
-            const storedWishlist = localStorage.getItem('userWishlist');
-            if (!storedWishlist) return;
-            
-            const wishlistItems = new Set(JSON.parse(storedWishlist).map(id => parseInt(id)));
-            
-            document.querySelectorAll('.wishlist-btn').forEach(button => {
-                const variantId = parseInt(button.getAttribute('data-variant-id'));
-                if (!isNaN(variantId)) {
-                    const isInWishlist = wishlistItems.has(variantId);
-                    
-                    button.setAttribute('data-in-wishlist', isInWishlist.toString());
-                    button.innerHTML = isInWishlist 
-                        ? '<i class="fas fa-heart text-red-500 text-lg"></i>'
-                        : '<i class="far fa-heart text-red-500 text-lg"></i>';
-                }
-            });
-        } catch (e) {
-            console.error('Error in local wishlist fallback:', e);
-        }
-    }
-
-    // Call the function to initialize wishlist icons
-    checkWishlistStatus();
-
-    // Initialize AOS (Animate On Scroll) if it's available
-    if (typeof AOS !== 'undefined') {
-        AOS.init({
-            duration: 800,
-            once: true
-        });
-    }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    const categoryLinks = document.querySelectorAll('.category-link');
-    const productGrid = document.getElementById('product-grid');
-
-    // Function to load products
-    function loadProducts(categoryId = null) {
-        fetch(`/api/products/?category=${categoryId}`)
-            .then(response => response.json())
-            .then(data => {
-                // Clear existing products
-                productGrid.innerHTML = '';
-
-                // Add new products
-                data.products.forEach(product => {
-                    const productCard = `
-                        <a href="/product/${product.id}/" class="block">
-                            <div class="product-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300 hover:shadow-lg">
-                                <div class="relative">
-                                    <img src="${product.image}" alt="${product.name}" class="w-full h-64 object-cover">
-                                    ${product.offer_percentage > 0 ? `
-                                    <div class="absolute top-2 left-2">
-                                        <span class="bg-blue-600 text-white text-sm px-3 py-1 rounded-full font-medium shadow-lg">
-                                            ${product.offer_percentage}% OFF
-                                        </span>
-                                    </div>
-                                    ` : ''}
-                                    <div class="absolute top-2 right-2">
-                                        <button 
-                                            class="wishlist-btn bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transform hover:scale-110 transition duration-300"
-                                            onclick="event.stopPropagation(); event.preventDefault(); toggleWishlist(${product.variants[0].id})"
-                                            data-variant-id="${product.variants[0].id}"
-                                            data-in-wishlist="false"
-                                        >
-                                            <i class="far fa-heart text-red-500 text-lg"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="p-4">
-                                    <h3 class="font-medium text-gray-800 mb-2">${product.name}</h3>
-                                    <div class="flex text-sm text-yellow-400 mb-2">
-                                        ${Array.from({ length: 5 }, (_, i) => `
-                                            <i class="${i < product.average_rating ? 'fas' : 'far'} fa-star"></i>
-                                        `).join('')}
-                                        <span class="text-gray-500 ml-1">(${product.reviews.length})</span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            ${product.sales_price < product.regular_price ? `
-                                            <span class="text-gray-400 line-through">₹${product.regular_price}</span>
-                                            <span class="text-lg font-bold text-gray-800 ml-2">₹${product.sales_price}</span>
-                                            ` : `
-                                            <span class="text-lg font-bold text-gray-800">₹${product.sales_price}</span>
-                                            `}
-                                        </div>
-                                        ${product.variants.length > 0 ? `
-                                        <button 
-                                            id="addToCartBtn_${product.id}"
-                                            onclick="event.stopPropagation(); event.preventDefault(); addCartItem(${product.variants[0].id})"
-                                            data-stock="${product.variants[0].stock}"
-                                            class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transform hover:scale-105 transition duration-300 flex items-center gap-2 shadow-md
-                                                   ${product.variants[0].stock == 0 ? 'opacity-50 cursor-not-allowed' : ''}"
-                                            ${product.variants[0].stock == 0 ? 'disabled' : ''}
-                                        >
-                                            <i class="fas fa-shopping-cart text-lg"></i>
-                                            <span class="text-sm font-medium">Add</span>
-                                        </button>
-                                        ` : `
-                                        <span class="text-red-500 text-sm font-medium">Out of Stock</span>
-                                        `}
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    `;
-                    productGrid.insertAdjacentHTML('beforeend', productCard);
-                });
-            })
-            .catch(error => console.error('Error fetching products:', error));
-    }
-
-    // Load latest products by default
-    loadProducts();
-
-    // Add event listeners to category links
-    categoryLinks.forEach(link => {
-        link.addEventListener('click', function(event) {
-            event.preventDefault();
-            const categoryId = this.getAttribute('data-category');
-            loadProducts(categoryId);
-            document.getElementById('featured').scrollIntoView({ behavior: 'smooth' });
-        });
-    });
-});
     </script>
 </body>
 </html>

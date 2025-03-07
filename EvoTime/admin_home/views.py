@@ -954,56 +954,49 @@ def toggle_category_status(request, category_id):
 @admin_required
 @never_cache
 def edit_category(request, category_id):
-    try:
-        # Validate and fetch category
-        category_id = int(category_id)
-        category = get_object_or_404(Category, id=category_id)
+    category = get_object_or_404(Category, id=category_id)
+    
+    if request.method == 'POST':
+        category_name = request.POST.get('category_name', '').strip()
+        category_image = request.FILES.get('category_image')
 
-        if request.method == 'POST':
-            new_name = request.POST.get('category_name', '').strip()
+        # Comprehensive Validations
+        errors = []
 
-            # Comprehensive Validations
-            errors = []
+        # Name Validation
+        if not category_name:
+            errors.append("Category name cannot be empty!")
+        elif len(category_name) < 2:
+            errors.append("Category name must be at least 2 characters long!")
+        elif len(category_name) > 100:
+            errors.append("Category name cannot exceed 100 characters!")
+        elif not re.match(r'^[A-Za-z0-9\s\-&.()]+$', category_name):
+            errors.append("Category name contains invalid characters!")
+        
+        # Check for Duplicate Category (case-insensitive)
+        if Category.objects.filter(name__iexact=category_name).exclude(id=category.id).exists():
+            errors.append("A category with this name already exists!")
 
-            # Name Validation
-            if not new_name:
-                errors.append("Category name cannot be empty!")
-            elif len(new_name) < 2:
-                errors.append("Category name must be at least 2 characters long!")
-            elif len(new_name) > 100:
-                errors.append("Category name cannot exceed 100 characters!")
-            elif not re.match(r'^[A-Za-z0-9\s\-&.()]+$', new_name):
-                errors.append("Category name contains invalid characters!")
-            
-            # Check for Duplicate Category (case-insensitive, excluding current category)
-            if Category.objects.exclude(id=category_id).filter(name__iexact=new_name).exists():
-                errors.append("A category with this name already exists!")
-
-            # Handle Errors
-            if errors:
-                for error in errors:
-                    messages.error(request, error)
-                return redirect('manage_categories')
-
-            # Update Category with Transaction
-            try:
-                with transaction.atomic():
-                    category.name = new_name
-                    category.save()
-                messages.success(request, "Category updated successfully!")
-            except IntegrityError:
-                messages.error(request, "An error occurred while updating the category.")
-            
+        # Handle Errors
+        if errors:
+            for error in errors:
+                messages.error(request, error)
             return redirect('manage_categories')
-
-        return render(request, 'product/edit_category.html', {'category': category})
-
-    except ValueError:
-        messages.error(request, "Invalid category ID!")
+        
+        # Update Category with Transaction
+        try:
+            with transaction.atomic():
+                category.name = category_name
+                if category_image:
+                    category.Category_image = category_image
+                category.save()
+            messages.success(request, f"Category '{category_name}' updated successfully!")
+        except IntegrityError:
+            messages.error(request, "An error occurred while updating the category.")
+        
         return redirect('manage_categories')
-    except Exception as e:
-        messages.error(request, f"An unexpected error occurred: {str(e)}")
-        return redirect('manage_categories')
+
+    return redirect('manage_categories')
 
 
 @admin_required
