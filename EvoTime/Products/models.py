@@ -9,7 +9,7 @@ class Brand(models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True)
     offer_percentage = models.PositiveIntegerField(default=0, help_text="Discount percentage for this brand.")
-    Brand_image = models.ImageField(upload_to='Brand_images/', blank=True, null=True)
+    Brand_image = models.ImageField(upload_to='brand_images/', blank=True, null=True)
 
     def save(self, *args, **kwargs):
         """Ensure all related products update their prices when brand offer changes."""
