@@ -38,21 +38,25 @@
     <div class="bg-white p-6 rounded shadow-lg w-96">
         <h3 class="text-lg font-bold mb-2">Edit Brand</h3>
         <input type="hidden" id="editBrandId">
-        <input type="text" id="editBrandName" class="w-full border p-2 rounded mb-2">
-        <input type="number" id="editBrandOffer" class="w-full border p-2 rounded mb-2">
+        <input type="text" id="editBrandName" class="w-full border p-2 rounded mb-2" placeholder="Brand Name">
+        <input type="number" id="editBrandOffer" class="w-full border p-2 rounded mb-2" placeholder="Offer Percentage">
+        <input type="file" id="editBrandImage" class="w-full border p-2 rounded mb-2" accept="image/*">
         <div class="flex justify-end space-x-2">
             <button class="bg-gray-500 text-white px-4 py-2 rounded" onclick="closeModal('editBrandModal')">Cancel</button>
             <button class="bg-blue-600 text-white px-4 py-2 rounded" onclick="editBrand()">Update</button>
         </div>
     </div>
 </div>
+</div>
 <script>
-    function openEditBrandModal(id, name, offer) {
+    function openEditBrandModal(id, name, offer, imageUrl) {
         document.getElementById("editBrandId").value = id;
         document.getElementById("editBrandName").value = name;
         document.getElementById("editBrandOffer").value = offer;
+        // Assuming imageUrl is the URL to the current image, if any
         document.getElementById("editBrandModal").classList.remove("hidden");
     }
+    
 
     function closeModal(id) {
         document.getElementById(id).classList.add("hidden");
@@ -62,21 +66,23 @@
         const id = document.getElementById("editBrandId").value;
         const name = document.getElementById("editBrandName").value;
         const offer = document.getElementById("editBrandOffer").value;
+        const imageFile = document.getElementById("editBrandImage").files[0];
     
-        fetch(`/admin-panel/brands/edit/${id}/`, {  // Updated URL to include /admin-panel/
+        const formData = new FormData();
+        formData.append("name", name);
+        formData.append("offer_percentage", offer);
+        if (imageFile) {
+            formData.append("Brand_image", imageFile);
+        }
+    
+        fetch(`/admin-panel/brands/edit/${id}/`, {
             method: "POST",
             headers: {
                 "X-CSRFToken": "{{ csrf_token }}",
-                "Content-Type": "application/json"
             },
-            body: JSON.stringify({ name, offer_percentage: offer })
+            body: formData
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Network response was not ok");
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
             if (data.message) {
                 alert(data.message);

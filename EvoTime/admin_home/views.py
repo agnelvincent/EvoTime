@@ -437,13 +437,14 @@ def list_brands(request):
     brands = Brand.objects.all()
     return render(request, 'brands/brands.html', {'brands': brands})
 
-@csrf_exempt  # Only for testing; use CSRF protection in production
+@csrf_exempt  # Remember to remove this in production and use proper CSRF protection
 def edit_brand(request, brand_id):
     if request.method == "POST":
-        brand = get_object_or_404(Brand, id=brand_id)  # Ensures ID exists, otherwise returns 404
-        data = json.loads(request.body)  # Parse JSON request body
-        brand.name = data.get('name', brand.name)
-        brand.offer_percentage = data.get('offer_percentage', brand.offer_percentage)
+        brand = get_object_or_404(Brand, id=brand_id)
+        brand.name = request.POST.get('name', brand.name)
+        brand.offer_percentage = request.POST.get('offer_percentage', brand.offer_percentage)
+        if 'Brand_image' in request.FILES:
+            brand.Brand_image = request.FILES['Brand_image']
         brand.save()
         return JsonResponse({"message": "Brand updated successfully"})
     
@@ -461,6 +462,7 @@ def add_brand(request):
     if request.method == 'POST':
         brand_name = request.POST.get('brand_name', '').strip()
         offer_percentage = request.POST.get('offer_percentage', '').strip()
+        brand_image = request.FILES.get('brand_image')  # Get uploaded image
 
         # Comprehensive Validations
         errors = []
@@ -499,11 +501,11 @@ def add_brand(request):
             with transaction.atomic():
                 brand = Brand.objects.create(
                     name=brand_name, 
-                    offer_percentage=offer_percentage
+                    offer_percentage=offer_percentage,
+                    Brand_image=brand_image  # Save image
                 )
 
                 # Apply Offer to All Associated Products
-                # Use bulk_update for better performance
                 products = brand.products.all()
                 for product in products:
                     product.save()  # This triggers price recalculation
@@ -516,6 +518,7 @@ def add_brand(request):
             return redirect('admin_product')
 
     return render(request, 'product/admin_product.html')
+
 
 
 

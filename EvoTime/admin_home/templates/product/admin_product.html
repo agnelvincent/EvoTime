@@ -131,13 +131,17 @@
 <div id="addBrandModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center p-4">
     <div class="bg-white rounded-lg w-full max-w-md p-6">
         <h2 class="text-xl font-bold mb-4">Add Brand</h2>
-        <form method="POST" action="{% url 'add_brand' %}">
+        <form method="POST" action="{% url 'add_brand' %}" enctype="multipart/form-data">
             {% csrf_token %}
+            
             <!-- Brand Name -->
             <input type="text" name="brand_name" placeholder="Brand Name" class="w-full border p-2 rounded mb-2" required>
 
             <!-- Offer Percentage (Optional) -->
             <input type="number" name="offer_percentage" placeholder="Offer Percentage (%)" min="0" max="100" class="w-full border p-2 rounded mb-2">
+
+            <!-- Brand Image Upload -->
+            <input type="file" name="brand_image" accept="image/*" class="w-full border p-2 rounded mb-2">
 
             <!-- Submit Button -->
             <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 w-full sm:w-auto">Add Brand</button>
@@ -145,6 +149,7 @@
         <button id="closeAddBrandModal" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Close</button>
     </div>
 </div>
+
 
 <!-- Edit Product Modal -->
 {% for product in products %}

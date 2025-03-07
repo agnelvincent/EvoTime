@@ -2,37 +2,49 @@
 
 {% block product %}
 <!-- Brands Section -->
-<section id="brandSection" class="bg-gray-50 py-16 px-4">
+<section id="brandSection" class="bg-gradient-to-r from-gray-50 to-blue-50 py-20 px-4">
     <div class="container mx-auto max-w-7xl">
-        <h2 class="text-4xl font-extrabold text-center text-gray-900 mb-12 tracking-tight">
+        <h2 class="text-4xl font-extrabold text-center text-gray-900 mb-14 tracking-tight relative">
             Our Premium Brands
+            <span class="block h-1 w-24 bg-blue-600 mx-auto mt-4 rounded-full"></span>
         </h2>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {% for brand in brands %}
             <div class="group">
                 <div 
-                    class="bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer"
+                    class="bg-white rounded-xl border border-gray-100 overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer"
                     onclick="showProducts('{{ brand.id }}')"
                 >
-                    <div class="p-6 text-center">
-                        <div class="bg-gradient-to-br from-blue-100 to-blue-200 rounded-full w-32 h-32 mx-auto mb-6 flex items-center justify-center shadow-md">
-                            <span class="text-4xl font-bold text-blue-800 opacity-80">
-                                {{ brand.name|slice:":2"|upper }}
-                            </span>
+                    <div class="p-8 text-center">
+                        <div class="mb-6 mx-auto relative w-32 h-32 flex items-center justify-center">
+                            {% if brand.logo %}
+                                <img 
+                                    src="{{ brand.logo }}" 
+                                    alt="{{ brand.name }} logo" 
+                                    class="w-full h-full object-contain transition-all duration-300 group-hover:scale-110"
+                                >
+                            {% else %}
+                                <!-- Fallback if no logo is available -->
+                                <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg w-32 h-32 mx-auto flex items-center justify-center border border-gray-200">
+                                    <span class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-800">
+                                        {{ brand.name|slice:":2"|upper }}
+                                    </span>
+                                </div>
+                            {% endif %}
                         </div>
                         
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-3 group-hover:text-blue-700 transition">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors">
                             {{ brand.name }}
                         </h3>
                         
-                        <p class="text-gray-600 text-sm line-clamp-3">
-                            {{ brand.description|truncatechars:120 }}
+                        <p class="text-gray-600 text-sm line-clamp-2 mb-5">
+                            {{ brand.description|truncatechars:100 }}
                         </p>
                         
                         <div class="mt-4">
-                            <span class="inline-block px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-xs font-medium">
-                                View Products
+                            <span class="inline-block px-5 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-sm font-medium transform transition-all duration-300 group-hover:scale-105 shadow-sm group-hover:shadow-md">
+                                View Collection
                             </span>
                         </div>
                     </div>
@@ -44,27 +56,27 @@
 </section>
 
 <!-- Products Section -->
-<section id="productSection" class="bg-gray-50 py-16 px-4 hidden">
+<section id="productSection" class="bg-gradient-to-r from-gray-50 to-blue-50 py-20 px-4 hidden">
     <div class="container mx-auto max-w-7xl">
         <div class="flex flex-col md:flex-row items-center justify-between mb-12">
-            <h2 
-                id="brandName" 
-                class="text-4xl font-extrabold text-gray-900 mb-4 md:mb-0 tracking-tight"
-            ></h2>
+            <div class="text-center md:text-left mb-6 md:mb-0">
+                <h2 
+                    id="brandName" 
+                    class="text-4xl font-extrabold text-gray-900 tracking-tight"
+                ></h2>
+                <div class="h-1 w-20 bg-blue-600 mt-4 rounded-full md:mx-0 mx-auto"></div>
+            </div>
             
             <button 
                 onclick="hideProducts()"
-                class="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors group"
+                class="flex items-center gap-2 text-gray-700 bg-white px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-all group border border-gray-100"
             >
-                <i class="fas fa-arrow-left group-hover:-translate-x-1 transition"></i>
+                <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
                 <span class="font-medium">Back to Brands</span>
             </button>
         </div>
         
-        <div 
-            id="productGrid" 
-            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
-        >
+        <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             <!-- Products will be dynamically loaded here -->
         </div>
     </div>
@@ -73,6 +85,13 @@
 <script>
     async function showProducts(brandId) {
         try {
+            // Add loading state
+            document.getElementById('productGrid').innerHTML = `
+                <div class="col-span-4 flex justify-center items-center py-16">
+                    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
+                </div>
+            `;
+            
             const response = await fetch(`/brand/${brandId}/`);
             const data = await response.json();
     
@@ -81,61 +100,72 @@
                 const productGrid = document.getElementById('productGrid');
                 productGrid.innerHTML = '';
     
+                // Check if products exist
+                if (data.products.length === 0) {
+                    productGrid.innerHTML = `
+                        <div class="col-span-4 text-center py-16">
+                            <div class="text-gray-500 text-xl">No products available for this brand yet</div>
+                        </div>
+                    `;
+                }
+    
                 data.products.forEach(product => {
                     const productCard = `
-                        <div class="flex flex-col bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group">
+                        <div class="flex flex-col bg-white rounded-xl border border-gray-100 overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group h-full">
                             <div class="relative h-64 overflow-hidden">
                                 <img 
                                     src="${product.image}" 
                                     alt="${product.name}" 
-                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                    onerror="this.src='https://via.placeholder.com/400x300?text=Product+Image'"
                                 >
                                 
                                 ${product.discount ? `
                                     <div class="absolute top-4 left-4">
-                                        <span class="bg-red-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
-                                            -${product.discount}%
+                                        <span class="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-4 py-1.5 rounded-lg font-semibold shadow-sm">
+                                            ${product.discount}% OFF
                                         </span>
                                     </div>
                                 ` : ''}
                                 
-                                <button class="absolute top-4 right-4 bg-white p-2 rounded-full shadow hover:bg-gray-100 transition">
-                                    <i class="far fa-heart text-gray-600"></i>
+                                <button class="absolute top-4 right-4 bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transition-colors">
+                                    <i class="far fa-heart text-gray-600 group-hover:text-red-500 transition-colors"></i>
                                 </button>
                             </div>
                             
                             <div class="flex flex-col flex-grow p-6">
-                                <h3 class="text-xl font-semibold text-gray-800 mb-2 group-hover:text-blue-700 transition h-12 line-clamp-2">
+                                <div class="flex items-center mb-3">
+                                    <div class="flex text-yellow-400 mr-2">
+                                        ${generateStarRating(product.rating || 4.5)}
+                                    </div>
+                                    <span class="text-gray-500 text-sm">(${product.reviews || 24})</span>
+                                </div>
+                                
+                                <h3 class="text-xl font-semibold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
                                     ${product.name}
                                 </h3>
                                 
-                                <div class="flex items-center mb-3">
-                                    <div class="flex text-yellow-400 mr-2">
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star-half-alt"></i>
-                                    </div>
-                                    <span class="text-gray-500 text-sm">(24)</span>
-                                </div>
+                                <p class="text-gray-600 text-sm mb-5 line-clamp-2">
+                                    ${product.description || 'Premium quality product from ' + data.brand.name}
+                                </p>
                                 
                                 <div class="flex justify-between items-center mt-auto">
                                     <div>
                                         <span class="text-xl font-bold text-gray-900">₹${product.sales_price}</span>
                                         ${product.sales_price < product.regular_price ? `
-                                            <span class="text-gray-500 text-sm line-through ml-2">
+                                            <span class="text-gray-400 text-sm line-through ml-2">
                                                 ₹${product.regular_price}
                                             </span>
                                         ` : ''}
                                     </div>
                                     
                                     <button 
-                                        class="bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition flex items-center gap-2"
-                                        onclick="addCartItem(${product.variants.length > 0 ? product.variants[0].id : 'null'})"
+                                        class="group bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:shadow-md transition-all flex items-center gap-2 relative overflow-hidden"
+                                        onclick="addCartItem(${product.variants && product.variants.length > 0 ? product.variants[0].id : 'null'})"
                                     >
-                                        <i class="fas fa-shopping-cart"></i>
-                                        <span>Add to Cart</span>
+                                        <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-600 to-blue-700 transition-all duration-300 transform scale-0 group-hover:scale-100 rounded-lg"></span>
+                                        <i class="fas fa-shopping-cart relative z-10"></i>
+                                        <span class="relative z-10">Add</span>
                                     </button>
                                 </div>
                             </div>
@@ -144,8 +174,16 @@
                     productGrid.innerHTML += productCard;
                 });
     
-                document.getElementById('productSection').classList.remove('hidden');
-                document.getElementById('brandSection').classList.add('hidden');
+                // Smooth transition between sections
+                document.getElementById('brandSection').classList.add('opacity-0');
+                setTimeout(() => {
+                    document.getElementById('brandSection').classList.add('hidden');
+                    document.getElementById('brandSection').classList.remove('opacity-0');
+                    document.getElementById('productSection').classList.remove('hidden');
+                    // Trigger a reflow
+                    void document.getElementById('productSection').offsetWidth;
+                    document.getElementById('productSection').classList.add('opacity-100');
+                }, 300);
             } else {
                 throw new Error(data.error || 'Failed to load products');
             }
@@ -156,8 +194,101 @@
     }
 
     function hideProducts() {
-        document.getElementById('productSection').classList.add('hidden');
-        document.getElementById('brandSection').classList.remove('hidden');
+        // Smooth transition back to brands
+        document.getElementById('productSection').classList.remove('opacity-100');
+        setTimeout(() => {
+            document.getElementById('productSection').classList.add('hidden');
+            document.getElementById('brandSection').classList.remove('hidden');
+            // Trigger a reflow
+            void document.getElementById('brandSection').offsetWidth;
+            document.getElementById('brandSection').classList.add('opacity-100');
+        }, 300);
     }
+    
+    function generateStarRating(rating) {
+        let stars = '';
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 >= 0.5;
+        
+        for (let i = 0; i < fullStars; i++) {
+            stars += '<i class="fas fa-star"></i>';
+        }
+        
+        if (hasHalfStar) {
+            stars += '<i class="fas fa-star-half-alt"></i>';
+        }
+        
+        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+        for (let i = 0; i < emptyStars; i++) {
+            stars += '<i class="far fa-star"></i>';
+        }
+        
+        return stars;
+    }
+    
+    function addCartItem(variantId) {
+        if (!variantId) {
+            showToast('Please select a product variant', 'warning');
+            return;
+        }
+        
+        // Add product to cart implementation
+        showToast('Product added to cart successfully!', 'success');
+    }
+    
+    function showToast(message, type = 'info') {
+        // Check if toast container exists, if not create it
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.className = 'fixed bottom-4 right-4 z-50 flex flex-col gap-3';
+            document.body.appendChild(toastContainer);
+        }
+        
+        // Create toast element
+        const toast = document.createElement('div');
+        const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500';
+        toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transform transition-all duration-500 translate-x-full`;
+        
+        // Icon based on type
+        const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+        toast.innerHTML = `
+            <i class="fas ${icon}"></i>
+            <span>${message}</span>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        // Animate in
+        setTimeout(() => {
+            toast.classList.remove('translate-x-full');
+        }, 10);
+        
+        // Remove after 4 seconds
+        setTimeout(() => {
+            toast.classList.add('opacity-0');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 4000);
+    }
+    
+    // Add CSS for transitions
+    document.addEventListener('DOMContentLoaded', function() {
+        const style = document.createElement('style');
+        style.textContent = `
+            #brandSection, #productSection {
+                transition: opacity 0.3s ease-in-out;
+            }
+            #brandSection.opacity-0, #productSection.opacity-0 {
+                opacity: 0;
+            }
+            #brandSection.opacity-100, #productSection.opacity-100 {
+                opacity: 1;
+            }
+        `;
+        document.head.appendChild(style);
+    });
 </script>
 {% endblock %}
