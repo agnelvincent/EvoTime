@@ -3,15 +3,15 @@
 {% block product %}
 <div class="container mx-auto px-4 py-10">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-        <!-- Enhanced Product Images with Improved Zoom -->
+        <!-- Enhanced Product Images with Zoom Effect -->
         <div class="flex flex-col items-center space-y-6 relative">
-            <div class="relative group w-[400px] h-[400px] overflow-hidden rounded-xl shadow-lg">
+            <div class="relative group w-full max-w-[500px] h-[500px] overflow-hidden rounded-xl shadow-lg">
                 <img id="mainImage" src="{{ variants.0.image1.url }}" 
-                     class="w-full h-full rounded-lg object-cover cursor-pointer transition-transform duration-300 transform group-hover:scale-105" 
+                     class="w-full h-full rounded-lg object-cover cursor-zoom-in transition-transform duration-300 transform group-hover:scale-105" 
                      alt="{{ product.name }}">
                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition-all duration-300"></div>
             </div>
-            <div id="zoomBox" class="hidden absolute border border-gray-200 shadow-2xl rounded-lg bg-white"></div>
+
             
             <!-- Thumbnails with Active Indicator -->
             <div class="flex space-x-4">
@@ -36,7 +36,7 @@
             <div>
                 <div class="flex items-center space-x-2 mb-2">
                     <span class="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-full">New Arrival</span>
-                    {% if product.stock > 0 %}
+                    {% if variants.0.stock > 0 %}
                         <span class="px-3 py-1 text-xs font-semibold text-white bg-green-600 rounded-full">In Stock</span>
                     {% else %}
                         <span class="px-3 py-1 text-xs font-semibold text-white bg-red-600 rounded-full">Out of Stock</span>
@@ -68,7 +68,7 @@
                 {% if product.regular_price > product.sales_price %}
                     <span class="text-lg text-gray-400 line-through">₹{{ product.regular_price }}</span>
                     <span class="px-2 py-1 text-sm font-semibold text-white bg-red-500 rounded">
-                        {{ product.discount_percentage|floatformat:0 }}% OFF
+                        {{ product.offer_percentage|floatformat:0 }}% OFF
                     </span>
                 {% endif %}
             </div>
@@ -262,22 +262,53 @@
     </div>
 </div>
 <style>
-    /* Enhanced zoom effect */
-    #zoomBox {
+    /* Product Zoom Functionality */
+    .relative.group {
+        position: relative;
+    }
+    
+    .zoom-lens {
         position: absolute;
+        border: 2px solid #3B82F6;
+        background-color: rgba(255, 255, 255, 0.3);
+        cursor: none;
+        display: none;
+        border-radius: 50%;
+    }
+    
+    .zoom-lens.active {
+        display: block;
+        animation: fadeIn 0.2s ease-out;
+    }
+    
+    .zoom-result {
+        position: absolute;
+        right: -110%;
         top: 0;
-        right: -320px;
-        width: 300px;
-        height: 300px;
-        border: 1px solid #ddd;
+        width: 500px;
+        height: 500px;
+        border: 2px solid #f1f1f1;
+        border-radius: 8px;
         background-repeat: no-repeat;
-        background-position: center;
-        background-size: 500%;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         display: none;
         pointer-events: none;
         z-index: 100;
-        border-radius: 0.5rem;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .zoom-result.active {
+        display: block;
+        animation: fadeIn 0.2s ease-out;
+    }
+    
+    /* Media query for smaller screens */
+    @media (max-width: 1200px) {
+        .zoom-result {
+            right: 0;
+            top: -110%;
+            width: 100%;
+            height: 100%;
+        }
     }
     
     /* Active color option */
@@ -326,7 +357,6 @@
         const mainImage = document.getElementById("mainImage");
         const thumbnails = document.querySelectorAll(".thumbnail");
         const thumbnailContainers = document.querySelectorAll(".thumbnail-container");
-        const zoomBox = document.getElementById("zoomBox");
         const variantSelect = document.getElementById("variantSelect");
         const colorOptions = document.querySelectorAll(".color-option");
         const buyNowBtn = document.getElementById("buyNowBtn");
@@ -340,7 +370,95 @@
         const readMoreBtn = document.getElementById("readMoreBtn");
         
         let isDescriptionExpanded = false;
-
+    
+        // ===== Create Zoom Elements ======
+        const productImageContainer = mainImage.parentElement;
+        
+        // Create zoom lens element
+        const zoomLens = document.createElement("div");
+        zoomLens.classList.add("zoom-lens");
+        productImageContainer.appendChild(zoomLens);
+        
+        // Create zoom result container
+        const zoomResult = document.createElement("div");
+        zoomResult.classList.add("zoom-result");
+        productImageContainer.appendChild(zoomResult);
+        
+        // Set initial zoom state
+        let isZoomActive = false;
+        
+        // ===== Zoom Functionality =====
+        function initZoom() {
+            // Get dimensions
+            const imgWidth = mainImage.offsetWidth;
+            const imgHeight = mainImage.offsetHeight;
+            
+            // Set zoom lens dimensions (smaller lens = higher zoom)
+            const lensWidth = imgWidth / 4;
+            const lensHeight = imgHeight / 4;
+            
+            zoomLens.style.width = `${lensWidth}px`;
+            zoomLens.style.height = `${lensHeight}px`;
+            
+            // Set zoom result dimensions and position
+            zoomResult.style.width = `${imgWidth}px`;
+            zoomResult.style.height = `${imgHeight}px`;
+            zoomResult.style.backgroundImage = `url(${mainImage.src})`;
+            zoomResult.style.backgroundSize = `${imgWidth * 3}px ${imgHeight * 3}px`;
+            
+            // Calculate ratios for proper zoom
+            const xRatio = zoomResult.offsetWidth / lensWidth;
+            const yRatio = zoomResult.offsetHeight / lensHeight;
+            
+            // Mouse events for zoom functionality
+            mainImage.addEventListener("mouseenter", function() {
+                isZoomActive = true;
+                zoomLens.classList.add("active");
+                zoomResult.classList.add("active");
+            });
+            
+            mainImage.addEventListener("mouseleave", function() {
+                isZoomActive = false;
+                zoomLens.classList.remove("active");
+                zoomResult.classList.remove("active");
+            });
+            
+            mainImage.addEventListener("mousemove", function(e) {
+                if (!isZoomActive) return;
+                
+                // Get cursor position
+                let rect = mainImage.getBoundingClientRect();
+                let x = e.clientX - rect.left;
+                let y = e.clientY - rect.top;
+                
+                // Prevent lens from going outside image
+                if (x > imgWidth - (lensWidth / 2)) {
+                    x = imgWidth - (lensWidth / 2);
+                }
+                if (x < (lensWidth / 2)) {
+                    x = lensWidth / 2;
+                }
+                if (y > imgHeight - (lensHeight / 2)) {
+                    y = imgHeight - (lensHeight / 2);
+                }
+                if (y < (lensHeight / 2)) {
+                    y = lensHeight / 2;
+                }
+                
+                // Position lens
+                zoomLens.style.left = `${x - (lensWidth / 2)}px`;
+                zoomLens.style.top = `${y - (lensHeight / 2)}px`;
+                
+                // Move background image in zoom result
+                zoomResult.style.backgroundPosition = `-${(x * xRatio) - (lensWidth * xRatio / 2)}px -${(y * yRatio) - (lensHeight * yRatio / 2)}px`;
+            });
+        }
+        
+        // Initialize zoom when image is loaded
+        mainImage.addEventListener("load", initZoom);
+        // Initialize zoom on page load
+        initZoom();
+    
         /** ✅ Description Read More Toggle */
         readMoreBtn.addEventListener("click", function() {
             if (isDescriptionExpanded) {
@@ -357,11 +475,11 @@
         
         // Set initial description height
         descriptionContainer.style.maxHeight = "100px";
-
+    
         /** ✅ Initial Stock Check and Wishlist Status */
         checkStockOnLoad();
         updateWishlistButton();
-
+    
         /** ✅ Handle Color Option Selection */
         colorOptions.forEach(option => {
             option.addEventListener("click", function() {
@@ -387,15 +505,18 @@
         
         // Set first color option as active initially
         colorOptions[0]?.classList.add("active");
-
+    
         /** ✅ Handle Variant Selection */
         variantSelect.addEventListener("change", function () {
             const selectedVariant = this.options[this.selectedIndex];
             updateProductImages(selectedVariant);
             checkStock(selectedVariant);
             updateWishlistButton();
+            
+            // Reinitialize zoom when images change
+            setTimeout(initZoom, 100);
         });
-
+    
         /** ✅ Image Thumbnail Click Handler */
         thumbnailContainers.forEach((container, index) => {
             container.addEventListener("click", () => {
@@ -406,44 +527,28 @@
                 // Update main image
                 const newSrc = thumbnails[index].dataset.src;
                 mainImage.src = newSrc;
-                zoomBox.style.backgroundImage = `url(${newSrc})`;
+                
+                // Update zoom result background
+                zoomResult.style.backgroundImage = `url(${newSrc})`;
                 
                 // Add animation
                 mainImage.classList.add("animate-fadeIn");
                 setTimeout(() => mainImage.classList.remove("animate-fadeIn"), 500);
             });
         });
-
-        /** ✅ Enhanced Zoom Feature */
-        mainImage.addEventListener("click", () => {
-            zoomBox.style.display = "block";
-            zoomBox.style.backgroundImage = `url(${mainImage.src})`;
-            zoomBox.style.backgroundSize = "500%";
-        });
-
-        mainImage.addEventListener("mousemove", (e) => {
-            const rect = mainImage.getBoundingClientRect();
-            const x = ((e.clientX - rect.left) / rect.width) * 100;
-            const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-            zoomBox.style.backgroundPosition = `${x}% ${y}%`;
-        });
-
-        mainImage.addEventListener("mouseleave", () => {
-            zoomBox.style.display = "none";
-        });
-
+    
+    
         /** ✅ Add to Cart */
         addToCartBtn.addEventListener("click", function () {
             const selectedVariant = variantSelect.options[variantSelect.selectedIndex];
             const stock = parseInt(selectedVariant.getAttribute("data-stock"));
             const selectedVariantId = variantSelect.value;
-
+    
             if (!selectedVariantId) {
                 showToast("Please select a variant before adding to the cart.", "error");
                 return;
             }
-
+    
             if (stock < 1) {
                 showToast("Insufficient stock!", "error");
                 return;
@@ -452,7 +557,7 @@
             // Add animation to button
             this.classList.add("animate-pulse");
             setTimeout(() => this.classList.remove("animate-pulse"), 500);
-
+    
             fetch(`/cart/add_to_cart/${selectedVariantId}/`, {
                 method: "POST",
                 headers: {
@@ -478,12 +583,12 @@
                 showToast("Something went wrong while adding to cart.", "error");
             });
         });
-
+    
         /** ✅ Buy Now */
         buyNowBtn.addEventListener("click", function () {
             const selectedVariant = variantSelect.options[variantSelect.selectedIndex];
             const variantId = selectedVariant.value;
-
+    
             if (!variantId) {
                 showToast("Please select a variant before proceeding to checkout.", "error");
                 return;
@@ -492,16 +597,16 @@
             // Add animation to button
             this.classList.add("animate-pulse");
             setTimeout(() => this.classList.remove("animate-pulse"), 500);
-
+    
             window.location.href = `/cart/checkout/buy_now/${variantId}/`;
         });
-
+    
         /** ✅ Add to/Remove from Wishlist */
         addToWishlistBtn.addEventListener("click", function () {
             const selectedVariantId = variantSelect.value;
             const selectedVariant = variantSelect.options[variantSelect.selectedIndex];
             const isInWishlist = selectedVariant.getAttribute("data-in-wishlist") === "true";
-
+    
             if (!selectedVariantId) {
                 showToast("Please select a variant before adding to wishlist.", "error");
                 return;
@@ -510,7 +615,7 @@
             // Add heart animation
             wishlistIcon.classList.add("animate-pulse");
             setTimeout(() => wishlistIcon.classList.remove("animate-pulse"), 500);
-
+    
             if (isInWishlist) {
                 // Remove from wishlist
                 removeFromWishlist(selectedVariantId);
@@ -519,7 +624,7 @@
                 addToWishlist(selectedVariantId);
             }
         });
-
+    
         /** ✅ Add to Wishlist Function */
         function addToWishlist(variantId) {
             fetch(`/wishlist/add/${variantId}/`, {
@@ -558,7 +663,7 @@
                 showToast("Something went wrong while adding to wishlist.", "error");
             });
         }
-
+    
         /** ✅ Remove from Wishlist Function */
         function removeFromWishlist(variantId) {
             fetch(`/wishlist/remove/${variantId}/`, {
@@ -592,7 +697,7 @@
                 showToast("Something went wrong while removing from wishlist.", "error");
             });
         }
-
+    
         /** ✅ Update Wishlist Button Appearance */
         function updateWishlistButton() {
             const selectedVariant = variantSelect.options[variantSelect.selectedIndex];
@@ -606,13 +711,13 @@
                 addToWishlistBtn.classList.remove("bg-red-50");
             }
         }
-
+    
         /** ✅ Check Stock on Page Load */
         function checkStockOnLoad() {
             const selectedVariant = variantSelect.options[variantSelect.selectedIndex];
             checkStock(selectedVariant);
         }
-
+    
         /** ✅ Check Stock and Update Buttons */
         function checkStock(selectedVariant) {
             const stock = parseInt(selectedVariant.getAttribute("data-stock"));
@@ -632,7 +737,7 @@
                 stockText.textContent = "In Stock";
             }
         }
-
+    
         /** ✅ Update Product Images */
         function updateProductImages(selectedVariant) {
             mainImage.src = selectedVariant.getAttribute("data-image1");
@@ -641,7 +746,7 @@
                 thumb.dataset.src = selectedVariant.getAttribute(`data-image${index + 1}`);
             });
         }
-
+    
         /** ✅ Show Toast Message */
         function showToast(message, type) {
             const toast = document.createElement("div");
