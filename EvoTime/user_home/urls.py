@@ -31,6 +31,8 @@ urlpatterns = [
     path('search/', views.search_products, name='search_products'),
     path('<int:id>/', product_detail_view, name='product_detail'),
     path('logout/', views.user_logout, name='user_logout'),
+    path("update-profile-image/", views.update_profile_image, name="update_profile_image"),
+
     path('account-overview/', views.account_overview, name='account_overview'),
     path("manage-address/", views.manage_address, name="manage_address"),
     path("add-address/", views.add_address, name="add_address"),

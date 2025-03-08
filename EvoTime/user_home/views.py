@@ -344,8 +344,10 @@ def home_view(request):
 class ProductAPI(View):
     def get(self, request):
         category_id = request.GET.get('category')
-        if category_id:
-            products = Product.objects.filter(category_id=category_id, is_blocked=False)
+        
+        # Ensure category_id is a valid integer or None
+        if category_id and category_id.isdigit():
+            products = Product.objects.filter(category_id=int(category_id), is_blocked=False)
         else:
             products = Product.objects.filter(is_blocked=False).order_by('-created_at')[:8]  # Fetch latest products
 
@@ -363,6 +365,7 @@ class ProductAPI(View):
                 'variants': list(product.variants.values()),
             })
         return JsonResponse({'products': product_list})
+
 
 
 @block_superuser_navigation
@@ -473,6 +476,16 @@ def get_cart_item_count(request):
         if cart:
             cart_item_count = cart.items.count()  # Count distinct items, not quantity
     return {"cart_item_count": cart_item_count}
+
+
+@login_required
+def update_profile_image(request):
+    if request.method == "POST" and request.FILES.get("profile_image"):
+        user = request.user
+        user.profile_image = request.FILES["profile_image"]
+        user.save()
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False}, status=400)
 
 
 

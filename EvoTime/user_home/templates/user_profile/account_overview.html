@@ -79,36 +79,34 @@
                     <a href="{% url 'wishlist' %}" class="text-gray-600 hover:text-blue-600 transition">
                         <i class="far fa-heart text-xl"></i>
                     </a>
-<a href="{% url 'view_cart' %}" class="text-gray-600 hover:text-blue-600 transition relative">
-    <i class="fas fa-shopping-cart text-xl"></i>
-    {% if cart_item_count > 0 %}
-        <span class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {{ cart_item_count }}
-        </span>
-    {% endif %}
-</a>
-
+                    <a href="{% url 'view_cart' %}" class="text-gray-600 hover:text-blue-600 transition relative">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        {% if cart_item_count > 0 %}
+                            <span class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                {{ cart_item_count }}
+                            </span>
+                        {% endif %}
+                    </a>
                     <a href="{% url 'account_overview' %}" class="text-gray-600 hover:text-blue-600 transition">
                         <i class="far fa-user text-xl"></i>
                     </a>
                     
                     <!-- Mobile Menu Button -->
-                    <button class="md:hidden text-gray-600 focus:outline-none">
+                    <button id="mobile-menu-button" class="md:hidden text-gray-600 focus:outline-none">
                         <i class="fas fa-bars text-2xl"></i>
                     </button>
                 </div>
             </div>
             
             <!-- Mobile Navigation - Hidden by default -->
-            <div class="md:hidden hidden mt-4 pb-2">
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-2">
                 <a href="{% url 'home' %}" class="block py-2 text-gray-800 font-medium">Home</a>
                 <a href="{% url 'brand_list' %}" class="block py-2 text-gray-600">Brands</a>
-                <a href="#" class="block py-2 text-gray-600">About</a>
-                <a href="#" class="block py-2 text-gray-600">Contact</a>
+                <a href="{% url "all_products" %}" class="block py-2 text-gray-600">All Products</a>
+                <a href="{% url "about" %}" class="block py-2 text-gray-600">About Us</a>
             </div>
         </div>
     </header>
-
 
     <!-- Main Content -->
     <div class="flex flex-col md:flex-row min-h-screen">
@@ -116,18 +114,29 @@
         <div class="w-full md:w-64 bg-white shadow-lg">
             <div class="flex flex-col items-center pt-8 pb-4 border-b">
                 <div class="relative group cursor-pointer">
-                    {% if user.profile_image %}
-                    <img src="{{ user.profile_image.url }}" alt="Profile" class="w-20 h-20 rounded-full object-cover border-2 border-blue-500 transition-transform group-hover:scale-105">
-                    {% else %}
-                    <img src="#" alt="Profile" class="w-20 h-20 rounded-full object-cover border-2 border-blue-500 transition-transform group-hover:scale-105">
-                    {% endif %}
-                    <div class="absolute inset-0 rounded-full bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <i class="fas fa-camera text-white"></i>
-                    </div>
+                    <label for="profileImageInput" class="cursor-pointer">
+                        {% if user.profile_image %}
+                        <img id="profileImagePreview" src="{{ user.profile_image.url }}" alt="Profile"
+                            class="w-20 h-20 rounded-full object-cover border-2 border-blue-500 transition-transform group-hover:scale-105">
+                        {% else %}
+                        <img id="profileImagePreview" src="#" alt="Profile"
+                            class="w-20 h-20 rounded-full object-cover border-2 border-blue-500 transition-transform group-hover:scale-105">
+                        {% endif %}
+                        <div class="absolute inset-0 rounded-full bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <i class="fas fa-camera text-white"></i>
+                        </div>
+                    </label>
+                    <input type="file" id="profileImageInput" class="hidden" accept="image/*">
                 </div>
                 <h3 class="mt-4 font-semibold text-gray-800">{{ user.full_name }}</h3>
                 <p class="text-sm text-gray-500">{{ user.email }}</p>
+            
+                <!-- Hidden Save Button (Visible After Image Selection) -->
+                <button id="saveProfileImageBtn" class="mt-3 bg-blue-500 text-white px-4 py-1 rounded hidden">
+                    Save Profile Image
+                </button>
             </div>
+            
             
             <nav class="mt-6">
                 <a href="{% url 'account_overview' %}" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
@@ -277,10 +286,16 @@
 
     <script>
         // Toggle Mobile Menu
-        function toggleMobileMenu() {
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
             const mobileMenu = document.getElementById('mobile-menu');
-            mobileMenu.classList.toggle('hidden');
-        }
+
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+        });
 
         // Initialize date picker
         flatpickr("#datepicker", {
@@ -297,6 +312,46 @@
                     document.querySelector('.group img').src = e.target.result;
                 };
                 reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        document.getElementById("profileImageInput").addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById("profileImagePreview").src = e.target.result;
+                    document.getElementById("saveProfileImageBtn").classList.remove("hidden"); // Show Save Button
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        document.getElementById("saveProfileImageBtn").addEventListener("click", function () {
+            const fileInput = document.getElementById("profileImageInput");
+            const file = fileInput.files[0];
+        
+            if (file) {
+                const formData = new FormData();
+                formData.append("profile_image", file);
+        
+                fetch("{% url 'update_profile_image' %}", {  // Replace with your actual URL
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}" // Ensure CSRF token is included
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log("Profile image updated successfully");
+                        document.getElementById("saveProfileImageBtn").classList.add("hidden"); // Hide Save Button after saving
+                    } else {
+                        console.log("Error updating profile image");
+                    }
+                })
+                .catch(error => console.log("Error:", error));
             }
         });
     </script>
