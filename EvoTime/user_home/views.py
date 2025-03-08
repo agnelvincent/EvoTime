@@ -32,7 +32,6 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from Cart.models import Cart
 from django.views import View
 from django.db.models import Q
-from django.template.loader import render_to_string
 
 
 def block_superuser_navigation(view_func):
@@ -42,9 +41,6 @@ def block_superuser_navigation(view_func):
         return view_func(request, *args, **kwargs)
     return wrapper
 
-
-def showpage(request):
-    return render(request , 'showpage.html')
 
 
 @never_cache
@@ -107,7 +103,6 @@ def user_signup(request):
             messages.error(request, "Passwords do not match.")
             return redirect('user_signup')
 
-        # Check if email or phone already exists
         if CustomUser .objects.filter(email=email).exists():
             messages.error(request, "An account with this email already exists.")
             return redirect('user_signup')
@@ -116,21 +111,17 @@ def user_signup(request):
             messages.error(request, "An account with this phone number already exists.")
             return redirect('user_signup')
 
-        # Clear any previous session data
         request.session.flush()
 
-        # Generate OTP and send email
         otp = send_otp(email)
-        print('OTP is:', otp)  # Debugging purposes (remove in production)
 
-        # Store user data and OTP in session
         user_data = {
             'full_name': full_name,
             'email': email,
             'phone_number': phone_number,
             'otp': otp,
-            'otp_created_at': timezone.now().isoformat(),  # Use timezone.now() here
-            'password': make_password(password),  # Hash the password
+            'otp_created_at': timezone.now().isoformat(), 
+            'password': make_password(password), 
         }
         request.session['user_data'] = user_data
 
@@ -169,14 +160,12 @@ def verify_otp(request):
             )
             user.save()
 
-            # Clear session data
             request.session.flush()
 
-            # Login the user with the specified backend
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
             messages.success(request, "Account created successfully! You are now logged in.")
-            return redirect('home')  # Redirect to home page
+            return redirect('home')  
         else:
             messages.error(request, "Invalid OTP. Please try again.")
 
@@ -192,13 +181,10 @@ def resend_otp(request):
         messages.error(request, "Session expired. Please sign up again.")
         return redirect('user_signup')
 
-    # Generate a new OTP and send it
     otp = send_otp(user_data['email'])
-    print('New OTP is:', otp)  # Debugging purposes (remove in production)
 
-    # Update the OTP in session
     user_data['otp'] = otp
-    user_data['otp_created_at'] = timezone.now().isoformat()  # Update OTP creation time
+    user_data['otp_created_at'] = timezone.now().isoformat()  
     request.session['user_data'] = user_data
 
     messages.success(request, "A new OTP has been sent to your email.")
@@ -211,10 +197,9 @@ def forgot_password(request):
         email = request.POST.get('email')
         try:
             user = CustomUser.objects.get(email=email)
-            # Generate OTP using your existing function
+
             otp = send_otp(email)
             
-            # Store data in session
             reset_data = {
                 'email': email,
                 'otp': otp,
@@ -243,7 +228,6 @@ def verify_reset_otp(request):
         otp = reset_data.get('otp')
         otp_created_at = datetime.fromisoformat(reset_data.get('otp_created_at'))
 
-        # Check if OTP is expired (2 minutes)
         if timezone.now() > otp_created_at + timedelta(minutes=2):
             messages.error(request, "OTP has expired. Please request a new one.")
             return redirect('resend_reset_otp')
@@ -303,7 +287,6 @@ def reset_password(request):
             user.set_password(new_password)
             user.save()
             
-            # Clear session data
             request.session.flush()
             
             messages.success(request, 'Password has been reset successfully')
@@ -320,7 +303,6 @@ def reset_password(request):
 @login_required
 def home_view(request):
     try:
-        # Fetch products with related variants
         products = Product.objects.prefetch_related('variants').all()
         new_products = Product.objects.all().order_by('-created_at')[:8]
 
@@ -345,11 +327,10 @@ class ProductAPI(View):
     def get(self, request):
         category_id = request.GET.get('category')
         
-        # Ensure category_id is a valid integer or None
         if category_id and category_id.isdigit():
             products = Product.objects.filter(category_id=int(category_id), is_blocked=False)
         else:
-            products = Product.objects.filter(is_blocked=False).order_by('-created_at')[:8]  # Fetch latest products
+            products = Product.objects.filter(is_blocked=False).order_by('-created_at')[:8] 
 
         product_list = []
         for product in products:
@@ -372,7 +353,7 @@ class ProductAPI(View):
 @never_cache
 @login_required
 def all_products(request):
-    # Fetch all products initially
+
     products = Product.objects.all()
     brands = Brand.objects.all()
     categories = Category.objects.all()
@@ -501,9 +482,8 @@ def account_overview(request):
         alternate_phone_number = request.POST.get("alternate_phone_number", "").strip()
         profile_image = request.FILES.get("profile_image")
 
-        errors = False  # Flag to track validation errors
+        errors = False 
 
-        # Validate Date of Birth (must be a valid date and in the past)
         if dob:
             try:
                 dob_date = datetime.strptime(dob, "%Y-%m-%d").date()
@@ -518,7 +498,7 @@ def account_overview(request):
 
         # Validate Alternate Phone Number
         if alternate_phone_number:
-            # Remove any non-digit characters
+
             cleaned_phone = re.sub(r'\D', '', alternate_phone_number)
             
             if not re.match(r'^\d{10,15}$', cleaned_phone):
@@ -533,12 +513,12 @@ def account_overview(request):
         # Validate Profile Image
         if profile_image:
             try:
-                # Check file type
+
                 if not profile_image.content_type.startswith("image"):
                     messages.error(request, "Invalid file type! Please upload an image.")
                     errors = True
                 else:
-                    # Optional: Add file size validation
+
                     if profile_image.size > 5 * 1024 * 1024:  # 5MB limit
                         messages.error(request, "Image size should not exceed 5MB.")
                         errors = True
@@ -557,7 +537,7 @@ def account_overview(request):
                 messages.error(request, f"Error uploading image: {str(e)}")
                 errors = True
 
-        # If no errors, save the user model and redirect
+
         if not errors:
             try:
                 user.save()
@@ -567,7 +547,6 @@ def account_overview(request):
                 messages.error(request, f"Error saving profile: {str(e)}")
                 errors = True
 
-    # Prepopulate the form with existing data
     context = {
         "user": user,
         "dob": user.dob.strftime("%Y-%m-%d") if user.dob else None,
@@ -582,7 +561,7 @@ def account_overview(request):
 @login_required
 @never_cache
 def manage_address(request):
-    addresses = Address.objects.filter(user=request.user)  # Assuming a relationship between user and addresses
+    addresses = Address.objects.filter(user=request.user)  
     return render(request, 'user_profile/address/manage_address.html', {'addresses': addresses})
 
 
@@ -592,7 +571,7 @@ def manage_address(request):
 @never_cache
 def add_address(request):
     if request.method == "POST":
-        # Extract data from the request
+
         name = request.POST.get("name")
         phone = request.POST.get("phone")
         address_line = request.POST.get("address_line")
@@ -602,7 +581,7 @@ def add_address(request):
         postal_code = request.POST.get("postal_code")
         country = request.POST.get("country")
         
-        # Create the address
+
         try:
             address = Address(
                 user=request.user,
@@ -615,9 +594,8 @@ def add_address(request):
                 postal_code=postal_code,
                 country=country
             )
-            address.save()  # Explicitly save the address instance
-            
-            # Return success with address data
+            address.save()  
+
             return JsonResponse({
                 "success": True,
                 "address": {
@@ -717,7 +695,7 @@ def order_list_view(request):
 def generate_invoice(request, item_id):
     item = get_object_or_404(OrderItem, id=item_id)
     user = item.order.user
-    address = item.order.shipping_address  # Use the shipping address from the order
+    address = item.order.shipping_address  
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="invoice_{item.id}.pdf"'
