@@ -121,38 +121,32 @@
                     <a href="{% url 'wishlist' %}" class="text-gray-600 hover:text-blue-600 transition">
                         <i class="far fa-heart text-xl"></i>
                     </a>
-<a href="{% url 'view_cart' %}" class="text-gray-600 hover:text-blue-600 transition relative">
-    <i class="fas fa-shopping-cart text-xl"></i>
-    {% if cart_item_count > 0 %}
-        <span class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {{ cart_item_count }}
-        </span>
-    {% endif %}
-</a>
-
+                    <a href="{% url 'view_cart' %}" class="text-gray-600 hover:text-blue-600 transition relative">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        {% if cart_item_count > 0 %}
+                            <span class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                {{ cart_item_count }}
+                            </span>
+                        {% endif %}
+                    </a>
                     <a href="{% url 'account_overview' %}" class="text-gray-600 hover:text-blue-600 transition">
                         <i class="far fa-user text-xl"></i>
                     </a>
                     
                     <!-- Mobile Menu Button -->
-                    <button class="md:hidden text-gray-600 focus:outline-none">
+                    <button id="mobile-menu-button" class="md:hidden text-gray-600 focus:outline-none">
                         <i class="fas fa-bars text-2xl"></i>
                     </button>
                 </div>
             </div>
             
-<!-- Mobile Menu Button -->
-<button id="mobile-menu-button" class="md:hidden text-gray-600 focus:outline-none">
-    <i class="fas fa-bars text-2xl"></i>
-</button>
-
-<!-- Mobile Navigation - Hidden by default -->
-<div id="mobile-menu" class="md:hidden hidden mt-4 pb-2">
-    <a href="{% url 'home' %}" class="block py-2 text-gray-800 font-medium">Home</a>
-    <a href="{% url 'brand_list' %}" class="block py-2 text-gray-600">Brands</a>
-    <a href="{% url "all_products" %}" class="block py-2 text-gray-600">All Products</a>
-    <a href="{% url "about" %}" class="block py-2 text-gray-600">About Us</a>
-</div>
+            <!-- Mobile Navigation - Hidden by default -->
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pb-2">
+                <a href="{% url 'home' %}" class="block py-2 text-gray-800 font-medium">Home</a>
+                <a href="{% url 'brand_list' %}" class="block py-2 text-gray-600">Brands</a>
+                <a href="{% url "all_products" %}" class="block py-2 text-gray-600">All Products</a>
+                <a href="{% url "about" %}" class="block py-2 text-gray-600">About Us</a>
+            </div>
         </div>
     </header>
 
@@ -554,7 +548,16 @@
 if (typeof AOS !== 'undefined') {
     AOS.init();
 }
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
 
+    if (mobileMenuButton && mobileMenu) {
+        mobileMenuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+    }
+});
 function getCSRFToken() {
     const cookieValue = document.cookie
         .split('; ')
@@ -954,19 +957,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-document.addEventListener('DOMContentLoaded', function() {
-    // Get references to the mobile menu button and mobile menu
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const mobileMenu = document.getElementById('mobile-menu');
 
-    // Add event listener to the mobile menu button
-    if (mobileMenuButton && mobileMenu) {
-        mobileMenuButton.addEventListener('click', function() {
-            // Toggle the visibility of the mobile menu
-            mobileMenu.classList.toggle('hidden');
-        });
-    }
-});
     </script>
 </body>
 </html>
