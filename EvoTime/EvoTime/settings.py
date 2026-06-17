@@ -2,20 +2,17 @@ from pathlib import Path
 from decouple import config
 import os
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
 ALLOWED_HOSTS = ["www.timeevo.life", "timeevo.life", "localhost", "127.0.0.1" ,]
 
 AUTH_USER_MODEL = 'user_home.CustomUser'
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB limit
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB limit   
 
 
 # Application definition
@@ -27,12 +24,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'admin_home',
     'user_home',
     'Products',
     'Cart',
     'Wishlist',
-    'social_django',
+
     'django.contrib.sites',
     'allauth',
     'allauth.account',
@@ -44,7 +42,6 @@ INSTALLED_APPS = [
 SITE_ID = 1
 
 AUTHENTICATION_BACKENDS = [ 
-    'social_core.backends.google.GoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend', 
     'allauth.account.auth_backends.AuthenticationBackend'
 ]
@@ -65,26 +62,17 @@ CSRF_TRUSTED_ORIGINS = ["https://timeevo.life"]
 
 CORS_ALLOWED_ORIGINS = [
     "https://www.timeevo.life",
-    "http://www.timeevo.life",  # If your frontend might use HTTP
-    "http://localhost:8000",  # Keep this if you use local development
-    "http://127.0.0.1:8000"  # Add this if needed for local testing
+    "http://www.timeevo.life",  
+    "http://localhost:8000",  
+    "http://127.0.0.1:8000"  
 ]
 
 
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None  # Disable username field in Allauth
-ACCOUNT_AUTHENTICATION_METHOD = 'email'  # Use email for authentication
-ACCOUNT_EMAIL_REQUIRED = True  # Require email during registration
-ACCOUNT_USERNAME_REQUIRED = False  # Username is not required
-
 # Allauth configuration
-ACCOUNT_AUTHENTICATION_METHOD = 'email'  # Use email for login
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None  # No username field in CustomUser
-ACCOUNT_USERNAME_REQUIRED = False  # Disable username requirement
-ACCOUNT_EMAIL_REQUIRED = True  # Require email for authentication
-ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Change as needed
-
+ACCOUNT_LOGIN_METHODS = {'email'} 
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None  
+ACCOUNT_SIGNUP_FIELDS = ['email*']
 ACCOUNT_EMAIL_VERIFICATION = "mandatory" 
-ACCOUNT_EMAIL_REQUIRED = True
 
 LOGIN_URL = '/register'
 LOGOUT_URL = '/logout'
@@ -97,18 +85,14 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'social_django.middleware.SocialAuthExceptionMiddleware',
     'allauth.account.middleware.AccountMiddleware'
 ]
-
-
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY') 
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
 
 ROOT_URLCONF = 'EvoTime.urls'
 
@@ -150,6 +134,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
 RAZORPAY_KEY_ID = config("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = config("RAZORPAY_KEY_SECRET")

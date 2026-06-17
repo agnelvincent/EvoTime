@@ -27,7 +27,6 @@ urlpatterns = [
     path('product/',include('Products.urls')),
     path('cart/', include('Cart.urls')),
     path('wishlist/',include('Wishlist.urls')),
-    path('auth/', include('social_django.urls', namespace='social')),
     path('accounts/', include('allauth.urls'))
 ]
 handler404 = custom_page_not_found_view
