@@ -13,13 +13,11 @@ from datetime import datetime, timedelta
 from django.urls import reverse
 from django.utils import timezone
 from django.http import JsonResponse
-from Cart.models import Order , OrderItem
 from Wishlist.models import Wishlist
 from django.core.paginator import Paginator
 from datetime import timedelta
-from Cart.models import Wallet , ProductReview
+from Cart.models import Wallet , ProductReview, Order , OrderItem, Cart
 from django.db import transaction
-from django.urls import reverse
 from decimal import Decimal
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import letter
@@ -29,7 +27,6 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from Cart.models import Cart
 from django.views import View
 from django.db.models import Q
 
