@@ -3,15 +3,10 @@ from django.db import models
 from django.core.validators import MinLengthValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-
-# Create your models here.
 from django.contrib.auth.models import BaseUserManager
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, full_name=None, **extra_fields):
-        """
-        Creates and returns a regular user with the given email, password, and optional full name.
-        """
         if not email:
             raise ValueError('The Email field must be set')
         
@@ -22,9 +17,6 @@ class CustomUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password=None, full_name=None, **extra_fields):
-        """
-        Creates and returns a superuser with the given email, password, and optional full name.
-        """
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
@@ -59,11 +51,9 @@ class CustomUser(AbstractUser):
     objects = CustomUserManager()
 
     def clean(self):
-        # Custom validation example
         if not self.full_name:
             raise ValidationError({'full_name': _('Full name cannot be empty.')})
         
-        # Custom logic for profile completeness
         if not self.profile_complete and not self.full_name:
             raise ValidationError(_('Please complete your profile by adding a full name.'))
 

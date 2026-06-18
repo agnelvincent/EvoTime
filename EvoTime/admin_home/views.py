@@ -8,8 +8,6 @@ from django.views.decorators.cache import never_cache
 from Products.models import Product, Brand, Category, ProductVariant
 from .models import Coupon
 from user_home.models import CustomUser
-from Cart.models import Order
-from django.core.paginator import Paginator
 from django.views.decorators.http import require_http_methods
 from django.contrib.admin.views.decorators import staff_member_required
 from decimal import Decimal
@@ -17,29 +15,21 @@ from io import BytesIO
 from PIL import Image
 from django.core.files.base import ContentFile
 import base64
-from Cart.models import Order , OrderItem , Payment
+from Cart.models import Order , OrderItem , Payment, Wallet
 from django.http import HttpResponse
 import datetime
 from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter
-from django.db.models import Sum
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
 from django.utils import timezone
-from django.db.models import Count
+from django.db.models import Count, Sum
 from datetime import datetime, timedelta, time
-from django.template.loader import get_template
-from Cart.models import Wallet
-from django.db import transaction
 from django.db import transaction, IntegrityError
 from decimal import Decimal, InvalidOperation
 import re
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-import json
 from django.views.decorators.csrf import csrf_exempt
 
 # Admin-only decorator

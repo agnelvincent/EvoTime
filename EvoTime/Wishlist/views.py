@@ -1,20 +1,10 @@
-from django.shortcuts import render, redirect , get_object_or_404
-from django.contrib.auth import authenticate, login , logout
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from user_home.models import CustomUser, Address
-from django.contrib.auth.hashers import make_password
-from Cart.views import add_to_cart
 from django.views.decorators.cache import never_cache
-import re
-from django.contrib.auth import login
-from django.utils.crypto import get_random_string
-from datetime import datetime, timedelta
-from django.urls import reverse
 from user_home.views import block_superuser_navigation
 from django.http import JsonResponse
 from .models import Wishlist , WishlistItem
-from Products.models import Product , ProductVariant
+from Products.models import ProductVariant
 
 
 @block_superuser_navigation
@@ -33,11 +23,9 @@ def wishlist_view(request):
 def add_to_wishlist(request, variant_id):
     if request.method == 'POST':
         variant = get_object_or_404(ProductVariant, id=variant_id)
-
-        # Get or create the wishlist for the user
+        
         wishlist, created = Wishlist.objects.get_or_create(user=request.user)
 
-        # Create or get the wishlist item without the user parameter
         wishlist_item, created = WishlistItem.objects.get_or_create(
             wishlist=wishlist,
             variant=variant

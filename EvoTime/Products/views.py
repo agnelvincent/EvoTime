@@ -1,7 +1,4 @@
-from django.shortcuts import render, redirect , get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.cache import never_cache
-from user_home.views import block_superuser_navigation
+from django.shortcuts import render, get_object_or_404
 from Products.models import Product
 from Cart.models import ProductReview
 from django.db.models import Avg , Count

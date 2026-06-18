@@ -1,8 +1,8 @@
 from django.urls import path
 from . import views
-from .views import user_viewer, toggle_user_block
 from django.conf import settings
 from django.conf.urls.static import static
+
 urlpatterns = [
     # Authentication
     path('login/', views.admin_login, name='admin_login'),

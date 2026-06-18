@@ -23,7 +23,7 @@ from user_home.views import custom_page_not_found_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('admin-panel/', include('admin_home.urls')),
-    path('', include('user_home.urls')), # Include user app URLs
+    path('', include('user_home.urls')),
     path('product/',include('Products.urls')),
     path('cart/', include('Cart.urls')),
     path('wishlist/',include('Wishlist.urls')),
@@ -31,9 +31,4 @@ urlpatterns = [
 ]
 handler404 = custom_page_not_found_view
 
-
-# Serve static and media files during development
-# if settings.DEBUG:
-#     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

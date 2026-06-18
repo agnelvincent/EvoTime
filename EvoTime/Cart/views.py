@@ -13,8 +13,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import OrderItem, Order
 from admin_home.models import Coupon , UsedCoupon
-from django.utils import timezone
-from datetime import timedelta
 from django.conf import settings
 import json
 import razorpay
