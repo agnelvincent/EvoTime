@@ -460,10 +460,29 @@ def get_cart_item_count(request):
 def update_profile_image(request):
     if request.method == "POST" and request.FILES.get("profile_image"):
         user = request.user
-        user.profile_image = request.FILES["profile_image"]
-        user.save()
-        return JsonResponse({"success": True})
-    return JsonResponse({"success": False}, status=400)
+        image_file = request.FILES["profile_image"]
+
+        # Basic validation
+        if not image_file.content_type.startswith("image"):
+            return JsonResponse({"success": False, "error": "Invalid file type. Please upload an image."}, status=400)
+        if image_file.size > 5 * 1024 * 1024:  # 5MB limit
+            return JsonResponse({"success": False, "error": "Image size must not exceed 5MB."}, status=400)
+
+        try:
+            # Delete old image from Cloudinary before replacing
+            if user.profile_image:
+                try:
+                    user.profile_image.delete(save=False)
+                except Exception:
+                    pass  # Don't block upload if old image deletion fails
+
+            user.profile_image = image_file
+            user.save(update_fields=["profile_image"])
+            return JsonResponse({"success": True, "image_url": user.profile_image.url})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+    return JsonResponse({"success": False, "error": "No image provided."}, status=400)
 
 
 
@@ -474,12 +493,11 @@ def account_overview(request):
     user = request.user  # Get the logged-in user
 
     if request.method == "POST":
-        # Retrieve form data
+        # Retrieve form data (profile image is handled separately via AJAX)
         dob = request.POST.get("dob")
         alternate_phone_number = request.POST.get("alternate_phone_number", "").strip()
-        profile_image = request.FILES.get("profile_image")
 
-        errors = False 
+        errors = False
 
         if dob:
             try:
@@ -495,54 +513,22 @@ def account_overview(request):
 
         # Validate Alternate Phone Number
         if alternate_phone_number:
-
             cleaned_phone = re.sub(r'\D', '', alternate_phone_number)
-            
             if not re.match(r'^\d{10,15}$', cleaned_phone):
                 messages.error(request, "Alternate phone number must be 10-15 digits long.")
                 errors = True
             else:
                 user.alternate_phone_number = cleaned_phone
         else:
-            # If no phone number is provided, set to None or empty string
             user.alternate_phone_number = None
-
-        # Validate Profile Image
-        if profile_image:
-            try:
-
-                if not profile_image.content_type.startswith("image"):
-                    messages.error(request, "Invalid file type! Please upload an image.")
-                    errors = True
-                else:
-
-                    if profile_image.size > 5 * 1024 * 1024:  # 5MB limit
-                        messages.error(request, "Image size should not exceed 5MB.")
-                        errors = True
-                    else:
-                        # Delete existing profile image if it exists
-                        if user.profile_image:
-                            try:
-                                user.profile_image.delete()
-                            except Exception as e:
-                                print(f"Error deleting existing profile image: {e}")
-                        
-                        # Save new profile image
-                        user.profile_image = profile_image
-
-            except Exception as e:
-                messages.error(request, f"Error uploading image: {str(e)}")
-                errors = True
-
 
         if not errors:
             try:
-                user.save()
+                user.save(update_fields=["dob", "alternate_phone_number"])
                 messages.success(request, "Profile updated successfully!")
                 return redirect("account_overview")
             except Exception as e:
                 messages.error(request, f"Error saving profile: {str(e)}")
-                errors = True
 
     context = {
         "user": user,

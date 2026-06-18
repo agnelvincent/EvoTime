@@ -126,7 +126,7 @@
                             <i class="fas fa-camera text-white"></i>
                         </div>
                     </label>
-                    <input type="file" id="profileImageInput" class="hidden" accept="image/*">
+                    <input type="file" id="profileImageInput" name="profile_image" class="hidden" accept="image/*">
                 </div>
                 <h3 class="mt-4 font-semibold text-gray-800">{{ user.full_name }}</h3>
                 <p class="text-sm text-gray-500">{{ user.email }}</p>
@@ -174,9 +174,9 @@
                     <div class="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
                         <div class="relative group cursor-pointer">
                             {% if user.profile_image and user.profile_image.url %}
-                                <img src="{{ user.profile_image.url }}" alt="Profile" class="w-32 h-32 rounded-lg object-cover">
+                                <img src="{{ user.profile_image.url }}" alt="Profile" class="w-32 h-32 rounded-lg object-cover profile-img-preview">
                             {% else %}
-                                <img src="" alt="Profile" class="w-32 h-32 rounded-lg object-cover">
+                                <img src="" alt="Profile" class="w-32 h-32 rounded-lg object-cover profile-img-preview">
                             {% endif %}
                             <div class="absolute inset-0 rounded-lg bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <i class="fas fa-camera text-white text-xl"></i>
@@ -184,7 +184,7 @@
                         </div>
                         <div class="flex-1">
                             <p class="text-sm text-gray-600 mb-3">Upload a new profile picture. Recommended size: 400x400px</p>
-                            <input type="file" name="profile_image" class="hidden" id="profile-upload" accept="image/*">
+                            <input type="file" id="profile-upload" class="hidden" accept="image/*">
                             <button type="button" onclick="document.getElementById('profile-upload').click()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
                                 <i class="fas fa-upload mr-2"></i>
                                 Upload New Picture
@@ -304,56 +304,81 @@
             animate: true
         });
 
-        // Profile picture upload preview
-        document.getElementById('profile-upload').addEventListener('change', function(e) {
-            if (e.target.files && e.target.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.querySelector('.group img').src = e.target.result;
-                };
-                reader.readAsDataURL(e.target.files[0]);
+        // ── Profile Picture Upload (unified AJAX flow) ──────────────────────
+        function uploadProfileImage(file) {
+            if (!file) return;
+
+            // Show a local preview immediately
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.querySelectorAll('#profileImagePreview, .profile-img-preview').forEach(function (img) {
+                    img.src = e.target.result;
+                });
+            };
+            reader.readAsDataURL(file);
+
+            // Show loading state on the save button
+            const saveBtn = document.getElementById("saveProfileImageBtn");
+            saveBtn.classList.remove("hidden");
+            saveBtn.disabled = true;
+            saveBtn.textContent = "Uploading…";
+
+            const formData = new FormData();
+            formData.append("profile_image", file);
+
+            fetch("{% url 'update_profile_image' %}", {
+                method: "POST",
+                body: formData,
+                headers: { "X-CSRFToken": "{{ csrf_token }}" }
+            })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    // Update all preview images with the real Cloudinary URL
+                    document.querySelectorAll('#profileImagePreview, .profile-img-preview').forEach(function (img) {
+                        img.src = data.image_url;
+                    });
+                    saveBtn.classList.add("hidden");
+                    showToast("Profile picture updated!", "success");
+                } else {
+                    showToast(data.error || "Upload failed. Please try again.", "error");
+                    saveBtn.textContent = "Save Profile Image";
+                    saveBtn.disabled = false;
+                }
+            })
+            .catch(function () {
+                showToast("Network error. Please try again.", "error");
+                saveBtn.textContent = "Save Profile Image";
+                saveBtn.disabled = false;
+            });
+        }
+
+        // Wire both file inputs to the same upload function
+        ["profileImageInput", "profile-upload"].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.addEventListener("change", function (event) {
+                    uploadProfileImage(event.target.files[0]);
+                });
             }
         });
 
-        document.getElementById("profileImageInput").addEventListener("change", function (event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    document.getElementById("profileImagePreview").src = e.target.result;
-                    document.getElementById("saveProfileImageBtn").classList.remove("hidden"); // Show Save Button
-                };
-                reader.readAsDataURL(file);
+        // Toast notification helper
+        function showToast(message, type) {
+            var toast = document.getElementById("profileToast");
+            if (!toast) {
+                toast = document.createElement("div");
+                toast.id = "profileToast";
+                toast.style.cssText = "position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:opacity 0.3s;";
+                document.body.appendChild(toast);
             }
-        });
-        
-        document.getElementById("saveProfileImageBtn").addEventListener("click", function () {
-            const fileInput = document.getElementById("profileImageInput");
-            const file = fileInput.files[0];
-        
-            if (file) {
-                const formData = new FormData();
-                formData.append("profile_image", file);
-        
-                fetch("{% url 'update_profile_image' %}", {  // Replace with your actual URL
-                    method: "POST",
-                    body: formData,
-                    headers: {
-                        "X-CSRFToken": "{{ csrf_token }}" // Ensure CSRF token is included
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        console.log("Profile image updated successfully");
-                        document.getElementById("saveProfileImageBtn").classList.add("hidden"); // Hide Save Button after saving
-                    } else {
-                        console.log("Error updating profile image");
-                    }
-                })
-                .catch(error => console.log("Error:", error));
-            }
-        });
+            toast.textContent = message;
+            toast.style.background = type === "success" ? "#16a34a" : "#dc2626";
+            toast.style.color = "#fff";
+            toast.style.opacity = "1";
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(function () { toast.style.opacity = "0"; }, 3000);
+        }
     </script>
 </body>
 </html>
