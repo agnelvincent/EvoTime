@@ -6,27 +6,21 @@
         <!-- Enhanced Product Images with Zoom Effect -->
         <div class="flex flex-col items-center space-y-6 relative">
             <div class="relative group w-full max-w-[500px] h-[500px] overflow-hidden rounded-xl shadow-lg">
-                <img id="mainImage" src="{{ variants.0.image1.url }}" 
-                     class="w-full h-full rounded-lg object-cover cursor-zoom-in transition-transform duration-300 transform group-hover:scale-105" 
+                <img id="mainImage"
+                     src="{% with first=variants.0.images.all.0 %}{% if first %}{{ first.image.url }}{% else %}{{ product.image.url }}{% endif %}{% endwith %}"
+                     class="w-full h-full rounded-lg object-cover cursor-zoom-in transition-transform duration-300 transform group-hover:scale-105"
                      alt="{{ product.name }}">
                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition-all duration-300"></div>
             </div>
 
-            
+
             <!-- Thumbnails with Active Indicator -->
-            <div class="flex space-x-4">
-                <div class="thumbnail-container active p-1 rounded-lg border-2 border-blue-500 cursor-pointer transition-all duration-300">
-                    <img src="{{ variants.0.image1.url }}" data-src="{{ variants.0.image1.url }}" class="thumbnail w-16 h-16 object-cover rounded-md">
+            <div class="flex space-x-4" id="thumbnailStrip">
+                {% for img in variants.0.images.all %}
+                <div class="thumbnail-container {% if forloop.first %}active p-1 rounded-lg border-2 border-blue-500{% else %}p-1 rounded-lg border-2 border-transparent hover:border-blue-500{% endif %} cursor-pointer transition-all duration-300">
+                    <img src="{{ img.image.url }}" data-src="{{ img.image.url }}" class="thumbnail w-16 h-16 object-cover rounded-md">
                 </div>
-                <div class="thumbnail-container p-1 rounded-lg border-2 border-transparent hover:border-blue-500 cursor-pointer transition-all duration-300">
-                    <img src="{{ variants.0.image2.url }}" data-src="{{ variants.0.image2.url }}" class="thumbnail w-16 h-16 object-cover rounded-md">
-                </div>
-                <div class="thumbnail-container p-1 rounded-lg border-2 border-transparent hover:border-blue-500 cursor-pointer transition-all duration-300">
-                    <img src="{{ variants.0.image3.url }}" data-src="{{ variants.0.image3.url }}" class="thumbnail w-16 h-16 object-cover rounded-md">
-                </div>
-                <div class="thumbnail-container p-1 rounded-lg border-2 border-transparent hover:border-blue-500 cursor-pointer transition-all duration-300">
-                    <img src="{{ variants.0.image4.url }}" data-src="{{ variants.0.image4.url }}" class="thumbnail w-16 h-16 object-cover rounded-md">
-                </div>
+                {% endfor %}
             </div>
         </div>
 
@@ -85,37 +79,34 @@
             
             <!-- Enhanced variant selection -->
             <div class="space-y-4">
-                <h3 class="text-lg font-semibold text-gray-700">Select Color</h3>
+                <h3 class="text-lg font-semibold text-gray-700">Select Variant</h3>
                 <div class="flex flex-wrap gap-3" id="colorOptions">
                     {% for variant in variants %}
-                        <div class="color-option cursor-pointer" 
+                        {% with primary=variant.get_primary_image %}
+                        <div class="color-option cursor-pointer"
                              data-variant-id="{{ variant.id }}"
                              data-stock="{{ variant.stock }}"
-                             data-image1="{{ variant.image1.url }}"
-                             data-image2="{{ variant.image2.url }}"
-                             data-image3="{{ variant.image3.url }}"
-                             data-image4="{{ variant.image4.url }}"
+                             data-images='[{% for img in variant.images.all %}"{{ img.image.url }}"{% if not forloop.last %},{% endif %}{% endfor %}]'
                              data-in-wishlist="{{ variant.in_wishlist|default:'false' }}">
-                            <div class="w-12 h-12 rounded-full border-2 transition-all duration-300 flex items-center justify-center" 
-                                 style="background-color: {{ variant.color_hex|default:'#ccc' }};">
-                                <i class="fas fa-check text-white opacity-0"></i>
+                            <div class="px-3 py-2 rounded-lg border-2 border-gray-300 transition-all duration-300 hover:border-blue-500 text-sm font-medium text-gray-700 flex items-center gap-2">
+                                {% if primary %}
+                                <img src="{{ primary.image.url }}" class="w-8 h-8 rounded-full object-cover" alt="{{ variant.name }}">
+                                {% endif %}
+                                {{ variant.name }}
                             </div>
-                            <span class="text-xs text-center block mt-1">{{ variant.color }}</span>
                         </div>
+                        {% endwith %}
                     {% endfor %}
                 </div>
-                
+
                 <!-- Hidden select for form submission -->
                 <select id="variantSelect" class="hidden">
                     {% for variant in variants %}
-                        <option value="{{ variant.id }}" 
+                        <option value="{{ variant.id }}"
                                 data-stock="{{ variant.stock }}"
-                                data-image1="{{ variant.image1.url }}"
-                                data-image2="{{ variant.image2.url }}"
-                                data-image3="{{ variant.image3.url }}"
-                                data-image4="{{ variant.image4.url }}"
+                                data-images='[{% for img in variant.images.all %}"{{ img.image.url }}"{% if not forloop.last %},{% endif %}{% endfor %}]'
                                 data-in-wishlist="{{ variant.in_wishlist|default:'false' }}">
-                            {{ variant.color }}
+                            {{ variant.name }}
                         </option>
                     {% endfor %}
                 </select>
@@ -738,13 +729,33 @@
             }
         }
     
-        /** ✅ Update Product Images */
+        /** Update Product Images from JSON array in data-images */
         function updateProductImages(selectedVariant) {
-            mainImage.src = selectedVariant.getAttribute("data-image1");
-            document.querySelectorAll(".thumbnail").forEach((thumb, index) => {
-                thumb.src = selectedVariant.getAttribute(`data-image${index + 1}`);
-                thumb.dataset.src = selectedVariant.getAttribute(`data-image${index + 1}`);
-            });
+            let images;
+            try {
+                images = JSON.parse(selectedVariant.getAttribute('data-images') || '[]');
+            } catch(e) {
+                images = [];
+            }
+            if (images.length > 0) {
+                mainImage.src = images[0];
+            }
+            const strip = document.getElementById('thumbnailStrip');
+            if (strip) {
+                strip.innerHTML = images.map((url, i) => `
+                    <div class="thumbnail-container ${i === 0 ? 'active p-1 rounded-lg border-2 border-blue-500' : 'p-1 rounded-lg border-2 border-transparent hover:border-blue-500'} cursor-pointer transition-all duration-300">
+                        <img src="${url}" data-src="${url}" class="thumbnail w-16 h-16 object-cover rounded-md">
+                    </div>
+                `).join('');
+                // Re-attach thumbnail click listeners
+                strip.querySelectorAll('.thumbnail-container').forEach(tc => {
+                    tc.addEventListener('click', () => {
+                        strip.querySelectorAll('.thumbnail-container').forEach(t => t.classList.remove('active','border-blue-500'));
+                        tc.classList.add('active','border-blue-500');
+                        mainImage.src = tc.querySelector('img').dataset.src;
+                    });
+                });
+            }
         }
     
         /** ✅ Show Toast Message */

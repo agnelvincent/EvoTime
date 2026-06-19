@@ -205,7 +205,9 @@
         {% if cart.items.all %}
           {% for item in cart.items.all %}
             <div class="cart-item hover-effect" data-item-id="{{ item.id }}" data-available-stock="{{ item.product_variant.stock }}">
-              <img src="{{ item.product_variant.image1.url }}" alt="{{ item.product_variant.product.name }}">
+              {% with primary=item.product_variant.get_primary_image %}
+              <img src="{% if primary %}{{ primary.image.url }}{% else %}{{ item.product_variant.product.image.url }}{% endif %}" alt="{{ item.product_variant.product.name }}">
+              {% endwith %}
               <div class="cart-item-details">
                 <h3>{{ item.product_variant.product.name }}</h3>
                 <p>{{ item.product_variant.product.description|truncatewords:20 }}</p>

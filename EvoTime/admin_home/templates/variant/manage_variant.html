@@ -15,7 +15,10 @@
         <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
             <thead class="bg-gray-100">
                 <tr>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Color</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Variant Name</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">SKU</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Attributes</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Images</th>
                     <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Stock</th>
                     <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -23,17 +26,34 @@
             <tbody class="bg-white divide-y divide-gray-200">
                 {% for variant in variants %}
                 <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-3 text-gray-700 font-medium">{{ variant.color }}</td>
+                    <td class="px-4 py-3 text-gray-700 font-medium">{{ variant.name }}</td>
+                    <td class="px-4 py-3 text-gray-500 text-xs font-mono">{{ variant.sku }}</td>
+                    <td class="px-4 py-3 text-gray-600 text-xs">
+                        {% for attr in variant.attributes.all %}
+                            <span class="inline-block bg-gray-100 rounded px-2 py-0.5 mr-1 mb-1">{{ attr.attribute_name }}: {{ attr.attribute_value }}</span>
+                        {% empty %}
+                            <span class="text-gray-400">—</span>
+                        {% endfor %}
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex gap-1">
+                        {% for img in variant.images.all %}
+                            <img src="{{ img.image.url }}" class="w-10 h-10 object-cover rounded" alt="img {{ img.sort_order }}">
+                        {% empty %}
+                            <span class="text-gray-400 text-xs">No images</span>
+                        {% endfor %}
+                        </div>
+                    </td>
                     <td class="px-4 py-3 text-gray-600">{{ variant.stock }}</td>
                     <td class="px-4 py-3">
                         <div class="flex space-x-4">
-                            <button 
-                                onclick="openEditVariantModal('{{ variant.id }}', '{{ variant.color }}', '{{ variant.stock }}')" 
+                            <button
+                                onclick="openEditVariantModal('{{ variant.id }}', '{{ variant.name }}', '{{ variant.stock }}')"
                                 class="text-blue-600 hover:underline">
                                 Edit
                             </button>
-                            <button 
-                                onclick="deleteVariant('{{ variant.id }}')" 
+                            <button
+                                onclick="deleteVariant('{{ variant.id }}')"
                                 class="text-red-500 hover:underline">
                                 Delete
                             </button>
@@ -42,7 +62,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="3" class="text-center text-gray-600 py-4">No variants found.</td>
+                    <td colspan="6" class="text-center text-gray-600 py-4">No variants found.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -92,78 +112,87 @@
     </nav>
     <!-- Add Variant Modal -->
     <div id="addVariantModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 max-h-screen overflow-y-auto">
             <h2 class="text-xl font-bold mb-4">Add New Variant</h2>
             <form id="addVariantForm" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
-                <input type="hidden" name="action" value="add">
-                <div class="space-y-4">
-                    <input type="text" name="color" placeholder="Color" class="w-full border border-gray-300 p-2 rounded" required>
-                    <input type="number" name="stock" placeholder="Stock" class="w-full border border-gray-300 p-2 rounded" required>
-                    <input type="file" name="image1" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
-                    <input type="file" name="image2" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
-                    <input type="file" name="image3" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
-                    <input type="file" name="image4" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Variant Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="name" placeholder="e.g. Midnight Black – 42mm Leather" class="w-full border border-gray-300 p-2 rounded" required>
+                        <p class="text-xs text-gray-400 mt-1">A descriptive display name visible to customers.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Stock <span class="text-red-500">*</span></label>
+                        <input type="number" name="stock" placeholder="0" min="0" class="w-full border border-gray-300 p-2 rounded" required>
+                    </div>
+
+                    <!-- Attributes -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Attributes</label>
+                        <div id="addAttrList" class="space-y-2">
+                            <div class="flex gap-2">
+                                <input type="text" name="attr_name_1" placeholder="e.g. color" class="w-1/2 border border-gray-300 p-2 rounded text-sm">
+                                <input type="text" name="attr_value_1" placeholder="e.g. Black" class="w-1/2 border border-gray-300 p-2 rounded text-sm">
+                            </div>
+                        </div>
+                        <button type="button" onclick="addAttrRow('addAttrList','add')" class="mt-1 text-blue-600 text-sm hover:underline">+ Add attribute</button>
+                    </div>
+
+                    <!-- Images (multiple) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Images</label>
+                        <input type="file" name="images" multiple accept="image/*" class="w-full border border-gray-300 p-2 rounded">
+                        <p class="text-xs text-gray-400 mt-1">Select one or more images. First image = primary display image.</p>
+                    </div>
                 </div>
                 <div class="mt-6 flex justify-end space-x-4">
-                    <button type="button" onclick="closeAddVariantModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                        Add Variant
-                    </button>
+                    <button type="button" onclick="closeAddVariantModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Add Variant</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="imageCropperModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z--5=100">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6">
-            <h2 class="text-xl font-bold mb-4">Crop Image</h2>
-            <div class="flex">
-                <div class="w-3/4 pr-4">
-                    <img id="cropperImage" class="max-w-full" src="" alt="Image to crop">
-                </div>
-                <div class="w-1/4">
-                    <div class="preview-container overflow-hidden"></div>
-                </div>
-            </div>
-            <div class="mt-6 flex justify-end space-x-4">
-                <button type="button" onclick="closeCropperModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">
-                    Cancel
-                </button>
-                <button type="button" onclick="confirmCrop()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                    Confirm Crop
-                </button>
-            </div>
-        </div>
-    </div>
-
-
-
     <!-- Edit Variant Modal -->
     <div id="editVariantModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 max-h-screen overflow-y-auto">
             <h2 class="text-xl font-bold mb-4">Edit Variant</h2>
             <form id="editVariantForm" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
-                <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="variant_id" id="editVariantId">
-                <div class="space-y-4">
-                    <input type="text" name="color" id="editVariantColor" placeholder="Color" class="w-full border border-gray-300 p-2 rounded" required>
-                    <input type="number" name="stock" id="editVariantStock" placeholder="Stock" class="w-full border border-gray-300 p-2 rounded" required>
-                    <input type="file" name="image1" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
-                    <input type="file" name="image2" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
-                    <input type="file" name="image3" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
-                    <input type="file" name="image4" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Variant Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="name" id="editVariantName" placeholder="Variant display name" class="w-full border border-gray-300 p-2 rounded" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Stock <span class="text-red-500">*</span></label>
+                        <input type="number" name="stock" id="editVariantStock" placeholder="0" min="0" class="w-full border border-gray-300 p-2 rounded" required>
+                    </div>
+
+                    <!-- Attributes -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Update Attributes</label>
+                        <div id="editAttrList" class="space-y-2">
+                            <div class="flex gap-2">
+                                <input type="text" name="attr_name_1" placeholder="attribute name" class="w-1/2 border border-gray-300 p-2 rounded text-sm">
+                                <input type="text" name="attr_value_1" placeholder="attribute value" class="w-1/2 border border-gray-300 p-2 rounded text-sm">
+                            </div>
+                        </div>
+                        <button type="button" onclick="addAttrRow('editAttrList','edit')" class="mt-1 text-blue-600 text-sm hover:underline">+ Add attribute</button>
+                    </div>
+
+                    <!-- Additional images -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Add More Images</label>
+                        <input type="file" name="images" multiple accept="image/*" class="w-full border border-gray-300 p-2 rounded">
+                        <p class="text-xs text-gray-400 mt-1">New images are appended to existing ones.</p>
+                    </div>
                 </div>
                 <div class="mt-6 flex justify-end space-x-4">
-                    <button type="button" onclick="closeEditVariantModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                        Update Variant
-                    </button>
+                    <button type="button" onclick="closeEditVariantModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Update Variant</button>
                 </div>
             </form>
         </div>
@@ -173,25 +202,37 @@
 <script>
     const productId = {{ product.id }};
 
-    // Add Variant Modal Functions
+    // Add Variant Modal
     function openAddVariantModal() {
         document.getElementById('addVariantModal').classList.remove('hidden');
     }
-
     function closeAddVariantModal() {
         document.getElementById('addVariantModal').classList.add('hidden');
     }
 
-    // Edit Variant Modal Functions
-    function openEditVariantModal(variantId, color, stock) {
+    // Edit Variant Modal — receives name & stock (color is gone)
+    function openEditVariantModal(variantId, name, stock) {
         document.getElementById('editVariantId').value = variantId;
-        document.getElementById('editVariantColor').value = color;
+        document.getElementById('editVariantName').value = name;
         document.getElementById('editVariantStock').value = stock;
         document.getElementById('editVariantModal').classList.remove('hidden');
     }
-
     function closeEditVariantModal() {
         document.getElementById('editVariantModal').classList.add('hidden');
+    }
+
+    // Dynamic attribute rows
+    const attrCounts = { add: 1, edit: 1 };
+    function addAttrRow(containerId, prefix) {
+        attrCounts[prefix]++;
+        const n = attrCounts[prefix];
+        const row = document.createElement('div');
+        row.className = 'flex gap-2';
+        row.innerHTML = `
+            <input type="text" name="attr_name_${n}" placeholder="attribute name" class="w-1/2 border border-gray-300 p-2 rounded text-sm">
+            <input type="text" name="attr_value_${n}" placeholder="attribute value" class="w-1/2 border border-gray-300 p-2 rounded text-sm">
+        `;
+        document.getElementById(containerId).appendChild(row);
     }
 
     // Delete Variant Function
