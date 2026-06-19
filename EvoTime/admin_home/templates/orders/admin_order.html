@@ -1,129 +1,132 @@
 {% extends 'admin_dashboard.html' %}
 
 {% block admin_side %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-6">All Orders</h1>
-    <a href="{% url 'admin_return_requests' %}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-        View Return Requests
-    </a>
+<div class="flex-1 p-4 sm:p-6 overflow-y-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h1 class="text-2xl font-bold text-gray-800">All Orders</h1>
+        <a href="{% url 'admin_return_requests' %}" class="px-5 py-2.5 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 shadow-sm transition-colors flex items-center justify-center gap-2">
+            <i class="fas fa-undo"></i> Return Requests
+        </a>
+    </div>
 
     {% if orders %}
-        <div class="space-y-4">
+        <div class="space-y-6">
             {% for order in orders %}
-                <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out {% if order.status == 'cancelled' %}bg-red-50 border-red-200{% endif %}">
-                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                        <div>
-                            <span class="text-sm text-gray-500">Order ID:</span>
-                            <span class="font-medium text-gray-800 ml-2">{{ order.id }}</span>
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out {% if order.status == 'cancelled' %}border-red-200{% endif %}">
+                    <!-- Order Header -->
+                    <div class="px-6 py-4 border-b border-gray-100 flex flex-wrap justify-between items-center bg-gray-50 rounded-t-xl gap-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-medium text-gray-500 uppercase tracking-wider">Order</span>
+                            <span class="text-lg font-bold text-gray-900">#{{ order.id }}</span>
                         </div>
-                        <div class="text-sm text-gray-500">
-                            {{ order.created_at|date:"F d, Y" }}
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            <i class="far fa-calendar-alt"></i>
+                            {{ order.created_at|date:"F d, Y, h:i A" }}
                         </div>
                     </div>
 
-                    <div class="px-6 py-4">
-                        <div class="mb-4">
-                            <h2 class="text-lg font-semibold text-gray-800">Customer Details</h2>
-                            <p class="text-sm text-gray-600"><strong>Name:</strong> {{ order.user.full_name }}</p>
-                            <p class="text-sm text-gray-600"><strong>Email:</strong> {{ order.user.email }}</p>
+                    <!-- Order Content -->
+                    <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Left Column: Items -->
+                        <div class="lg:col-span-2 space-y-4">
+                            <h2 class="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2">Ordered Items</h2>
+                            <ul class="space-y-4">
+                                {% for item in order.items.all %}
+                                <li class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 p-4 rounded-lg border border-gray-100 gap-4">
+                                    <div class="flex-1">
+                                        <h3 class="font-medium text-gray-900">{{ item.product_variant.product.name }}</h3>
+                                        <p class="text-sm text-gray-500 mt-1">Variant: {{ item.product_variant.name }}</p>
+                                        <div class="mt-2 flex gap-4 text-sm">
+                                            <span class="text-gray-600"><span class="font-medium">Qty:</span> {{ item.quantity }}</span>
+                                            <span class="text-gray-600"><span class="font-medium">Price:</span> ₹{{ item.total_price }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="w-full sm:w-auto">
+                                        {% if item.status == 'cancelled' %}
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"><i class="fas fa-times-circle mr-1.5"></i> Cancelled</span>
+                                        {% elif item.status == 'returned' %}
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"><i class="fas fa-undo mr-1.5"></i> Returned</span>
+                                        {% else %}
+                                            <form action="{% url 'admin_change_orderitem_status' item.id %}" method="POST" class="flex items-center gap-2">
+                                                {% csrf_token %}
+                                                <select name="status" class="block w-full sm:w-32 px-3 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md transition-colors {% if item.status == 'delivered' %}bg-green-50 text-green-700 border-green-200{% endif %}">
+                                                    <option value="pending" {% if item.status == 'pending' %}selected{% endif %}>Pending</option>
+                                                    <option value="processing" {% if item.status == 'processing' %}selected{% endif %}>Processing</option>
+                                                    <option value="shipped" {% if item.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                                                    <option value="delivered" {% if item.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                                    <option value="cancelled" {% if item.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                                    <option value="returned" {% if item.status == 'returned' %}selected{% endif %}>Returned</option>
+                                                </select>
+                                                <button type="submit" class="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition-colors" title="Update Status">
+                                                    <i class="fas fa-save"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
                         </div>
 
-                        <h2 class="text-lg font-semibold text-gray-800">Ordered Items</h2>
-                        <ul class="mt-2 space-y-2">
-                            {% for item in order.items.all %}
-                            <li class="flex justify-between items-center border-b border-gray-200 pb-2">
-                                <div>
-                                    <span class="text-sm text-gray-600">{{ item.product_variant.product.name }} ({{ item.product_variant.name }})</span>
-                                    <span class="block text-xs text-gray-500">Quantity: {{ item.quantity }}</span>
-                                    <span class="block text-xs text-gray-500">Price: ₹{{ item.total_price }}</span>
-                                </div>
-                                <div>
-                                    <span class="block text-xs text-gray-500">Status</span>
-                                    {% if item.status == 'cancelled' %}
-                                        <span class="text-sm text-red-600">Cancelled</span>
-                                    {% elif item.status == 'returned' %}
-                                        <span class="text-sm text-green-600">Returned</span>
-                                    {% else %}
-                                        <form action="{% url 'admin_change_orderitem_status' item.id %}" method="POST" class="inline-flex">
-                                            {% csrf_token %}
-                                            <select name="status" class="border border-gray-300 rounded-md text-sm">
-                                                <option value="pending" {% if item.status == 'pending' %}selected{% endif %}>Pending</option>
-                                                <option value="processing" {% if item.status == 'processing' %}selected{% endif %}>Processing</option>
-                                                <option value="shipped" {% if item.status == 'shipped' %}selected{% endif %}>Shipped</option>
-                                                <option value="delivered" {% if item.status == 'delivered' %}selected{% endif %}>Delivered</option>
-                                                <option value="cancelled" {% if item.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
-                                                <option value="returned" {% if item.status == 'returned' %}selected{% endif %}>Returned</option>
-                                            </select>
-                                            <button type="submit" class="ml-2 px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                                                Update
-                                            </button>
-                                        </form>
-                                    {% endif %}
-                                </div>
-                            </li>
-                            {% endfor %}
-                        </ul>
+                        <!-- Right Column: Details -->
+                        <div class="space-y-6">
+                            <!-- Customer Details -->
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                <h2 class="text-sm font-bold text-blue-900 uppercase tracking-wider mb-3"><i class="fas fa-user mr-2"></i> Customer</h2>
+                                <p class="text-sm text-blue-800 font-medium">{{ order.user.full_name }}</p>
+                                <p class="text-sm text-blue-700 mt-1">{{ order.user.email }}</p>
+                            </div>
 
-                        <div class="mt-4">
-                            <h2 class="text-lg font-semibold text-gray-800">Order Summary</h2>
-                            <p class="text-sm text-gray-600"><strong>Total Amount:</strong> ₹{{ order.total_amount }}</p>
-                            <p class="text-sm text-gray-600"><strong>Discount:</strong> ₹{{ order.discount }}</p>
-                            <p class="text-sm text-gray-600"><strong>Shipping Charge:</strong> ₹{{ order.shipping_charge }}</p>
-                            <p class="text-sm text-gray-600"><strong>Final Amount:</strong> ₹{{ order.total_amount|floatformat:2 }}</p>
-                        </div>
+                            <!-- Payment & Status -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <h2 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3"><i class="fas fa-credit-card mr-2"></i> Payment</h2>
+                                <div class="flex justify-between items-center text-sm mb-2">
+                                    <span class="text-gray-500">Status:</span>
+                                    <span class="font-medium text-gray-900 uppercase">{{ order.payment.status }}</span>
+                                </div>
+                                {% if order.payment.status == 'refund_completed' %}
+                                    <p class="text-sm text-green-600 font-medium"><i class="fas fa-check-circle mr-1"></i> Refund Completed</p>
+                                {% elif order.payment.status == 'refund_pending' %}
+                                    <p class="text-sm text-yellow-600 font-medium"><i class="fas fa-clock mr-1"></i> Refund Pending</p>
+                                {% endif %}
+                            </div>
 
-                        <div class="mt-4">
-                            <h2 class="text-lg font-semibold text-gray-800">Payment Status</h2>
-                            <p class="text-sm text-gray-600"><strong>Status:</strong> {{ order.payment.status }}</p>
-                            {% if order.payment.status == 'refund_completed' %}
-                                <p class="text-sm text-green-600">Refund Completed</p>
-                            {% elif order.payment.status == 'refund_pending' %}
-                                <p class="text-sm text-yellow-600">Refund Pending</p>
-                            {% endif %}
+                            <!-- Order Summary -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <h2 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3"><i class="fas fa-receipt mr-2"></i> Summary</h2>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Subtotal</span>
+                                        <span class="font-medium text-gray-900">₹{{ order.total_amount }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Discount</span>
+                                        <span class="font-medium text-green-600">-₹{{ order.discount }}</span>
+                                    </div>
+                                    <div class="flex justify-between border-b border-gray-200 pb-2">
+                                        <span class="text-gray-500">Shipping</span>
+                                        <span class="font-medium text-gray-900">+₹{{ order.shipping_charge }}</span>
+                                    </div>
+                                    <div class="flex justify-between pt-2">
+                                        <span class="font-bold text-gray-900">Total</span>
+                                        <span class="font-bold text-blue-600 text-lg">₹{{ order.total_amount|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             {% endfor %}
         </div>
     {% else %}
-        <p class="text-gray-500">No orders found.</p>
+        <div class="bg-white border border-gray-200 rounded-xl p-8 text-center text-gray-500">
+            <i class="fas fa-box-open text-5xl text-gray-300 mb-4"></i>
+            <p class="text-lg">No orders found.</p>
+        </div>
     {% endif %}
 
-    <!-- Pagination -->
-<div class="mt-6 flex justify-center">
-    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-        {% if orders.has_previous %}
-            <a href="?page={{ orders.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                <span class="sr-only">Previous</span>
-                <!-- Heroicon name: solid/chevron-left -->
-                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
-            </a>
-        {% endif %}
-
-        {% for num in orders.paginator.page_range %}
-            {% if orders.number == num %}
-                <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-500 text-white text-sm font-medium">
-                    {{ num }}
-                </a>
-            {% else %}
-                <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                    {{ num }}
-                </a>
-            {% endif %}
-        {% endfor %}
-
-        {% if orders.has_next %}
-            <a href="?page={{ orders.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                <span class="sr-only">Next</span>
-                <!-- Heroicon name: solid/chevron-right -->
-                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-            </a>
-        {% endif %}
-    </nav>
-</div>
+    <!-- Pagination Component -->
+    {% include 'components/pagination.html' with page_obj=orders %}
 </div>
 {% endblock %}

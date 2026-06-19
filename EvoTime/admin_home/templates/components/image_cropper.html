@@ -1,0 +1,141 @@
+<!-- admin_home/templates/components/image_cropper.html -->
+<div id="unifiedCropperModal" class="hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="cropper-modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="UnifiedCropper.close()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="mb-5 flex justify-between items-center border-b border-gray-100 pb-4">
+                    <h3 class="text-xl leading-6 font-bold text-gray-900" id="cropper-modal-title">Crop Image</h3>
+                    <button type="button" onclick="UnifiedCropper.close()" class="text-gray-400 hover:text-gray-500 focus:outline-none transition-colors p-2 rounded-full hover:bg-gray-100">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+                <div class="w-full max-h-[60vh] bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center border border-gray-200">
+                    <img id="unifiedCropperImage" src="" alt="Image to crop" class="max-w-full max-h-full block opacity-0 transition-opacity duration-300">
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end gap-3 border-t border-gray-200">
+                <button type="button" onclick="UnifiedCropper.close()" class="w-full sm:w-auto justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                    Cancel
+                </button>
+                <button type="button" onclick="UnifiedCropper.cropAndSave()" class="w-full sm:w-auto justify-center rounded-lg border border-transparent shadow-sm px-5 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors flex items-center gap-2">
+                    <i class="fas fa-crop-alt"></i> Crop & Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const UnifiedCropper = (function() {
+        let cropperInstance = null;
+        let currentFileInput = null;
+        let onCropCallback = null;
+        
+        const modal = document.getElementById('unifiedCropperModal');
+        const imageElement = document.getElementById('unifiedCropperImage');
+
+        function open(fileInput, options = {}) {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            currentFileInput = fileInput;
+            onCropCallback = options.onCrop || null;
+            
+            const aspectRatio = options.aspectRatio !== undefined ? options.aspectRatio : 1; // default square
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imageElement.src = e.target.result;
+                imageElement.style.opacity = '1';
+                
+                modal.classList.remove('hidden');
+
+                if (cropperInstance) {
+                    cropperInstance.destroy();
+                }
+
+                cropperInstance = new Cropper(imageElement, {
+                    aspectRatio: aspectRatio,
+                    viewMode: 2,
+                    autoCropArea: 1,
+                    background: false,
+                    modal: true,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function close() {
+            modal.classList.add('hidden');
+            if (cropperInstance) {
+                cropperInstance.destroy();
+                cropperInstance = null;
+            }
+            imageElement.src = '';
+            imageElement.style.opacity = '0';
+            
+            // Optionally clear the file input if user cancelled
+            // if (currentFileInput) currentFileInput.value = '';
+            
+            currentFileInput = null;
+            onCropCallback = null;
+        }
+
+        function cropAndSave() {
+            if (!cropperInstance || !currentFileInput) return;
+
+            const canvas = cropperInstance.getCroppedCanvas({
+                width: 800, // Maximum width to keep file sizes manageable
+                height: 800, // Maximum height
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+
+            canvas.toBlob(function(blob) {
+                const originalFile = currentFileInput.files[0];
+                const fileName = originalFile ? originalFile.name : 'cropped_image.jpg';
+                const fileType = originalFile ? originalFile.type : 'image/jpeg';
+                
+                const croppedFile = new File([blob], fileName, { type: fileType });
+                
+                // Replace the file inside the input using DataTransfer
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(croppedFile);
+                currentFileInput.files = dataTransfer.files;
+
+                // Fire an event in case other listeners need to know the file changed
+                currentFileInput.dispatchEvent(new Event('change', { bubbles: true, cancelable: true, cropperInternal: true }));
+
+                // Invoke callback if provided
+                if (typeof onCropCallback === 'function') {
+                    onCropCallback(croppedFile, canvas.toDataURL(fileType));
+                }
+
+                // Show success toast
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        toast: true,
+                        position: 'bottom-end',
+                        icon: 'success',
+                        title: 'Image cropped successfully',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                }
+
+                close();
+            }, 'image/jpeg', 0.9);
+        }
+
+        return {
+            open: open,
+            close: close,
+            cropAndSave: cropAndSave
+        };
+    })();
+</script>

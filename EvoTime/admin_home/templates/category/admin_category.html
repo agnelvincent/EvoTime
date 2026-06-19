@@ -193,5 +193,23 @@
     function closeEditCategoryModal() {
         document.getElementById('editCategoryModal').classList.add('hidden');
     }
+
+    // Attach Unified Cropper
+    document.addEventListener("DOMContentLoaded", function() {
+        const fileInputs = document.querySelectorAll('input[type="file"][name="Category_image"], input[type="file"][name="category_image"]');
+        fileInputs.forEach(input => {
+            input.addEventListener('change', function(e) {
+                // Prevent infinite loop if triggered by Cropper itself
+                if (e.cropperInternal) return; 
+                if (this.files && this.files.length > 0) {
+                    UnifiedCropper.open(this, { aspectRatio: 1 });
+                }
+            });
+        });
+    });
 </script>
+
+<!-- Unified Cropper Component -->
+{% include 'components/image_cropper.html' %}
+
 {% endblock %}
