@@ -1,0 +1,108 @@
+{#
+  ────────────────────────────────────────────────────────
+  Reusable Product Card  ·  templates/partials/_product_card.html
+  ────────────────────────────────────────────────────────
+  Include with:  {% include 'partials/_product_card.html' with product=product %}
+
+  Expects a `product` object with:
+    · product.id
+    · product.name
+    · product.image.url          (primary image)
+    · product.sales_price
+    · product.regular_price
+    · product.offer_percentage
+    · product.average_rating
+    · product.reviews.count
+    · product.variants.first     (first variant for cart/wishlist)
+    · product.variants.first.id
+    · product.variants.first.stock
+
+  Requires on the page:
+    · addCartItem(variantId, btn)    JS function
+    · toggleWishlist(variantId, btn) JS function
+    (both defined in partials/_shop_scripts.html)
+  ────────────────────────────────────────────────────────
+#}
+
+<div class="product-card fade-up">
+    <a href="{% url 'product_detail' product.id %}" class="block relative overflow-hidden" style="height:260px;">
+        <img src="{{ product.image.url }}"
+             alt="{{ product.name }}"
+             class="w-full h-full object-cover"
+             loading="lazy">
+
+        <!-- Offer badge -->
+        {% if product.offer_percentage > 0 %}
+            <span class="offer-badge">
+                <i class="fas fa-bolt text-yellow-300 text-[10px] mr-1"></i>{{ product.offer_percentage }}% OFF
+            </span>
+        {% endif %}
+
+        <!-- Quick view overlay -->
+        <div class="absolute inset-0 bg-slate-900/0 hover:bg-slate-900/20 transition-all flex items-center justify-center opacity-0 hover:opacity-100">
+            <span class="bg-white text-slate-800 text-xs font-semibold px-4 py-2 rounded-full shadow">
+                View Details
+            </span>
+        </div>
+    </a>
+
+    <!-- Wishlist button (outside link to avoid nested-a) -->
+    {% if product.variants.first %}
+    <button class="wishlist-btn"
+            onclick="toggleWishlist({{ product.variants.first.id }}, this)"
+            data-variant-id="{{ product.variants.first.id }}"
+            data-in-wishlist="false"
+            title="Toggle wishlist"
+            aria-label="Add {{ product.name }} to wishlist">
+        <i class="far fa-heart text-rose-500"></i>
+    </button>
+    {% endif %}
+
+    <!-- Card body -->
+    <div class="p-4">
+        <h3 class="font-semibold text-slate-800 text-sm line-clamp-1 mb-1">{{ product.name }}</h3>
+
+        <!-- Star rating -->
+        <div class="flex items-center gap-0.5 mb-3">
+            {% for i in "12345" %}
+                {% if forloop.counter <= product.average_rating %}
+                    <i class="fas fa-star star-filled text-xs"></i>
+                {% else %}
+                    <i class="far fa-star star-empty text-xs"></i>
+                {% endif %}
+            {% endfor %}
+            <span class="text-slate-400 text-xs ml-1">({{ product.reviews.count }})</span>
+        </div>
+
+        <!-- Price + Add to cart -->
+        <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
+                {% if product.sales_price < product.regular_price %}
+                    <span class="text-slate-400 line-through text-xs block">₹{{ product.regular_price }}</span>
+                    <span class="text-slate-900 font-bold text-base">₹{{ product.sales_price }}</span>
+                {% else %}
+                    <span class="text-slate-900 font-bold text-base">₹{{ product.sales_price }}</span>
+                {% endif %}
+            </div>
+
+            {% if product.variants.first %}
+                {% with v=product.variants.first %}
+                <button id="addToCartBtn_{{ product.id }}"
+                        class="add-cart-btn flex-shrink-0"
+                        onclick="addCartItem({{ v.id }}, this)"
+                        data-stock="{{ v.stock }}"
+                        {% if v.stock == 0 %}disabled{% endif %}
+                        aria-label="Add {{ product.name }} to cart">
+                    {% if v.stock == 0 %}
+                        <i class="fas fa-ban text-xs"></i> Sold out
+                    {% else %}
+                        <i class="fas fa-shopping-cart text-xs"></i> Add
+                    {% endif %}
+                </button>
+                {% endwith %}
+            {% else %}
+                <span class="text-xs font-medium text-slate-400">No variants</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
