@@ -90,13 +90,18 @@ class OrderItem(models.Model):
         ("rejected", "Return Rejected"),
     ]
 
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name="order_items")
-    quantity = models.PositiveIntegerField(default=1)
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="pending")
-    updated_at = models.DateTimeField(auto_now=True)
-    return_status = models.CharField(max_length=50, choices=RETURN_STATUS_CHOICES, default="no_request")
-    return_reason = models.TextField(blank=True, null=True)
+    order                  = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
+    product_variant        = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name="order_items")
+    quantity               = models.PositiveIntegerField(default=1)
+    status                 = models.CharField(max_length=50, choices=STATUS_CHOICES, default="pending")
+    updated_at             = models.DateTimeField(auto_now=True)
+    return_status          = models.CharField(max_length=50, choices=RETURN_STATUS_CHOICES, default="no_request")
+    return_reason          = models.TextField(blank=True, null=True)
+
+    # Price snapshot — frozen at order creation time.
+    # This ensures historical order totals are never affected by future price changes.
+    unit_price_at_purchase = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount_applied       = models.PositiveIntegerField(default=0, help_text="Offer % that was active when order was placed.")
 
     @property
     def can_be_cancelled(self):
@@ -152,10 +157,11 @@ class OrderItem(models.Model):
 
     @property
     def total_price(self):
-        return self.product_variant.product.sales_price * self.quantity
+        """Uses the price frozen at order time — never affected by later price edits."""
+        return self.unit_price_at_purchase * self.quantity
 
     def __str__(self):
-        return f"{self.quantity} x {self.product_variant.product.name} ({self.product_variant.color})"
+        return f"{self.quantity} x {self.product_variant.product.name} ({self.product_variant.name})"
 
 
 class Payment(models.Model):
