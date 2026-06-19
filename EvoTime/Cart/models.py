@@ -9,7 +9,6 @@ from decimal import Decimal
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
-# Cart model that is associated with a user
 class Cart(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="cart")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -24,7 +23,6 @@ class Cart(models.Model):
         return total
 
 
-# CartItem model that links products (variants) to the user's cart
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
     product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name="cart_items")
@@ -59,7 +57,6 @@ class Order(models.Model):
     shipping_charge = models.DecimalField(max_digits=10, decimal_places=2, default=100)
 
     def calculate_total_amount(self):
-        """Calculate total amount including the shipping charge"""
         items_total = sum(item.total_price for item in self.items.all())
         self.total_amount = items_total + self.shipping_charge
         self.save()
@@ -71,8 +68,8 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    CANCELLATION_WINDOW_HOURS = 24  # Cancellation allowed within 24 hours
-    RETURN_WINDOW_DAYS = 7  # Return allowed within 7 days after delivery
+    CANCELLATION_WINDOW_HOURS = 24 
+    RETURN_WINDOW_DAYS = 7 
 
     STATUS_CHOICES = [
         ("pending", "Pending"),
@@ -98,14 +95,13 @@ class OrderItem(models.Model):
     return_status          = models.CharField(max_length=50, choices=RETURN_STATUS_CHOICES, default="no_request")
     return_reason          = models.TextField(blank=True, null=True)
 
-    # Price snapshot — frozen at order creation time.
-    # This ensures historical order totals are never affected by future price changes.
+
     unit_price_at_purchase = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount_applied       = models.PositiveIntegerField(default=0, help_text="Offer % that was active when order was placed.")
 
     @property
     def can_be_cancelled(self):
-        """Check if this order item is eligible for cancellation"""
+
         if self.status not in ["pending", "processing"]:
             return False
         time_elapsed = timezone.now() - self.order.created_at
@@ -113,10 +109,9 @@ class OrderItem(models.Model):
 
     @property
     def can_be_returned(self):
-        """Check if this order item is eligible for return (within 7 days after delivery)"""
         if self.status != "delivered":
             return False
-        time_elapsed = timezone.now() - self.updated_at  # Using updated_at to track delivery date
+        time_elapsed = timezone.now() - self.updated_at
         return time_elapsed.total_seconds() <= (self.RETURN_WINDOW_DAYS * 86400)  # 86400 seconds in a day
 
     def cancel_item(self, reason=""):
@@ -134,7 +129,6 @@ class OrderItem(models.Model):
             self.save()
 
     def return_item(self, reason=""):
-        """Handles return process for this specific order item and calculates refund"""
         if not self.can_be_returned:
             raise ValidationError("This item cannot be returned.")
 
@@ -152,7 +146,7 @@ class OrderItem(models.Model):
             per_item_shipping_charge = self.order.shipping_charge / total_items if total_items > 0 else 0
             refund_amount = self.total_price + per_item_shipping_charge
 
-            return refund_amount  # This should be used for processing refunds
+            return refund_amount 
 
 
     @property
@@ -202,15 +196,12 @@ class Wallet(models.Model):
             wallet=self, amount=amount, transaction_type="CREDIT", reason=reason
         )
 
-        # Debugging log
-        print(f"Transaction Created: {transaction}")
 
-        return transaction  # Return the transaction for confirmation
+        return transaction 
 
 
     def deduct_amount(self, amount, reason="Debit"):
-        """Deduct amount from wallet if sufficient balance and create a transaction."""
-        amount = Decimal(amount)  # ✅ Convert amount to Decimal
+        amount = Decimal(amount)  
         if self.balance >= amount:
             self.balance -= amount
             self.save()
