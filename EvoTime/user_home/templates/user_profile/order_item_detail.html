@@ -82,11 +82,11 @@
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Variant</p>
-                            <p class="font-medium">{{ order_item.product_variant.color }}</p>
+                            <p class="font-medium">{{ order_item.product_variant.name }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Unit Price</p>
-                            <p class="font-medium">${{ order_item.product_variant.product.sales_price }}</p>
+                            <p class="font-medium">₹{{ order_item.unit_price_at_purchase }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Quantity</p>
