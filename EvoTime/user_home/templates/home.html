@@ -79,10 +79,11 @@
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50" style="display:flex; flex-direction:column; min-height:100vh;">
     {% include 'partials/_navbar.html' %}
 
     <div id="toast-container" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 z-50 space-y-2"></div>
+    <div style="flex:1;">
     {% block product %}
 
 
@@ -421,59 +422,9 @@
         </div>
     </section>
     {% endblock product %}
+    </div>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-12">
-        <div class="container mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                    <div class="text-xl font-bold mb-4">
-                        <span class="text-indigo-600">Evo</span>Time
-                    </div>
-                    <p class="text-gray-400">Your destination for premium timepieces that redefine elegance and precision.</p>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-4">Quick Links</h4>
-                    <ul class="space-y-2">
-                        <li><a href="{% url 'home' %}" class="text-gray-400 hover:text-white transition">Home</a></li>
-                        <li><a href="{% url 'brand_list' %}" class="text-gray-400 hover:text-white transition">Brands</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition">About</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition">Contact</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-4">Support</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-400 hover:text-white transition">Shipping Policy</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition">Return Policy</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition">FAQs</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition">Privacy Policy</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-4">Follow Us</h4>
-                    <div class="flex space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-white transition">
-                            <i class="fab fa-facebook-f text-xl"></i>
-                        </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition">
-                            <i class="fab fa-twitter text-xl"></i>
-                        </a>
-                        <a href="https://www.instagram.com/ag_.nel/" target="_blank" class="text-gray-400 hover:text-white transition">
-                            <i class="fab fa-instagram text-xl"></i>
-                        </a>
-                        
-                        <a href="#" class="text-gray-400 hover:text-white transition">
-                            <i class="fab fa-pinterest text-xl"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="border-t border-gray-700 mt-8 pt-8 text-center">
-                <p class="text-gray-400">&copy; 2024 EvoTime. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+    {% include 'partials/_footer.html' %}
 
     <script>
 /// Initialize AOS
