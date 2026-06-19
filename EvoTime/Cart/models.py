@@ -35,13 +35,13 @@ class CartItem(models.Model):
         return self.product_variant.product.sales_price * self.quantity
 
     def __str__(self):
-        return f"{self.quantity} x {self.product_variant.product.name} ({self.product_variant.color})"
+        return f"{self.quantity} x {self.product_variant.product.name} ({self.product_variant.name})"
 
     def clean(self):
         if self.quantity <= 0:
             raise ValidationError("Quantity must be greater than zero.")
         if self.product_variant.stock < self.quantity:
-            raise ValidationError(f"Not enough stock for {self.product_variant.product.name} ({self.product_variant.color}).")
+            raise ValidationError(f"Not enough stock for {self.product_variant.product.name} ({self.product_variant.name}).")
 
 
 
