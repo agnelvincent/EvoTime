@@ -1,246 +1,271 @@
 {% extends 'admin_dashboard.html' %}
 
 {% block admin_side %}
-<div class="container mx-auto mt-10 px-4">
-    <!-- Buttons to Trigger Modals -->
-    <div class="mb-4 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-        <button id="openAddProductModal" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200 w-full sm:w-auto">Add Product</button>
-        <button id="openAddBrandModal" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 w-full sm:w-auto">Add Brand</button>
+<div class="flex-1 p-4 sm:p-6 overflow-y-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h1 class="text-2xl font-bold text-gray-800">Product List</h1>
+        <button id="openAddProductModal" class="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm transition-colors w-full sm:w-auto flex items-center justify-center gap-2">
+            <i class="fas fa-plus"></i> Add Product
+        </button>
     </div>
 
-    <!-- Product List -->
-    <div class="bg-white shadow-lg rounded-lg p-6">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Product List</h1>
-        <div class="overflow-x-auto">
-            <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="px-6 py-4 text-left">Name</th>
-                        <th class="px-6 py-4 text-left">Category</th>
-                        <th class="px-4 py-4 text-left">Price</th>
-                        <th class="px-4 py-4 text-left">Sales Price</th>
-                        <th class="px-6 py-4 text-left">Status</th>
-                        <th class="px-6 py-4 text-left">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for product in products %}
-                    <tr>
-                        <td class="px-6 py-4">{{ product.name }}</td>
-                        <td class="px-6 py-4">{{ product.category.name }}</td>
-                        <td class="px-6 py-4">₹{{ product.regular_price }}</td>
-                        <td class="px-6 py-4">₹{{ product.sales_price }}</td>
-                        <td class="px-6 py-4">
-                            {% if product.is_blocked %}
-                            <span class="text-red-600">Blocked</span>
-                            {% else %}
-                            <span class="text-green-600">Active</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4">
-                            <button class="edit-product-btn text-blue-600 hover:underline" data-product-id="{{ product.id }}">
+    <!-- Product List Table -->
+    <div class="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden mb-6">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Image</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price (₹)</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sales (₹)</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for product in products %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="h-10 w-10 rounded object-cover border border-gray-200">
+                        {% else %}
+                        <div class="h-10 w-10 rounded bg-gray-100 flex items-center justify-center text-gray-400">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ product.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ product.category.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 line-through text-gray-400">{{ product.regular_price }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{{ product.sales_price }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if product.is_blocked %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Blocked</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="flex items-center space-x-3">
+                            <button class="edit-product-btn text-blue-600 hover:text-blue-900 font-medium bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors" data-product-id="{{ product.id }}">
                                 Edit
                             </button>
-                            <a href="{% url 'manage_variants' product.id %}" class="text-purple-600 hover:underline">View Variants</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                            <a href="{% url 'manage_variants' product.id %}" class="text-purple-600 hover:text-purple-900 font-medium bg-purple-50 hover:bg-purple-100 px-3 py-1 rounded transition-colors">
+                                Variants
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-box-open text-4xl text-gray-300 mb-3"></i>
+                            <p>No products found.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    <!-- Pagination Controls -->
-<div class="flex justify-center mt-6">
-    <nav class="inline-flex rounded-md shadow-sm">
-        {% if products.has_previous %}
-            <a href="?page=1" class="px-4 py-2 border rounded-l-md bg-white text-gray-700 hover:bg-gray-50">First</a>
-            <a href="?page={{ products.previous_page_number }}" class="px-4 py-2 border bg-white text-gray-700 hover:bg-gray-50">Previous</a>
-        {% endif %}
 
-        <span class="px-4 py-2 border bg-white text-gray-700">
-            Page {{ products.number }} of {{ products.paginator.num_pages }}
-        </span>
-
-        {% if products.has_next %}
-            <a href="?page={{ products.next_page_number }}" class="px-4 py-2 border bg-white text-gray-700 hover:bg-gray-50">Next</a>
-            <a href="?page={{ products.paginator.num_pages }}" class="px-4 py-2 border rounded-r-md bg-white text-gray-700 hover:bg-gray-50">Last</a>
-        {% endif %}
-    </nav>
-</div>
+    <!-- Pagination -->
+    {% include 'components/pagination.html' with page_obj=products %}
 </div>
 
 <!-- Add Product Modal -->
-<div id="addProductModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center p-4">
-    <div class="bg-white rounded-lg w-full max-w-2xl p-6 overflow-y-auto max-h-screen">
-        <h2 class="text-xl font-bold mb-4">Add Product</h2>
-        <form method="POST" action="{% url 'add_product' %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            <!-- Product Name -->
-            <input type="text" name="name" placeholder="Product Name" class="w-full border p-2 rounded mb-2" required>
-
-            <!-- Category Dropdown -->
-            <select name="category" class="w-full border p-2 rounded mb-2" required>
-                <option value="">Select Category</option>
-                {% for category in categories %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
-                {% endfor %}
-            </select>
-
-            <!-- Description -->
-            <textarea name="description" placeholder="Description" class="w-full border p-2 rounded mb-2" required></textarea>
-
-            <!-- Regular Price -->
-            <input type="number" name="regular_price" id="regular_price" placeholder="Regular Price" class="w-full border p-2 rounded mb-2" required>
-
-            <!-- Offer Percentage -->
-            <input type="number" name="offer_percentage" id="offer_percentage" placeholder="Offer %" class="w-full border p-2 rounded mb-2" min="0" max="100">
-
-            <!-- Sales Price (Readonly) -->
-            <input type="number" name="sales_price" id="sales_price" placeholder="Sales Price" class="w-full border p-2 rounded mb-2" readonly>
-
-            <!-- Image Upload and Cropping -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Upload Product Image</label>
-                <input type="file" id="imageInput" name="image" accept="image/*" class="w-full border p-2 rounded mb-2">
-                <div class="relative w-60 h-60 border rounded-md overflow-hidden mt-2">
-                    <img id="imagePreview" class="hidden w-full h-full object-cover">
+<div id="addProductModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity" aria-hidden="true" id="closeAddProductModalBg"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl w-full">
+            <form method="POST" action="{% url 'add_product' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="mb-5 flex justify-between items-center">
+                        <h3 class="text-xl leading-6 font-bold text-gray-900" id="modal-title">Add New Product</h3>
+                        <button type="button" id="closeAddProductModal" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Product Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" placeholder="Product Name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                            <select name="category" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                                <option value="">Select Category</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Brand <span class="text-red-500">*</span></label>
+                            <select name="brand" id="brandSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                                <option value="" disabled selected>Select Brand</option>
+                                {% for brand in brands %}
+                                    <option value="{{ brand.id }}" data-offer="{{ brand.offer_percentage|default:0 }}">{{ brand.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" id="brand_offer" value="0">
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Regular Price (₹) <span class="text-red-500">*</span></label>
+                            <input type="number" name="regular_price" id="regular_price" placeholder="0.00" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Offer Percentage (%)</label>
+                            <input type="number" name="offer_percentage" id="offer_percentage" placeholder="0" min="0" max="100" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors">
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Sales Price (₹)</label>
+                            <input type="number" name="sales_price" id="sales_price" placeholder="0.00" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500" readonly>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description <span class="text-red-500">*</span></label>
+                            <textarea name="description" placeholder="Product description..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors h-24 resize-none" required></textarea>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                            <input type="file" id="imageInput" name="image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors border border-gray-300 rounded-lg p-1">
+                            <div class="relative w-40 h-40 border rounded-md overflow-hidden mt-2 hidden" id="imagePreviewContainer">
+                                <img id="imagePreview" class="w-full h-full object-cover">
+                            </div>
+                            <button type="button" id="cropButton" class="mt-2 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 hidden">Crop Image</button>
+                            <input type="hidden" name="cropped_image" id="croppedImageInput">
+                        </div>
+                    </div>
                 </div>
-                <button type="button" id="cropButton" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Crop Image</button>
-            </div>
-
-            <!-- Hidden Input for Cropped Image -->
-            <input type="hidden" name="cropped_image" id="croppedImageInput">
-
-            <!-- Brand Dropdown -->
-            <select name="brand" id="brandSelect" class="w-full border p-2 rounded mb-2" required>
-                <option value="" disabled selected>Select Brand</option>
-                {% for brand in brands %}
-                    <option value="{{ brand.id }}" data-offer="{{ brand.offer_percentage|default:0 }}">{{ brand.name }}</option>
-                {% endfor %}
-            </select>
-            <input type="hidden" id="brand_offer" value="0">
-
-            <!-- Submit Button -->
-            <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 w-full sm:w-auto">Add Product</button>
-        </form>
-        <button id="closeAddProductModal" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Close</button>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end gap-3">
+                    <button type="button" id="closeAddProductModalBtn" class="w-full sm:w-auto justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="w-full sm:w-auto justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                        Add Product
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-<!-- Add Brand Modal -->
-<div id="addBrandModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center p-4">
-    <div class="bg-white rounded-lg w-full max-w-md p-6">
-        <h2 class="text-xl font-bold mb-4">Add Brand</h2>
-        <form method="POST" action="{% url 'add_brand' %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            
-            <!-- Brand Name -->
-            <input type="text" name="brand_name" placeholder="Brand Name" class="w-full border p-2 rounded mb-2" required>
-
-            <!-- Offer Percentage (Optional) -->
-            <input type="number" name="offer_percentage" placeholder="Offer Percentage (%)" min="0" max="100" class="w-full border p-2 rounded mb-2">
-
-            <!-- Brand Image Upload -->
-            <input type="file" name="brand_image" accept="image/*" class="w-full border p-2 rounded mb-2">
-
-            <!-- Submit Button -->
-            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 w-full sm:w-auto">Add Brand</button>
-        </form>
-        <button id="closeAddBrandModal" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Close</button>
-    </div>
-</div>
-
-
-<!-- Edit Product Modal -->
+<!-- Edit Product Modals -->
 {% for product in products %}
-<div id="editProductModal{{ product.id }}" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center p-4">
-    <div class="bg-white rounded-lg w-full max-w-2xl p-6 overflow-y-auto max-h-screen">
-        <h2 class="text-xl font-bold mb-4">Edit Product: {{ product.name }}</h2>
-        <form method="POST" action="{% url 'edit_product' product.id %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            <!-- Product Name -->
-            <input type="text" name="name" value="{{ product.name }}" class="w-full border p-2 rounded mb-2" required>
-
-            <!-- Category Dropdown -->
-            <select name="category" class="w-full border p-2 rounded mb-2" required>
-                <option value="">Select Category</option>
-                {% for category in categories %}
-                    <option value="{{ category.id }}" {% if category.id == product.category.id %}selected{% endif %}>{{ category.name }}</option>
-                {% endfor %}
-            </select>
-
-            <!-- Description -->
-            <textarea name="description" class="w-full border p-2 rounded mb-2" required>{{ product.description }}</textarea>
-
-            <!-- Regular Price -->
-            <input type="number" name="regular_price" id="regular_price{{ product.id }}" value="{{ product.regular_price }}" class="w-full border p-2 rounded mb-2" required>
-
-            <!-- Offer Percentage -->
-            <input type="number" name="offer_percentage" id="offer_percentage{{ product.id }}" value="{{ product.offer_percentage }}" class="w-full border p-2 rounded mb-2" min="0" max="100">
-
-            <!-- Sales Price (Readonly) -->
-            <input type="number" name="sales_price" id="sales_price{{ product.id }}" value="{{ product.sales_price }}" class="w-full border p-2 rounded mb-2" readonly>
-
-            <!-- Image Upload and Cropping -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Upload Product Image</label>
-                <input type="file" id="imageInput{{ product.id }}" name="image" accept="image/*" class="w-full border p-2 rounded mb-2">
-                <div class="relative w-60 h-60 border rounded-md overflow-hidden mt-2">
-                    <img id="imagePreview{{ product.id }}" class="w-full h-full object-cover" 
-                        src="{{ product.image.url }}" {% if not product.image %} style="display:none;" {% endif %}>
+<div id="editProductModal{{ product.id }}" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity" aria-hidden="true" id="closeEditProductModalBg{{ product.id }}"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl w-full">
+            <form method="POST" action="{% url 'edit_product' product.id %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="mb-5 flex justify-between items-center">
+                        <h3 class="text-xl leading-6 font-bold text-gray-900">Edit Product: {{ product.name }}</h3>
+                        <button type="button" id="closeEditProductModalX{{ product.id }}" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Product Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" value="{{ product.name }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                            <select name="category" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                                <option value="">Select Category</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if category.id == product.category.id %}selected{% endif %}>{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Brand <span class="text-red-500">*</span></label>
+                            <select name="brand" id="brandSelect{{ product.id }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                                <option value="" disabled>Select Brand</option>
+                                {% for brand in brands %}
+                                    <option value="{{ brand.id }}" data-offer="{{ brand.offer_percentage|default:0 }}" 
+                                        {% if brand.id == product.brand.id %}selected{% endif %}>
+                                        {{ brand.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" id="brand_offer{{ product.id }}" value="{{ product.brand.offer_percentage|default:0 }}">
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Regular Price (₹) <span class="text-red-500">*</span></label>
+                            <input type="number" name="regular_price" id="regular_price{{ product.id }}" value="{{ product.regular_price }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Offer Percentage (%)</label>
+                            <input type="number" name="offer_percentage" id="offer_percentage{{ product.id }}" value="{{ product.offer_percentage }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" min="0" max="100">
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Sales Price (₹)</label>
+                            <input type="number" name="sales_price" id="sales_price{{ product.id }}" value="{{ product.sales_price }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500" readonly>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description <span class="text-red-500">*</span></label>
+                            <textarea name="description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors h-24 resize-none" required>{{ product.description }}</textarea>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Update Product Image</label>
+                            <input type="file" id="imageInput{{ product.id }}" name="image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors border border-gray-300 rounded-lg p-1">
+                            <div class="relative w-40 h-40 border rounded-md overflow-hidden mt-2 {% if not product.image %}hidden{% endif %}" id="imagePreviewContainer{{ product.id }}">
+                                <img id="imagePreview{{ product.id }}" src="{% if product.image %}{{ product.image.url }}{% endif %}" class="w-full h-full object-cover">
+                            </div>
+                            <button type="button" id="cropButton{{ product.id }}" class="mt-2 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 hidden">Crop Image</button>
+                            <input type="hidden" name="cropped_image" id="croppedImageInput{{ product.id }}">
+                        </div>
+                    </div>
                 </div>
-                
-                <button type="button" id="cropButton{{ product.id }}" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Crop Image</button>
-            </div>
-
-            <!-- Hidden Input for Cropped Image -->
-            <input type="hidden" name="cropped_image" id="croppedImageInput{{ product.id }}">
-
-            <!-- Brand Dropdown -->
-            <select name="brand" id="brandSelect{{ product.id }}" class="w-full border p-2 rounded mb-2" required>
-                <option value="" disabled>Select Brand</option>
-                {% for brand in brands %}
-                    <option value="{{ brand.id }}" data-offer="{{ brand.offer_percentage|default:0 }}" 
-                        {% if brand.id == product.brand.id %}selected{% endif %}>
-                        {{ brand.name }}
-                    </option>
-                {% endfor %}
-            </select>
-            <input type="hidden" id="brand_offer{{ product.id }}" value="{{ product.brand.offer_percentage|default:0 }}">
-
-            <!-- Submit Button -->
-            <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 w-full sm:w-auto">Update Product</button>
-        </form>
-        <button id="closeEditProductModal{{ product.id }}" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Close</button>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end gap-3">
+                    <button type="button" id="closeEditProductModalBtn{{ product.id }}" class="w-full sm:w-auto justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="w-full sm:w-auto justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                        Update Product
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endfor %}
 
-<!-- JavaScript for Modals, Image Cropping, and Price Calculation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Modal Toggles
-        const openAddProductModal = document.getElementById('openAddProductModal');
-        const closeAddProductModal = document.getElementById('closeAddProductModal');
-        const addProductModal = document.getElementById('addProductModal');
-
-        const openAddBrandModal = document.getElementById('openAddBrandModal');
-        const closeAddBrandModal = document.getElementById('closeAddBrandModal');
-        const addBrandModal = document.getElementById('addBrandModal');
-
-        if (openAddProductModal && closeAddProductModal && addProductModal) {
-            openAddProductModal.addEventListener('click', () => addProductModal.classList.remove('hidden'));
-            closeAddProductModal.addEventListener('click', () => addProductModal.classList.add('hidden'));
+        // Modal Logic Helper
+        function setupModal(openBtnId, closeBtnIds, modalId) {
+            const modal = document.getElementById(modalId);
+            if(openBtnId) {
+                const openBtn = document.getElementById(openBtnId);
+                if (openBtn && modal) {
+                    openBtn.addEventListener('click', () => modal.classList.remove('hidden'));
+                }
+            }
+            if(closeBtnIds && modal) {
+                closeBtnIds.forEach(id => {
+                    const btn = document.getElementById(id);
+                    if(btn) {
+                        btn.addEventListener('click', () => modal.classList.add('hidden'));
+                    }
+                });
+            }
         }
 
-        if (openAddBrandModal && closeAddBrandModal && addBrandModal) {
-            openAddBrandModal.addEventListener('click', () => addBrandModal.classList.remove('hidden'));
-            closeAddBrandModal.addEventListener('click', () => addBrandModal.classList.add('hidden'));
-        }
+        // Add Product Modal
+        setupModal('openAddProductModal', ['closeAddProductModal', 'closeAddProductModalBg', 'closeAddProductModalBtn'], 'addProductModal');
 
-        // Edit Product Modal Toggles
+        // Edit Product Modals
         document.querySelectorAll('.edit-product-btn').forEach(button => {
             button.addEventListener('click', function () {
                 const productId = this.getAttribute('data-product-id');
@@ -250,66 +275,65 @@
                 }
             });
         });
-
-        document.querySelectorAll('[id^="closeEditProductModal"]').forEach(button => {
-            button.addEventListener('click', function () {
-                const productId = this.id.replace('closeEditProductModal', '');
-                const editModal = document.getElementById(`editProductModal${productId}`);
-                if (editModal) {
-                    editModal.classList.add('hidden');
-                }
-            });
-        });
+        {% for product in products %}
+            setupModal(null, [`closeEditProductModalBg{{ product.id }}`, `closeEditProductModalX{{ product.id }}`, `closeEditProductModalBtn{{ product.id }}`], `editProductModal{{ product.id }}`);
+        {% endfor %}
 
         // Image Cropping
-        function initializeCropper(imageInputId, imagePreviewId, cropButtonId, croppedImageInputId) {
+        function initializeCropper(imageInputId, imagePreviewContainerId, imagePreviewId, cropButtonId, croppedImageInputId) {
             const imageInput = document.getElementById(imageInputId);
+            const imagePreviewContainer = document.getElementById(imagePreviewContainerId);
             const imagePreview = document.getElementById(imagePreviewId);
             const cropButton = document.getElementById(cropButtonId);
             const croppedImageInput = document.getElementById(croppedImageInputId);
 
             let cropper;
 
-            imageInput.addEventListener('change', function (e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        imagePreview.src = e.target.result;
-                        imagePreview.classList.remove('hidden');
-
-                        if (cropper) {
-                            cropper.destroy();
-                        }
-                        cropper = new Cropper(imagePreview, {
-                            aspectRatio: 1,
-                            viewMode: 1,
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            cropButton.addEventListener('click', function () {
-                if (cropper) {
-                    const canvas = cropper.getCroppedCanvas();
-                    canvas.toBlob(function (blob) {
+            if(imageInput) {
+                imageInput.addEventListener('change', function (e) {
+                    const file = e.target.files[0];
+                    if (file) {
                         const reader = new FileReader();
-                        reader.onloadend = function () {
-                            croppedImageInput.value = reader.result;
+                        reader.onload = function (e) {
+                            imagePreview.src = e.target.result;
+                            imagePreviewContainer.classList.remove('hidden');
+                            cropButton.classList.remove('hidden');
+
+                            if (cropper) {
+                                cropper.destroy();
+                            }
+                            cropper = new Cropper(imagePreview, {
+                                aspectRatio: 1,
+                                viewMode: 1,
+                            });
                         };
-                        reader.readAsDataURL(blob);
-                    });
-                }
-            });
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            if(cropButton) {
+                cropButton.addEventListener('click', function () {
+                    if (cropper) {
+                        const canvas = cropper.getCroppedCanvas();
+                        canvas.toBlob(function (blob) {
+                            const reader = new FileReader();
+                            reader.onloadend = function () {
+                                croppedImageInput.value = reader.result;
+                                Swal.fire('Success', 'Image cropped successfully!', 'success');
+                                cropButton.classList.add('hidden'); // hide after crop
+                            };
+                            reader.readAsDataURL(blob);
+                        });
+                    }
+                });
+            }
         }
 
-        // Initialize Cropper for Add Product Form
-        initializeCropper('imageInput', 'imagePreview', 'cropButton', 'croppedImageInput');
-
-        // Initialize Cropper for Edit Product Forms
+        // Initialize Cropper
+        initializeCropper('imageInput', 'imagePreviewContainer', 'imagePreview', 'cropButton', 'croppedImageInput');
         {% for product in products %}
-            initializeCropper('imageInput{{ product.id }}', 'imagePreview{{ product.id }}', 'cropButton{{ product.id }}', 'croppedImageInput{{ product.id }}');
+            initializeCropper('imageInput{{ product.id }}', 'imagePreviewContainer{{ product.id }}', 'imagePreview{{ product.id }}', 'cropButton{{ product.id }}', 'croppedImageInput{{ product.id }}');
         {% endfor %}
 
         // Price Calculation Logic
@@ -337,7 +361,7 @@
             recalculate(); // Initial calculation
         }
 
-        // Apply Price Calculation for Add Product Form
+        // Apply Price Calculation
         const regularPriceInput = document.getElementById('regular_price');
         const offerPercentageInput = document.getElementById('offer_percentage');
         const salesPriceInput = document.getElementById('sales_price');
@@ -348,7 +372,6 @@
             updateSalesPrice(regularPriceInput, offerPercentageInput, salesPriceInput, brandSelect, brandOfferInput);
         }
 
-        // Apply Price Calculation for Edit Product Forms
         {% for product in products %}
             const regularPriceInput{{ product.id }} = document.getElementById('regular_price{{ product.id }}');
             const offerPercentageInput{{ product.id }} = document.getElementById('offer_percentage{{ product.id }}');
