@@ -106,6 +106,33 @@
                     ? '<i class="fas fa-heart" style="color:#f43f5e;"></i>'
                     : '<i class="far fa-heart" style="color:#f43f5e;"></i>';
                 showToast(nowIn ? 'Added to wishlist' : 'Removed from wishlist', 'success');
+
+                // If on wishlist page and item was removed, fade out and remove card
+                if (!nowIn && window.location.pathname.includes('/wishlist/')) {
+                    const card = btn.closest('.product-card');
+                    if (card) {
+                        card.style.transition = 'all 0.4s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.9)';
+                        setTimeout(() => {
+                            card.remove();
+                            // Check if wishlist container is now empty
+                            const container = document.getElementById('wishlist-container');
+                            if (container && container.querySelectorAll('.product-card').length === 0) {
+                                const emptyMsg = document.getElementById('empty-wishlist-message');
+                                if (emptyMsg) {
+                                    emptyMsg.style.display = 'block';
+                                } else {
+                                    const msg = document.createElement('p');
+                                    msg.id = 'empty-wishlist-message';
+                                    msg.className = 'text-gray-600';
+                                    msg.textContent = 'Your wishlist is empty.';
+                                    container.parentNode.appendChild(msg);
+                                }
+                            }
+                        }, 400);
+                    }
+                }
             } else {
                 throw new Error(data.error || 'Could not update wishlist.');
             }

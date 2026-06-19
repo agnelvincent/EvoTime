@@ -414,11 +414,13 @@ def brand_list(request):
 @never_cache
 @login_required
 def brand_products(request, brand_id):
+    from django.template.loader import render_to_string
     try:
         brand = Brand.objects.get(id=brand_id)
         products = Product.objects.filter(brand=brand, is_blocked=False)
 
         product_list = []
+        html_content = ""
         for product in products:
             product_list.append({
                 'id': product.id,
@@ -429,6 +431,7 @@ def brand_products(request, brand_id):
                 'discount': round(((product.regular_price - product.sales_price) / product.regular_price) * 100, 2) if product.sales_price else 0,
                 'variants': [{'id': variant.id, 'stock': variant.stock} for variant in product.variants.all()]
             })
+            html_content += render_to_string('partials/_product_card.html', {'product': product}, request=request)
 
         return JsonResponse({
             'brand': {
@@ -436,7 +439,8 @@ def brand_products(request, brand_id):
                 'name': brand.name,
                 'description': brand.description
             },
-            'products': product_list
+            'products': product_list,
+            'html': html_content
         })
     except Brand.DoesNotExist:
         return JsonResponse({'error': 'Brand not found'}, status=404)
