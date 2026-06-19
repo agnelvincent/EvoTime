@@ -245,7 +245,7 @@ def checkout(request):
                 # Handle "Buy Now" case
                 if is_buy_now and single_variant:
                     if single_variant.stock < single_quantity:
-                        messages.error(request, f"Not enough stock for {single_variant.product.name} ({single_variant.color})")
+                        messages.error(request, f"Not enough stock for {single_variant.product.name} ({single_variant.name})")
                         return redirect("product_detail", pk=single_variant.product.id)
 
                     single_variant.stock -= single_quantity
@@ -255,13 +255,15 @@ def checkout(request):
                         order=order,
                         product_variant=single_variant,
                         quantity=single_quantity,
+                        unit_price_at_purchase=single_variant.product.sales_price,
+                        discount_applied=single_variant.product.get_applicable_offer(),
                         status="processing",
                     )
                 else:
                     for cart_item in cart_items:
                         variant = cart_item.product_variant
                         if variant.stock < cart_item.quantity:
-                            messages.error(request, f"Not enough stock for {variant.product.name} ({variant.color})")
+                            messages.error(request, f"Not enough stock for {variant.product.name} ({variant.name})")
                             return redirect("view_cart")
 
                         variant.stock -= cart_item.quantity
@@ -271,6 +273,8 @@ def checkout(request):
                             order=order,
                             product_variant=variant,
                             quantity=cart_item.quantity,
+                            unit_price_at_purchase=variant.product.sales_price,
+                            discount_applied=variant.product.get_applicable_offer(),
                             status="processing",
                         )
 
@@ -393,7 +397,7 @@ def buy_now(request, variant_id):
         variant = get_object_or_404(ProductVariant, id=variant_id)
 
         if variant.stock < 1:
-            messages.error(request, f"{variant.product.name} ({variant.color}) is out of stock!")
+            messages.error(request, f"{variant.product.name} ({variant.name}) is out of stock!")
             return redirect('product_detail', id=variant.product.id)  # FIXED: Pass correct parameter
         
         # Redirect to checkout with variant_id in the query parameters
