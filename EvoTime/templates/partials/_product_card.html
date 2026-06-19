@@ -1,28 +1,4 @@
-{#
-  ────────────────────────────────────────────────────────
-  Reusable Product Card  ·  templates/partials/_product_card.html
-  ────────────────────────────────────────────────────────
-  Include with:  {% include 'partials/_product_card.html' with product=product %}
 
-  Expects a `product` object with:
-    · product.id
-    · product.name
-    · product.image.url          (primary image)
-    · product.sales_price
-    · product.regular_price
-    · product.offer_percentage
-    · product.average_rating
-    · product.reviews.count
-    · product.variants.first     (first variant for cart/wishlist)
-    · product.variants.first.id
-    · product.variants.first.stock
-
-  Requires on the page:
-    · addCartItem(variantId, btn)    JS function
-    · toggleWishlist(variantId, btn) JS function
-    (both defined in partials/_shop_scripts.html)
-  ────────────────────────────────────────────────────────
-#}
 
 <div class="product-card fade-up">
     <a href="{% url 'product_detail' product.id %}" class="block relative overflow-hidden" style="height:260px;">
