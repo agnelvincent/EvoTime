@@ -899,8 +899,8 @@ def manage_categories(request):
     if request.method == 'POST':
         category_name = request.POST.get('category_name', '').strip()
         image = request.FILES.get('Category_image')
+        offer_percentage = request.POST.get('offer_percentage',0)
 
-        # Comprehensive Validations
         errors = []
 
         # Name Validation
@@ -917,27 +917,24 @@ def manage_categories(request):
         if Category.objects.filter(name__iexact=category_name).exists():
             errors.append("A category with this name already exists!")
 
+        if offer_percentage < 0 or offer_percentage > 100:
+            errors.append('Invalid offer details')
+
         # Handle Errors
         if errors:
             for error in errors:
                 messages.error(request, error)
             return redirect('manage_categories')
         
-        print("Form submitted!")
-        print(f"POST data: {request.POST}")
-        print(f"FILES data: {request.FILES}")
-
-        # Create Category with Transaction
         try:
             with transaction.atomic():
-                Category.objects.create(name=category_name , Category_image = image)
+                Category.objects.create(name=category_name , Category_image = image, offer_percentage = offer_percentage)
             messages.success(request, f"Category '{category_name}' added successfully!")
         except IntegrityError:
             messages.error(request, "An error occurred while creating the category.")
         
         return redirect('manage_categories')
 
-    # Fetch categories with ordering
     categories = Category.objects.all().order_by('-created_at')
     categories_list = Category.objects.all().order_by('-created_at')
 
@@ -998,6 +995,7 @@ def edit_category(request, category_id):
     if request.method == 'POST':
         category_name = request.POST.get('category_name', '').strip()
         category_image = request.FILES.get('category_image')
+        offer_percentage = request.POST.get('offer_percentage',0)
 
         # Comprehensive Validations
         errors = []
@@ -1016,6 +1014,9 @@ def edit_category(request, category_id):
         if Category.objects.filter(name__iexact=category_name).exclude(id=category.id).exists():
             errors.append("A category with this name already exists!")
 
+        if offer_percentage < 0 or offer_percentage > 100:
+            errors.append('Invalid offer percentage provided')
+
         # Handle Errors
         if errors:
             for error in errors:
@@ -1028,6 +1029,8 @@ def edit_category(request, category_id):
                 category.name = category_name
                 if category_image:
                     category.Category_image = category_image
+                if offer_percentage:
+                    category.offer_percentage = offer_percentage
                 category.save()
             messages.success(request, f"Category '{category_name}' updated successfully!")
         except IntegrityError:
