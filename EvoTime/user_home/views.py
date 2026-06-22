@@ -300,7 +300,6 @@ def reset_password(request):
 @login_required
 def home_view(request):
     try:
-        products = Product.objects.prefetch_related('variants').all()
         new_products = Product.objects.all().order_by('-created_at')[:8]
 
         user_wishlist_variant_ids = []

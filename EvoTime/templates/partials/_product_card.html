@@ -8,9 +8,9 @@
              loading="lazy">
 
         <!-- Offer badge -->
-        {% if product.offer_percentage > 0 %}
+        {% if product.applied_offer > 0 %}
             <span class="offer-badge">
-                <i class="fas fa-bolt text-yellow-300 text-[10px] mr-1"></i>{{ product.offer_percentage }}% OFF
+                <i class="fas fa-bolt text-yellow-300 text-[10px] mr-1"></i>{{ product.applied_offer }}% OFF
             </span>
         {% endif %}
 

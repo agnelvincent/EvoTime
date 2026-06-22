@@ -73,6 +73,10 @@ class Product(models.Model):
         default=0,
         help_text="Product-level discount percentage."
     )
+    applied_offer = models.PositiveIntegerField(
+        default=0,
+        help_text="applied discount percentage."
+    )
 
     def __str__(self):
         return self.name
@@ -81,7 +85,8 @@ class Product(models.Model):
         category_offer = self.category.offer_percentage if self.category else 0
         brand_offer    = self.brand.offer_percentage    if self.brand    else 0
         product_offer  = self.offer_percentage
-        return max(category_offer, brand_offer, product_offer)
+        self.applied_offer = max(category_offer, brand_offer, product_offer)
+        return self.applied_offer
 
     def calculate_sales_price(self):
         from decimal import Decimal, ROUND_HALF_UP
@@ -99,8 +104,6 @@ class Product(models.Model):
 
     def review_count(self):
         return self.reviews.count()
-
-
 
     def clean(self):
         if not self.category:
