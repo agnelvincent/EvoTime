@@ -33,7 +33,7 @@ class Category(models.Model):
         for product in self.products.select_related('brand', 'category').all():
             try:
                 product.save()
-            except Exception:
+            except Exception as e:
                 pass
 
 
@@ -84,9 +84,14 @@ class Product(models.Model):
         return max(category_offer, brand_offer, product_offer)
 
     def calculate_sales_price(self):
+        from decimal import Decimal, ROUND_HALF_UP
         highest_offer = self.get_applicable_offer()
         if highest_offer > 0:
-            return self.regular_price * (1 - highest_offer / 100)
+            discount_percentage = Decimal(str(highest_offer)) / Decimal('100')
+            discount_multiplier = Decimal('1') - discount_percentage
+            new_price = self.regular_price * discount_multiplier
+            return new_price.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        
         return self.regular_price 
 
     def average_rating(self):
