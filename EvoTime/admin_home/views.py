@@ -917,6 +917,7 @@ def manage_categories(request):
         if Category.objects.filter(name__iexact=category_name).exists():
             errors.append("A category with this name already exists!")
 
+        offer_percentage = int(offer_percentage)
         if offer_percentage < 0 or offer_percentage > 100:
             errors.append('Invalid offer details')
 
@@ -1013,7 +1014,8 @@ def edit_category(request, category_id):
         # Check for Duplicate Category (case-insensitive)
         if Category.objects.filter(name__iexact=category_name).exclude(id=category.id).exists():
             errors.append("A category with this name already exists!")
-
+            
+        offer_percentage = int(offer_percentage)
         if offer_percentage < 0 or offer_percentage > 100:
             errors.append('Invalid offer percentage provided')
 
