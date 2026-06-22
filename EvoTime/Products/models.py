@@ -30,7 +30,7 @@ class Category(models.Model):
     def save(self, *args, **kwargs):
 
         super().save(*args, **kwargs)
-        for product in self.products.select_related('brand', 'category').all():
+        for product in self.products.select_related('brand').all():
             try:
                 product.save()
             except Exception as e:
@@ -52,7 +52,7 @@ class Brand(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        for product in self.products.select_related('brand', 'category').all():
+        for product in self.products.select_related('category').all():
             try:
                 product.save()
             except Exception:
