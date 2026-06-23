@@ -432,7 +432,17 @@ def edit_brand(request, brand_id):
     if request.method == "POST":
         brand = get_object_or_404(Brand, id=brand_id)
         brand.name = request.POST.get('name', brand.name)
-        brand.offer_percentage = request.POST.get('offer_percentage', brand.offer_percentage)
+        offer_percentage = request.POST.get('offer_percentage',0)
+        if offer_percentage.strip():  # Ensure offer percentage is not empty
+            try:
+                offer_percentage = Decimal(offer_percentage)
+                if offer_percentage < 0 or offer_percentage > 100:
+                    raise ValueError
+            except (ValueError, TypeError):
+                messages.error(request, "Offer percentage must be between 0 and 100.")
+                return redirect('admin_brand')
+            
+        brand.offer_percentage = offer_percentage
         if 'Brand_image' in request.FILES:
             brand.Brand_image = request.FILES['Brand_image']
         brand.save()
@@ -1014,7 +1024,7 @@ def edit_category(request, category_id):
         # Check for Duplicate Category (case-insensitive)
         if Category.objects.filter(name__iexact=category_name).exclude(id=category.id).exists():
             errors.append("A category with this name already exists!")
-            
+
         offer_percentage = int(offer_percentage)
         if offer_percentage < 0 or offer_percentage > 100:
             errors.append('Invalid offer percentage provided')

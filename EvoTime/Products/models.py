@@ -55,7 +55,7 @@ class Brand(models.Model):
         for product in self.products.select_related('category').all():
             try:
                 product.save()
-            except Exception:
+            except Exception as e:
                 pass
 
 
