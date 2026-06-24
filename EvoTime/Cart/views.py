@@ -411,32 +411,6 @@ def buy_now(request, variant_id):
         return redirect('home')
 
 
-@block_superuser_navigation
-@never_cache
-@login_required
-def create_razorpay_order(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
-        amount = data.get("amount", 0)
-
-        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-        razorpay_order = client.order.create({
-            "amount": amount,
-            "currency": "INR",
-            "payment_capture": "1"
-        })
-
-        # ✅ Store order in database
-        order = Order.objects.create(
-            user=request.user,
-            total_amount=amount / 100,
-            razorpay_order_id=razorpay_order["id"],
-        )
-
-        return JsonResponse({
-            "id": razorpay_order["id"],  # ✅ Ensure frontend gets razorpay_order_id
-            "amount": razorpay_order["amount"],
-        })
 
 
 
@@ -579,11 +553,6 @@ def verify_payment(request, order_id):
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})
 
-@block_superuser_navigation
-@never_cache
-@login_required
-def razorpay_payment_success(request):
-    return JsonResponse({"message": "Payment Successful"})
 
 
 

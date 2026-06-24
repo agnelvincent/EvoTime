@@ -109,7 +109,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'user_home.context_processors.get_cart_item_count'
+                'user_home.context_processors.get_cart_item_count',
+                'user_home.context_processors.razorpay_settings',
             ],
         },
     },
