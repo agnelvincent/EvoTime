@@ -665,15 +665,18 @@ def delete_address(request, address_id):
 @never_cache
 @login_required
 def order_list_view(request):
-    orders_list = Order.objects.filter(user=request.user).order_by('-created_at')
+    orders_list = Order.objects.filter(user=request.user).order_by('-created_at', '-id')
     
     # Filter by status
     status = request.GET.get('status')
     if status:
-        orders_list = orders_list.filter(status__status=status)
+        if status == 'completed':
+            orders_list = orders_list.filter(items__status='delivered').distinct()
+        else:
+            orders_list = orders_list.filter(items__status=status).distinct()
         
     # Pagination
-    paginator = Paginator(orders_list.order_by('id'), 5)  # Show 10 orders per page
+    paginator = Paginator(orders_list, 5)  # Show 5 orders per page
     page_number = request.GET.get('page')
     orders = paginator.get_page(page_number)
     

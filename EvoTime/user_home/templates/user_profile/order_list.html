@@ -1,166 +1,335 @@
 {% extends 'user_profile/account_overview.html' %}
 
 {% block user %}
-<div class="fade-up">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-900">My Orders</h1>
-            <p class="text-slate-500 text-sm mt-1">Track and manage your purchases</p>
-        </div>
+  .orders-page {
+    font-family: 'Inter', sans-serif;
+  }
 
-        <!-- Status Filter -->
-        <form method="GET" action="{% url 'order_list' %}" id="statusFilterForm">
-            <div class="relative">
-                <select name="status" id="statusFilter"
-                        class="appearance-none pl-4 pr-10 py-2.5 text-sm font-medium text-slate-700
-                               bg-white border border-slate-200 rounded-xl shadow-sm
-                               focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500
-                               cursor-pointer transition-all hover:border-indigo-300">
-                    <option value="">All Orders</option>
-                    <option value="pending"   {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
-                    <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
-                    <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
-                </select>
-                <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-up {
+    animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Status Badges */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .status-pending { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+  .status-processing { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+  .status-shipped { background: #faf5ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+  .status-delivered { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+  .status-cancelled { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  .status-returned { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+
+  /* Payment Badges */
+  .pay-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .pay-completed { background: #e6fcf5; color: #0ca678; }
+  .pay-pending { background: #fff9db; color: #f59f00; }
+  .pay-refund-pending { background: #edf2ff; color: #4c6ef5; }
+  .pay-refund-completed { background: #f1f3f5; color: #495057; }
+  .pay-default { background: #f8f9fa; color: #868e96; }
+
+  /* Order Cards */
+  .order-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .order-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  }
+
+  /* Image zoom */
+  .prod-img-box img {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .order-card:hover .prod-img-box img {
+    transform: scale(1.06);
+  }
+
+  /* Filter Tabs */
+  .filter-tab {
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  .filter-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #6366f1;
+    border-radius: 2px;
+  }
+</style>
+
+<div class="orders-page fade-up">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">My Orders</h1>
+      <p class="text-slate-500 text-sm mt-1">Track shipping status and view invoice receipts</p>
+    </div>
+  </div>
+
+  <!-- Filter Navigation Tabs -->
+  <div class="flex items-center gap-1 border-b border-slate-200 mb-8 overflow-x-auto no-scrollbar">
+    <a href="{% url 'order_list' %}"
+       class="filter-tab px-4 py-3 text-sm font-semibold whitespace-nowrap transition-colors {% if not request.GET.status %}active text-indigo-600{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+      All Orders
+    </a>
+    <a href="{% url 'order_list' %}?status=pending"
+       class="filter-tab px-4 py-3 text-sm font-semibold whitespace-nowrap transition-colors {% if request.GET.status == 'pending' %}active text-indigo-600{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+      Pending
+    </a>
+    <a href="{% url 'order_list' %}?status=completed"
+       class="filter-tab px-4 py-3 text-sm font-semibold whitespace-nowrap transition-colors {% if request.GET.status == 'completed' %}active text-indigo-600{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+      Completed
+    </a>
+    <a href="{% url 'order_list' %}?status=cancelled"
+       class="filter-tab px-4 py-3 text-sm font-semibold whitespace-nowrap transition-colors {% if request.GET.status == 'cancelled' %}active text-indigo-600{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+      Cancelled
+    </a>
+  </div>
+
+  <!-- Orders Content -->
+  {% if orders %}
+    <div class="space-y-6">
+      {% for order in orders %}
+        <div class="order-card overflow-hidden">
+          
+          <!-- Order Metadata Header -->
+          <div class="bg-slate-50/70 border-b border-slate-100 px-5 py-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Order ID</span>
+                <span class="font-bold text-slate-800">#ORD-{{ order.id }}</span>
+              </div>
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Placed On</span>
+                <span class="font-medium text-slate-600">{{ order.created_at|date:"d M Y" }}</span>
+              </div>
+              {% if order.shipping_address %}
+                <div class="hidden sm:block">
+                  <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Ship To</span>
+                  <span class="font-medium text-slate-600 truncate max-w-[150px] block" title="{{ order.shipping_address.full_name }}">
+                    {{ order.shipping_address.full_name }}
+                  </span>
+                </div>
+              {% endif %}
             </div>
-        </form>
+
+            <!-- Payment Badge & Action -->
+            <div class="flex items-center gap-3">
+              {% if order.payment.status == 'completed' %}
+                <span class="pay-badge pay-completed">
+                  <i class="fas fa-check-circle"></i> Paid
+                </span>
+              {% elif order.payment.status == 'pending' %}
+                <span class="pay-badge pay-pending">
+                  <i class="fas fa-clock"></i> Payment Pending
+                </span>
+              {% elif order.payment.status == 'refund_pending' %}
+                <span class="pay-badge pay-refund-pending">
+                  <i class="fas fa-undo"></i> Refund Pending
+                </span>
+              {% elif order.payment.status == 'refund_completed' %}
+                <span class="pay-badge pay-refund-completed">
+                  <i class="fas fa-check-double"></i> Refunded
+                </span>
+              {% else %}
+                <span class="pay-badge pay-default">
+                  {{ order.payment.status|default:"Unpaid"|title }}
+                </span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Order Items -->
+          <div class="divide-y divide-slate-100">
+            {% for item in order.items.all %}
+              <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-6 transition-all hover:bg-slate-50/30">
+                
+                <!-- Left: Product Image & Details -->
+                <div class="flex items-center gap-4 flex-1 min-w-0">
+                  <div class="prod-img-box w-16 h-16 rounded-xl border border-slate-100 overflow-hidden bg-slate-50 flex-shrink-0">
+                    {% with primary=item.product_variant.get_primary_image %}
+                      <img src="{% if primary %}{{ primary.image.url }}{% else %}{{ item.product_variant.product.image.url }}{% endif %}"
+                           alt="{{ item.product_variant.product.name }}"
+                           class="w-full h-full object-cover">
+                    {% endwith %}
+                  </div>
+                  
+                  <div class="min-w-0">
+                    <h3 class="text-sm font-semibold text-slate-800 truncate" title="{{ item.product_variant.product.name }}">
+                      {{ item.product_variant.product.name }}
+                    </h3>
+                    
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs text-slate-500">
+                      <span class="font-medium text-slate-600">Qty: {{ item.quantity }}</span>
+                      <span>•</span>
+                      <span>Price: ₹{{ item.unit_price_at_purchase }}</span>
+                      {% if item.product_variant.color %}
+                        <span>•</span>
+                        <span class="inline-flex items-center gap-1">
+                          <span class="w-2.5 h-2.5 rounded-full border border-slate-300 inline-block" style="background-color: {{ item.product_variant.color|lower }}"></span>
+                          {{ item.product_variant.color }}
+                        </span>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Middle/Right: Item Status -->
+                <div class="flex flex-wrap items-center sm:justify-end gap-x-4 gap-y-2 flex-shrink-0">
+                  <div class="text-left sm:text-right">
+                    <span class="text-xs text-slate-400 block font-medium mb-1">Status</span>
+                    {% if item.status == 'pending' %}
+                      <span class="status-pill status-pending">Pending</span>
+                    {% elif item.status == 'processing' %}
+                      <span class="status-pill status-processing">Processing</span>
+                    {% elif item.status == 'shipped' %}
+                      <span class="status-pill status-shipped">Shipped</span>
+                    {% elif item.status == 'delivered' %}
+                      <span class="status-pill status-delivered">Delivered</span>
+                    {% elif item.status == 'cancelled' %}
+                      <span class="status-pill status-cancelled">Cancelled</span>
+                    {% elif item.status == 'returned' %}
+                      <span class="status-pill status-returned">Returned</span>
+                    {% else %}
+                      <span class="status-pill bg-slate-100 text-slate-600 border border-slate-200">{{ item.status|title }}</span>
+                    {% endif %}
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="flex gap-2 items-center mt-3 sm:mt-0">
+                    <a href="{% url 'order_item_detail' item_id=item.id %}"
+                       class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold
+                              border border-indigo-100 bg-indigo-50/50 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
+                      <i class="fas fa-eye"></i> Details
+                    </a>
+                    
+                    <a href="{% url 'generate_invoice' item.id %}"
+                       class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold
+                              border border-emerald-100 bg-emerald-50/50 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
+                      <i class="fas fa-download"></i> Receipt
+                    </a>
+                  </div>
+                </div>
+
+              </div>
+            {% endfor %}
+          </div>
+
+          <!-- Order Summary Footer -->
+          <div class="bg-slate-50/40 border-t border-slate-100 px-5 py-4 flex flex-wrap items-center justify-between gap-4 text-sm">
+            <div class="flex items-center gap-4 text-slate-500">
+              <span>Items Total: <span class="font-semibold text-slate-700">₹{{ order.total_amount|default:"0.00" }}</span></span>
+              {% if order.discount > 0 %}
+                <span class="text-emerald-600 font-semibold">Discount: -₹{{ order.discount }}</span>
+              {% endif %}
+            </div>
+            
+            <div class="text-right">
+              <span class="text-slate-500 font-medium">Grand Total: </span>
+              <span class="text-base font-extrabold text-slate-800">₹{{ order.total_amount|default:"0.00" }}</span>
+            </div>
+          </div>
+
+        </div>
+      {% endfor %}
     </div>
 
-    <!-- Orders List -->
-    {% if orders %}
-        <div class="space-y-4">
-            {% for order in orders %}
-            <div class="profile-card overflow-hidden">
-                <!-- Order meta bar -->
-                <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 bg-slate-50 border-b border-slate-100">
-                    <div class="flex items-center gap-3 text-sm">
-                        <span class="font-semibold text-slate-800">#ORD-{{ order.id }}</span>
-                        <span class="text-slate-400">·</span>
-                        <span class="text-slate-500">{{ order.created_at|date:"d M Y" }}</span>
-                    </div>
-                    <!-- Payment status badge -->
-                    {% if order.payment_status == 'paid' %}
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
-                            Paid
-                        </span>
-                    {% elif order.payment_status == 'pending' %}
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-200">
-                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block"></span>
-                            Pending
-                        </span>
-                    {% else %}
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-200">
-                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block"></span>
-                            {{ order.get_payment_status_display }}
-                        </span>
-                    {% endif %}
-                </div>
-
-                <!-- Items -->
-                <div class="divide-y divide-slate-50">
-                    {% for item in order.items.all %}
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 px-5 py-4">
-                        <!-- Product image -->
-                        <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
-                            {% with primary=item.product_variant.get_primary_image %}
-                            <img src="{% if primary %}{{ primary.image.url }}{% else %}{{ item.product_variant.product.image.url }}{% endif %}"
-                                 alt="{{ item.product_variant.product.name }}"
-                                 class="w-full h-full object-cover">
-                            {% endwith %}
-                        </div>
-
-                        <!-- Product info -->
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold text-slate-800 truncate">
-                                {{ item.product_variant.product.name }}
-                            </p>
-                            <p class="text-xs text-slate-500 mt-0.5">
-                                {{ item.quantity }} × ₹{{ item.unit_price_at_purchase }}
-                            </p>
-                            <p class="text-xs font-medium text-indigo-600 mt-0.5">
-                                Total: ₹{{ item.total_price }}
-                            </p>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="flex gap-2 flex-shrink-0">
-                            <a href="{% url 'order_item_detail' item_id=item.id %}"
-                               class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold
-                                      bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors">
-                                <i class="fas fa-eye text-[11px]"></i>
-                                Details
-                            </a>
-                            <a href="{% url 'generate_invoice' item.id %}"
-                               class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold
-                                      bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">
-                                <i class="fas fa-download text-[11px]"></i>
-                                Invoice
-                            </a>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-
-        <!-- Pagination -->
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-8 text-sm">
-            <p class="text-slate-500">
-                Showing <span class="font-medium text-slate-700">{{ orders.start_index }}–{{ orders.end_index }}</span>
-                of <span class="font-medium text-slate-700">{{ orders.paginator.count }}</span> orders
-            </p>
-            <div class="flex items-center gap-2">
-                {% if orders.has_previous %}
-                    <a href="?page={{ orders.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
-                       class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 hover:border-indigo-300 transition-all">
-                        <i class="fas fa-chevron-left text-xs mr-1"></i> Prev
-                    </a>
-                {% else %}
-                    <button disabled class="px-4 py-2 rounded-xl border border-slate-100 text-slate-300 font-medium cursor-not-allowed">
-                        <i class="fas fa-chevron-left text-xs mr-1"></i> Prev
-                    </button>
-                {% endif %}
-
-                {% if orders.has_next %}
-                    <a href="?page={{ orders.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
-                       class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 hover:border-indigo-300 transition-all">
-                        Next <i class="fas fa-chevron-right text-xs ml-1"></i>
-                    </a>
-                {% else %}
-                    <button disabled class="px-4 py-2 rounded-xl border border-slate-100 text-slate-300 font-medium cursor-not-allowed">
-                        Next <i class="fas fa-chevron-right text-xs ml-1"></i>
-                    </button>
-                {% endif %}
-            </div>
-        </div>
-
-    {% else %}
-        <!-- Empty state -->
-        <div class="profile-card flex flex-col items-center justify-center py-20 text-center">
-            <div class="w-20 h-20 rounded-2xl bg-indigo-50 flex items-center justify-center mb-5">
-                <i class="fas fa-box-open text-3xl text-indigo-400"></i>
-            </div>
-            <h3 class="text-lg font-semibold text-slate-700 mb-1">No orders yet</h3>
-            <p class="text-slate-400 text-sm mb-6 max-w-xs">
-                Looks like you haven't placed any orders. Start exploring our collection!
-            </p>
-            <a href="{% url 'all_products' %}"
-               class="btn-primary">
-                <i class="fas fa-shopping-bag"></i> Shop Now
+    <!-- Pagination Controls -->
+    {% if orders.paginator.num_pages > 1 %}
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-4 border-t border-slate-100 text-sm">
+        <p class="text-slate-500">
+          Showing <span class="font-semibold text-slate-700">{{ orders.start_index }}–{{ orders.end_index }}</span>
+          of <span class="font-semibold text-slate-700">{{ orders.paginator.count }}</span> orders
+        </p>
+        
+        <div class="flex items-center gap-2">
+          {% if orders.has_previous %}
+            <a href="?page={{ orders.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
+               class="inline-flex items-center gap-1 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 font-semibold hover:bg-slate-50 hover:border-indigo-400 hover:text-indigo-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+              <i class="fas fa-chevron-left text-xs"></i> Prev
             </a>
+          {% else %}
+            <span class="inline-flex items-center gap-1 px-4 py-2 rounded-xl border border-slate-100 bg-slate-50 text-slate-300 font-semibold cursor-not-allowed">
+              <i class="fas fa-chevron-left text-xs"></i> Prev
+            </span>
+          {% endif %}
+
+          {% if orders.has_next %}
+            <a href="?page={{ orders.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
+               class="inline-flex items-center gap-1 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 font-semibold hover:bg-slate-50 hover:border-indigo-400 hover:text-indigo-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+              Next <i class="fas fa-chevron-right text-xs"></i>
+            </a>
+          {% else %}
+            <span class="inline-flex items-center gap-1 px-4 py-2 rounded-xl border border-slate-100 bg-slate-50 text-slate-300 font-semibold cursor-not-allowed">
+              Next <i class="fas fa-chevron-right text-xs"></i>
+            </span>
+          {% endif %}
         </div>
+      </div>
     {% endif %}
 
+  {% else %}
+    <!-- Empty State -->
+    <div class="border border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center py-20 px-6 text-center bg-white shadow-sm">
+      <div class="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mb-5 text-indigo-500">
+        <i class="fas fa-box-open text-2xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-slate-800 mb-1">No orders found</h3>
+      <p class="text-slate-500 text-sm mb-6 max-w-xs leading-relaxed">
+        {% if request.GET.status %}
+          We couldn't find any orders matching the selected status. Try checking another category.
+        {% else %}
+          You haven't placed any orders yet. Explore our latest premium timepieces and start shopping today!
+        {% endif %}
+      </p>
+      <a href="{% url 'all_products' %}"
+         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-200 hover:bg-indigo-700 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+        <i class="fas fa-shopping-bag text-sm"></i> Start Shopping
+      </a>
+    </div>
+  {% endif %}
 </div>
-
-<script>
-    /* Auto-submit filter on change */
-    document.getElementById('statusFilter').addEventListener('change', function () {
-        document.getElementById('statusFilterForm').submit();
-    });
-</script>
 {% endblock user %}
