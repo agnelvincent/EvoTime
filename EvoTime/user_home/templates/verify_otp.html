@@ -1,74 +1,190 @@
-<!DOCTYPE html>
 {% load static %}
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OTP Verification</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" type="image/jpg" href="{% static 'evo_time-removebg.png' %}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OTP Verification – EvoTime</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpg" href="{% static 'evo_time-removebg.png' %}">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <style>
+    * {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background-color: #020617; /* slate-950 */
+      color: #f8fafc;
+    }
+
+    /* Floating Orbs */
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(6%, 8%) scale(1.15); }
+    }
+    @keyframes float2 {
+      0%, 100% { transform: translate(0, 0) scale(1.1); }
+      50% { transform: translate(-6%, -8%) scale(0.95); }
+    }
+    @keyframes float3 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-4%, 4%) scale(1.05); }
+    }
+    .animate-float-1 { animation: float1 20s ease-in-out infinite; }
+    .animate-float-2 { animation: float2 24s ease-in-out infinite; }
+    .animate-float-3 { animation: float3 16s ease-in-out infinite; }
+
+    /* Shifting Gradient Button */
+    .gradient-btn {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #6366f1 100%);
+      background-size: 200% auto;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .gradient-btn:hover {
+      background-position: right center;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+      transform: translateY(-1.5px);
+    }
+    .gradient-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Glass Card */
+    .glass-card {
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Custom Input Focus */
+    .glass-input {
+      background: rgba(2, 6, 23, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-input:focus {
+      background: rgba(2, 6, 23, 0.6);
+      border-color: rgba(99, 102, 241, 0.5);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    }
+  </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h2 class="text-2xl font-bold text-center mb-4">OTP Verification</h2>
-        
-        <form method="POST" action="{% url 'verify_otp' %}" class="space-y-4">
-            {% csrf_token %}
-            <div>
-                <label for="otp" class="block text-sm font-medium text-gray-700">Enter OTP</label>
-                <input type="text" name="otp" id="otp" placeholder="Enter OTP" 
-                    class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-                    required>
-            </div>
-            <button type="submit" 
-                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px -4 rounded-lg transition">
-                Verify OTP
-            </button>
-        </form>
-        
-        <div class="text-center mt-4">
-            <p class="text-sm text-gray-600">Time Remaining: 
-                <span id="timer" class="font-bold text-gray-800">Loading...</span>
-            </p>
-        </div>
-        
-        {% if messages %}
-            <div class="mt-4 text-center">
-                {% for message in messages %}
-                    <p class="text-sm text-red-600">{{ message }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-        
-        <div class="text-center mt-4" id="resend-link" style="display: none;">
-            <p class="text-sm text-gray-600">
-                OTP Expired? 
-                <a href="{% url 'resend_otp' %}" id="resend_otp" class="text-blue-500 font-bold">Resend OTP</a>
-            </p>
-        </div>
+<body class="flex items-center justify-center min-h-screen relative overflow-hidden px-4">
+
+  <!-- Decorative floating background orbs (Mesh Gradient) -->
+  <div class="fixed top-[-15%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-600/10 blur-[130px] pointer-events-none animate-float-1"></div>
+  <div class="fixed bottom-[-15%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-purple-600/10 blur-[130px] pointer-events-none animate-float-2"></div>
+  <div class="fixed top-[35%] left-[55%] w-[35vw] h-[35vw] rounded-full bg-indigo-600/5 blur-[120px] pointer-events-none animate-float-3"></div>
+
+  <!-- OTP Verification Card -->
+  <div class="w-full max-w-md glass-card rounded-3xl p-8 relative z-10">
+    
+    <!-- Logo -->
+    <div class="flex justify-center mb-6">
+      <div class="w-16 h-16 rounded-2xl bg-slate-800/40 flex items-center justify-center p-3 border border-slate-700/50 shadow-inner">
+        <img src="{% static 'evo_time-removebg.png' %}" alt="EvoTime Logo" class="w-full h-full object-contain">
+      </div>
     </div>
 
-    <script>
-        const otpCreationTime = new Date("{{ user_data.otp_created_at }}").getTime();
-const otpExpiryTime = otpCreationTime + 2 * 60 * 1000; // 2 minutes in milliseconds
+    <!-- Headers -->
+    <h2 class="text-3xl font-extrabold text-center text-white tracking-tight">Verify Account</h2>
+    <p class="text-center text-slate-400 text-sm mt-1.5 mb-8 font-medium">Enter the OTP sent to verify your account</p>
 
-function updateTimer() {
-                const now = new Date().getTime();
-                const distance = otpExpiryTime - now;
+    <!-- Error/Success Messages Block -->
+    {% if messages %}
+      <div class="mb-6 space-y-2 animate-fade-in">
+        {% for message in messages %}
+          <div class="px-4 py-3 text-sm rounded-xl flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-200">
+            <i class="fas fa-exclamation-circle text-red-400"></i>
+            <span>{{ message }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
 
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    <!-- Form -->
+    <form action="{% url 'verify_otp' %}" method="POST" class="space-y-6">
+      {% csrf_token %}
 
-                document.getElementById("timer").innerHTML = minutes + "m " + seconds + "s ";
+      <!-- OTP Field -->
+      <div>
+        <label for="otp" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Enter OTP</label>
+        <div class="relative">
+          <i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+          <input type="text"
+                 id="otp"
+                 name="otp"
+                 placeholder="Enter OTP"
+                 required
+                 class="glass-input w-full pl-11 pr-4 py-3 text-center tracking-[0.2em] text-lg font-bold rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none">
+        </div>
+      </div>
 
-                if (distance < 0) {
-                    clearInterval(timerInterval);
-                    document.getElementById("timer").innerHTML = "EXPIRED";
-                    document.getElementById("resend-link").style.display = "block"; // Show resend link
-                }
-            }
+      <!-- Submit Button -->
+      <button type="submit"
+              class="w-full gradient-btn text-white text-sm font-bold py-3.5 rounded-xl shadow-md mt-2">
+        Verify OTP
+      </button>
+    </form>
 
-            const timerInterval = setInterval(updateTimer, 1000);
-    </script>
+    <!-- Countdown Timer -->
+    <div class="text-center mt-6">
+      <p class="text-xs font-medium text-slate-400">Time Remaining: 
+        <span id="timer" class="font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-md ml-1">Loading...</span>
+      </p>
+    </div>
+
+    <!-- Resend Link -->
+    <div class="text-center mt-6 transition-all duration-300" id="resend-link" style="display: none;">
+      <p class="text-xs font-medium text-slate-400">
+        OTP Expired? 
+        <a href="{% url 'resend_otp' %}"
+           id="resend_otp"
+           class="text-indigo-400 hover:text-indigo-300 font-bold ml-1 transition-colors">
+          Resend OTP
+        </a>
+      </p>
+    </div>
+  </div>
+
+  <!-- JavaScript timer logic -->
+  <script>
+    const otpCreationTime = new Date("{{ user_data.otp_created_at }}").getTime();
+    const otpExpiryTime = otpCreationTime + 2 * 60 * 1000; // 2 minutes in milliseconds
+
+    function updateTimer() {
+      const now = new Date().getTime();
+      const distance = otpExpiryTime - now;
+
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      document.getElementById("timer").innerHTML = minutes + "m " + seconds + "s";
+
+      if (distance < 0) {
+        clearInterval(timerInterval);
+        document.getElementById("timer").innerHTML = "EXPIRED";
+        document.getElementById("resend-link").style.display = "block"; // Show resend link
+      }
+    }
+
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer(); // Initial call
+  </script>
 </body>
 </html>
