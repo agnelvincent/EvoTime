@@ -1,0 +1,122 @@
+{% load static %}
+
+<footer style="background:#0f172a; color:#fff; font-family:'Inter','Poppins',sans-serif;">
+    <div style="max-width:1280px; margin:0 auto; padding:56px 24px 0;">
+
+        <!-- Top grid -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:40px; padding-bottom:40px;">
+
+            <!-- Brand column -->
+            <div style="grid-column:span 1;">
+                <a href="{% url 'home' %}" style="display:inline-flex; align-items:center; gap:10px; text-decoration:none; margin-bottom:16px;">
+                    <img src="{% static 'evo_time.jpg' %}" alt="EvoTime"
+                         style="width:34px; height:34px; border-radius:50%; object-fit:cover;">
+                    <span style="font-size:1.2rem; font-weight:800; color:#fff; letter-spacing:-0.02em;">
+                        <span style="color:#818cf8;">Evo</span>Time
+                    </span>
+                </a>
+                <p style="color:#94a3b8; font-size:0.85rem; line-height:1.6; margin:0;">
+                    Your destination for premium timepieces that redefine elegance and precision.
+                </p>
+                <!-- Social icons -->
+                <div style="display:flex; gap:12px; margin-top:20px;">
+                    <a href="https://www.instagram.com/ag_.nel/" target="_blank" rel="noopener noreferrer"
+                       class="evo-social-icon" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="evo-social-icon" aria-label="Twitter / X">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="evo-social-icon" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="evo-social-icon" aria-label="Pinterest">
+                        <i class="fab fa-pinterest-p"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div>
+                <h4 style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#e2e8f0; margin-bottom:16px;">
+                    Explore
+                </h4>
+                <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px;">
+                    <li><a href="{% url 'home' %}" class="evo-footer-link">Home</a></li>
+                    <li><a href="{% url 'brand_list' %}" class="evo-footer-link">Brands</a></li>
+                    <li><a href="{% url 'all_products' %}" class="evo-footer-link">All Products</a></li>
+                    <li><a href="{% url 'about' %}" class="evo-footer-link">About Us</a></li>
+                </ul>
+            </div>
+
+            <!-- Account -->
+            <div>
+                <h4 style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#e2e8f0; margin-bottom:16px;">
+                    Account
+                </h4>
+                <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px;">
+                    <li><a href="{% url 'account_overview' %}" class="evo-footer-link">My Profile</a></li>
+                    <li><a href="{% url 'order_list' %}" class="evo-footer-link">My Orders</a></li>
+                    <li><a href="{% url 'manage_address' %}" class="evo-footer-link">Addresses</a></li>
+                    <li><a href="{% url 'wallet_page' %}" class="evo-footer-link">Wallet</a></li>
+                </ul>
+            </div>
+
+            <!-- Support -->
+            <div>
+                <h4 style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#e2e8f0; margin-bottom:16px;">
+                    Support
+                </h4>
+                <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px;">
+                    <li><a href="#" class="evo-footer-link">Shipping Policy</a></li>
+                    <li><a href="#" class="evo-footer-link">Return Policy</a></li>
+                    <li><a href="#" class="evo-footer-link">FAQs</a></li>
+                    <li><a href="#" class="evo-footer-link">Privacy Policy</a></li>
+                </ul>
+            </div>
+
+        </div><!-- /top grid -->
+
+        <!-- Bottom bar -->
+        <div style="border-top:1px solid rgba(148,163,184,0.15); padding:20px 0; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px;">
+            <p style="color:#64748b; font-size:0.78rem; margin:0;">
+                &copy; 2024 EvoTime. All rights reserved.
+            </p>
+            <div style="display:flex; gap:20px;">
+                <a href="#" class="evo-footer-link" style="font-size:0.78rem;">Privacy</a>
+                <a href="#" class="evo-footer-link" style="font-size:0.78rem;">Terms</a>
+                <a href="#" class="evo-footer-link" style="font-size:0.78rem;">Cookies</a>
+            </div>
+        </div>
+
+    </div><!-- /inner -->
+</footer>
+
+<style>
+    .evo-footer-link {
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 0.875rem;
+        transition: color 0.2s;
+        font-family: 'Inter', 'Poppins', sans-serif;
+    }
+    .evo-footer-link:hover { color: #ffffff; }
+
+    .evo-social-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: rgba(148,163,184,0.1);
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: background 0.2s, color 0.2s;
+    }
+    .evo-social-icon:hover {
+        background: rgba(99,102,241,0.2);
+        color: #a5b4fc;
+    }
+</style>

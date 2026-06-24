@@ -300,7 +300,6 @@ def reset_password(request):
 @login_required
 def home_view(request):
     try:
-        products = Product.objects.prefetch_related('variants').all()
         new_products = Product.objects.all().order_by('-created_at')[:8]
 
         user_wishlist_variant_ids = []
@@ -396,6 +395,10 @@ def all_products(request):
         'brands': brands,
         'categories': categories,
         'search_query': search_query,
+        'brand_filter': brand_filter,
+        'category_filter': category_filter,
+        'price_filter': price_filter,
+        'sort_by': sort_by,
     }
 
     return render(request, 'all_products.html', context)
@@ -414,11 +417,13 @@ def brand_list(request):
 @never_cache
 @login_required
 def brand_products(request, brand_id):
+    from django.template.loader import render_to_string
     try:
         brand = Brand.objects.get(id=brand_id)
         products = Product.objects.filter(brand=brand, is_blocked=False)
 
         product_list = []
+        html_content = ""
         for product in products:
             product_list.append({
                 'id': product.id,
@@ -429,6 +434,7 @@ def brand_products(request, brand_id):
                 'discount': round(((product.regular_price - product.sales_price) / product.regular_price) * 100, 2) if product.sales_price else 0,
                 'variants': [{'id': variant.id, 'stock': variant.stock} for variant in product.variants.all()]
             })
+            html_content += render_to_string('partials/_product_card.html', {'product': product}, request=request)
 
         return JsonResponse({
             'brand': {
@@ -436,7 +442,8 @@ def brand_products(request, brand_id):
                 'name': brand.name,
                 'description': brand.description
             },
-            'products': product_list
+            'products': product_list,
+            'html': html_content
         })
     except Brand.DoesNotExist:
         return JsonResponse({'error': 'Brand not found'}, status=404)
@@ -658,15 +665,18 @@ def delete_address(request, address_id):
 @never_cache
 @login_required
 def order_list_view(request):
-    orders_list = Order.objects.filter(user=request.user).order_by('-created_at')
+    orders_list = Order.objects.filter(user=request.user).order_by('-created_at', '-id')
     
     # Filter by status
     status = request.GET.get('status')
     if status:
-        orders_list = orders_list.filter(status__status=status)
-
+        if status == 'completed':
+            orders_list = orders_list.filter(items__status='delivered').distinct()
+        else:
+            orders_list = orders_list.filter(items__status=status).distinct()
+        
     # Pagination
-    paginator = Paginator(orders_list.order_by('id'), 5)  # Show 10 orders per page
+    paginator = Paginator(orders_list, 5)  # Show 5 orders per page
     page_number = request.GET.get('page')
     orders = paginator.get_page(page_number)
     

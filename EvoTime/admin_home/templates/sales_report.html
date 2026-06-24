@@ -1,83 +1,105 @@
 {% extends 'admin_dashboard.html' %}
 
 {% block admin_side %}
-<div class="container mx-auto p-5">
-    <h2 class="text-2xl font-bold mb-4">Sales Report</h2>
+<div class="flex-1 p-4 sm:p-6 overflow-y-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h1 class="text-2xl font-bold text-gray-800">Sales Report</h1>
+    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="bg-blue-500 text-white p-4 rounded-xl">
-            <h3 class="text-lg font-semibold">Total Revenue</h3>
-            <p class="text-2xl">₹{{ total_revenue|default:0 }}</p>
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-sm">
+            <h3 class="text-blue-100 font-medium tracking-wide uppercase text-sm mb-1">Total Revenue</h3>
+            <p class="text-3xl font-bold">₹{{ total_revenue|default:0 }}</p>
         </div>
 
-        <div class="bg-green-500 text-white p-4 rounded-xl">
-            <h3 class="text-lg font-semibold">Total Orders</h3>
-            <p class="text-2xl">{{ total_orders }}</p>
+        <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-sm">
+            <h3 class="text-green-100 font-medium tracking-wide uppercase text-sm mb-1">Total Orders</h3>
+            <p class="text-3xl font-bold">{{ total_orders }}</p>
         </div>
 
-        <div class="bg-yellow-500 text-white p-4 rounded-xl">
-            <h3 class="text-lg font-semibold">Completed Orders</h3>
-            <p class="text-2xl">{{ completed_orders }}</p>
+        <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-6 rounded-xl shadow-sm">
+            <h3 class="text-yellow-100 font-medium tracking-wide uppercase text-sm mb-1">Completed Orders</h3>
+            <p class="text-3xl font-bold">{{ completed_orders }}</p>
         </div>
 
-        <div class="bg-red-500 text-white p-4 rounded-xl">
-            <h3 class="text-lg font-semibold">Cancelled Orders</h3>
-            <p class="text-2xl">{{ cancelled_orders }}</p>
+        <div class="bg-gradient-to-br from-red-500 to-red-600 text-white p-6 rounded-xl shadow-sm">
+            <h3 class="text-red-100 font-medium tracking-wide uppercase text-sm mb-1">Cancelled Orders</h3>
+            <p class="text-3xl font-bold">{{ cancelled_orders }}</p>
         </div>
 
-        <div class="bg-gray-500 text-white p-4 rounded-xl">
-            <h3 class="text-lg font-semibold">Sales in Last 7 Days</h3>
-            <p class="text-2xl">₹{{ weekly_sales|default:0 }}</p>
+        <div class="bg-gradient-to-br from-gray-500 to-gray-600 text-white p-6 rounded-xl shadow-sm">
+            <h3 class="text-gray-100 font-medium tracking-wide uppercase text-sm mb-1">Sales in Last 7 Days</h3>
+            <p class="text-3xl font-bold">₹{{ weekly_sales|default:0 }}</p>
         </div>
 
-        <div class="bg-purple-500 text-white p-4 rounded-xl">
-            <h3 class="text-lg font-semibold">Sales in Last 30 Days</h3>
-            <p class="text-2xl">₹{{ monthly_sales|default:0 }}</p>
+        <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-sm">
+            <h3 class="text-purple-100 font-medium tracking-wide uppercase text-sm mb-1">Sales in Last 30 Days</h3>
+            <p class="text-3xl font-bold">₹{{ monthly_sales|default:0 }}</p>
         </div>
     </div>
 
-    <h3 class="text-xl font-semibold mt-6">Best Selling Products</h3>
-    <table class="min-w-full bg-white border border-gray-200 mt-2">
-        <thead>
-            <tr class="bg-gray-100">
-                <th class="border px-4 py-2">Product</th>
-                <th class="border px-4 py-2">Total Sold</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for product in best_selling_products %}
-            <tr>
-                <td class="border px-4 py-2">{{ product.product_variant__product__name }}</td>
-                <td class="border px-4 py-2">{{ product.total_sold }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="2" class="text-center py-2">No sales yet.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Best Selling Products -->
+        <div class="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                <h3 class="text-lg font-bold text-gray-800">Best Selling Products</h3>
+            </div>
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Sold</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for product in best_selling_products %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ product.product_variant__product__name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ product.total_sold }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-box-open text-3xl text-gray-300 mb-2"></i>
+                            <p>No sales yet.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-    <h3 class="text-xl font-semibold mt-6">Payment Breakdown</h3>
-    <table class="min-w-full bg-white border border-gray-200 mt-2">
-        <thead>
-            <tr class="bg-gray-100">
-                <th class="border px-4 py-2">Payment Method</th>
-                <th class="border px-4 py-2">Total Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for payment in payment_breakdown %}
-            <tr>
-                <td class="border px-4 py-2">{{ payment.payment_method }}</td>
-                <td class="border px-4 py-2">₹{{ payment.total }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="2" class="text-center py-2">No payments recorded.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <!-- Payment Breakdown -->
+        <div class="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                <h3 class="text-lg font-bold text-gray-800">Payment Breakdown</h3>
+            </div>
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Method</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for payment in payment_breakdown %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 uppercase">{{ payment.payment_method }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-semibold">₹{{ payment.total }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-credit-card text-3xl text-gray-300 mb-2"></i>
+                            <p>No payments recorded.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}

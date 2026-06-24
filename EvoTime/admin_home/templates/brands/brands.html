@@ -1,30 +1,66 @@
 {% extends "admin_dashboard.html" %}
+
 {% block admin_side %}
-<div class="container mx-auto p-6">
-    <h2 class="text-2xl font-bold mb-4">Manage Brands</h2>
+<div class="flex-1 p-4 sm:p-6 overflow-y-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h1 class="text-2xl font-bold text-gray-800">Manage Brands</h1>
+        <button onclick="openAddBrandModal()" class="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm transition-colors w-full sm:w-auto flex items-center justify-center gap-2">
+            <i class="fas fa-plus"></i> Add Brand
+        </button>
+    </div>
 
     <!-- Brands Table -->
-    <div class="bg-white p-4 rounded-lg shadow-md">
-        <table class="w-full border-collapse border border-gray-200">
-            <thead>
-                <tr class="bg-gray-200">
-                    <th class="border p-2">#</th>
-                    <th class="border p-2">Name</th>
-                    <th class="border p-2">Offer (%)</th>
-                    <th class="border p-2">Actions</th>
+    <div class="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden mb-6">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Offer (%)</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="bg-white divide-y divide-gray-200">
                 {% for brand in brands %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ forloop.counter }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ brand.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {% if brand.offer_percentage > 0 %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {{ brand.offer_percentage|floatformat:1 }}%
+                        </span>
+                        {% else %}
+                        <span class="text-gray-400">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if brand.is_blocked %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Blocked</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="flex items-center space-x-3">
+                            <button onclick="openEditBrandModal('{{ brand.id }}', '{{ brand.name|escapejs }}', '{{ brand.offer_percentage|default:0 }}')" class="text-blue-600 hover:text-blue-900 font-medium bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
+                                Edit
+                            </button>
+                            <button onclick="toggleBrandStatus('{{ brand.id }}')" class="font-medium px-3 py-1 rounded transition-colors {% if not brand.is_blocked %}text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-900{% else %}text-green-600 bg-green-50 hover:bg-green-100 hover:text-green-900{% endif %}">
+                                {% if brand.is_blocked %}Unblock{% else %}Block{% endif %}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
                 <tr>
-                    <td class="border p-2">{{ forloop.counter }}</td>
-                    <td class="border p-2">{{ brand.name }}</td>
-                    <td class="border p-2">{{ brand.offer_percentage }}</td>
-                    <td class="border p-2">
-                        <button class="bg-blue-500 text-white px-2 py-1 rounded" onclick="openEditBrandModal('{{ brand.id }}', '{{ brand.name }}', '{{ brand.offer_percentage }}')">Edit</button>
-                        <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="toggleBrandStatus('{{ brand.id }}')">
-                            {% if brand.is_blocked %}Unblock{% else %}Block{% endif %}
-                        </button>
+                    <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-copyright text-4xl text-gray-300 mb-3"></i>
+                            <p>No brands found.</p>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -33,30 +69,101 @@
     </div>
 </div>
 
-<!-- Edit Brand Modal -->
-<div id="editBrandModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center">
-    <div class="bg-white p-6 rounded shadow-lg w-96">
-        <h3 class="text-lg font-bold mb-2">Edit Brand</h3>
-        <input type="hidden" id="editBrandId">
-        <input type="text" id="editBrandName" class="w-full border p-2 rounded mb-2" placeholder="Brand Name">
-        <input type="number" id="editBrandOffer" class="w-full border p-2 rounded mb-2" placeholder="Offer Percentage">
-        <input type="file" id="editBrandImage" class="w-full border p-2 rounded mb-2" accept="image/*">
-        <div class="flex justify-end space-x-2">
-            <button class="bg-gray-500 text-white px-4 py-2 rounded" onclick="closeModal('editBrandModal')">Cancel</button>
-            <button class="bg-blue-600 text-white px-4 py-2 rounded" onclick="editBrand()">Update</button>
+<!-- Add Brand Modal -->
+<div id="addBrandModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="add-brand-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity" aria-hidden="true" onclick="closeModal('addBrandModal')"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <form method="POST" action="{% url 'add_brand' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="mb-5 flex justify-between items-center">
+                        <h3 class="text-xl leading-6 font-bold text-gray-900" id="add-brand-title">Add Brand</h3>
+                        <button type="button" onclick="closeModal('addBrandModal')" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Brand Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="brand_name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="Brand Name" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Offer Percentage (%)</label>
+                            <input type="number" name="offer_percentage" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="0" min="0" max="100">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Brand Image</label>
+                            <input type="file" name="brand_image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors border border-gray-300 rounded-lg p-1">
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('addBrandModal')" class="w-full sm:w-auto justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="w-full sm:w-auto justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                        Add Brand
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<!-- Edit Brand Modal -->
+<div id="editBrandModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="edit-brand-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity" aria-hidden="true" onclick="closeModal('editBrandModal')"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="mb-5 flex justify-between items-center">
+                    <h3 class="text-xl leading-6 font-bold text-gray-900" id="edit-brand-title">Edit Brand</h3>
+                    <button type="button" onclick="closeModal('editBrandModal')" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <input type="hidden" id="editBrandId">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Brand Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="editBrandName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="Brand Name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Offer Percentage (%)</label>
+                        <input type="number" id="editBrandOffer" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="0" min="0" max="100">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Update Image</label>
+                        <input type="file" id="editBrandImage" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors border border-gray-300 rounded-lg p-1" accept="image/*">
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end gap-3">
+                <button type="button" onclick="closeModal('editBrandModal')" class="w-full sm:w-auto justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                    Cancel
+                </button>
+                <button type="button" onclick="editBrand()" class="w-full sm:w-auto justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                    Update Brand
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
+
 <script>
-    function openEditBrandModal(id, name, offer, imageUrl) {
+    function openAddBrandModal() {
+        document.getElementById("addBrandModal").classList.remove("hidden");
+    }
+
+    function openEditBrandModal(id, name, offer) {
         document.getElementById("editBrandId").value = id;
         document.getElementById("editBrandName").value = name;
         document.getElementById("editBrandOffer").value = offer;
-        // Assuming imageUrl is the URL to the current image, if any
         document.getElementById("editBrandModal").classList.remove("hidden");
     }
-    
 
     function closeModal(id) {
         document.getElementById(id).classList.add("hidden");
@@ -85,27 +192,57 @@
         .then(response => response.json())
         .then(data => {
             if (data.message) {
-                alert(data.message);
-                location.reload();
+                Swal.fire('Success!', data.message, 'success').then(() => location.reload());
             } else {
                 throw new Error("Invalid response from server");
             }
         })
         .catch(error => {
             console.error("Error:", error);
-            alert("Failed to update brand. Please try again.");
+            Swal.fire('Error', 'Failed to update brand. Please try again.', 'error');
         });
     }
+
     function toggleBrandStatus(id) {
-        fetch(`admin-panel/brands/toggle-status/${id}/`, {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": "{{ csrf_token }}",
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You are about to change the status of this brand.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, change it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin-panel/brands/toggle-status/${id}/`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                    }
+                })
+                .then(response => response.json())
+                .then(data => location.reload())
+                .catch(error => console.error("Error:", error));
             }
-        })
-        .then(response => response.json())
-        .then(data => location.reload())
-        .catch(error => console.error("Error:", error));
+        });
     }
+
+    // Attach Unified Cropper
+    document.addEventListener("DOMContentLoaded", function() {
+        const fileInputs = document.querySelectorAll('input[type="file"][name="brand_image"], input[type="file"]#editBrandImage');
+        fileInputs.forEach(input => {
+            input.addEventListener('change', function(e) {
+                // Prevent infinite loop if triggered by Cropper itself
+                if (e.cropperInternal) return; 
+                if (this.files && this.files.length > 0) {
+                    UnifiedCropper.open(this, { aspectRatio: 1 });
+                }
+            });
+        });
+    });
 </script>
+
+<!-- Unified Cropper Component -->
+{% include 'components/image_cropper.html' %}
+
 {% endblock %}

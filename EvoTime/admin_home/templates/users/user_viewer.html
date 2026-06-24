@@ -1,37 +1,63 @@
 {% extends "admin_dashboard.html" %}
 
 {% block admin_side %}
-<div class="container mx-auto mt-10">
-    <h1 class="text-center text-3xl font-bold text-gray-800 mb-6">User List</h1>
-    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
-        <table class="min-w-full">
-            <thead class="bg-gray-800 text-white">
+<div class="flex-1 p-4 sm:p-6 overflow-y-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h1 class="text-2xl font-bold text-gray-800">User List</h1>
+        <!-- Items Per Page Dropdown -->
+        <form method="GET" action="{% url 'user_viewer' %}" class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+            <label for="per_page" class="text-sm font-medium text-gray-600">Items per page:</label>
+            <select name="per_page" id="per_page" onchange="this.form.submit()" class="text-sm border-none focus:ring-0 text-gray-800 font-medium bg-transparent cursor-pointer">
+                <option value="10" {% if request.GET.per_page == "10" %}selected{% endif %}>10</option>
+                <option value="20" {% if request.GET.per_page == "20" %}selected{% endif %}>20</option>
+                <option value="50" {% if request.GET.per_page == "50" %}selected{% endif %}>50</option>
+            </select>
+        </form>
+    </div>
+
+    <div class="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden mb-6">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left">#</th>
-                    <th class="px-6 py-3 text-left">Full Name</th>
-                    <th class="px-6 py-3 text-left">Email</th>
-                    <th class="px-6 py-3 text-left">Phone Number</th>
-                    <th class="px-6 py-3 text-center">Actions</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Full Name</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Phone Number</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 {% for user in users %}
                 <tr class="hover:bg-gray-50 transition duration-200">
-                    <td class="px-6 py-4">{{ forloop.counter }}</td>
-                    <td class="px-6 py-4">{{ user.full_name }}</td>
-                    <td class="px-6 py-4">{{ user.email }}</td>
-                    <td class="px-6 py-4">{{ user.phone_number }}</td>
-                    <td class="px-6 py-4 text-center">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ forloop.counter }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ user.full_name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ user.email }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ user.phone_number }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if user.is_blocked %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Blocked</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
                         <a href="{% url 'toggle_user_block' user.id %}" 
-                           class="px-4 py-2 text-sm font-medium rounded 
-                           {% if user.is_blocked %}bg-green-500 text-white hover:bg-green-600{% else %}bg-red-500 text-white hover:bg-red-600{% endif %} transition duration-200">
+                           class="inline-flex justify-center items-center px-4 py-1.5 font-medium rounded transition duration-200 
+                           {% if user.is_blocked %}text-green-600 bg-green-50 hover:bg-green-100 hover:text-green-900{% else %}text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-900{% endif %}">
                             {% if user.is_blocked %}Unblock{% else %}Block{% endif %}
                         </a>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">No users found.</td>
+                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-users text-4xl text-gray-300 mb-3"></i>
+                            <p>No users found.</p>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -39,42 +65,6 @@
     </div>
 
     <!-- Pagination -->
-<div class="mt-6 flex justify-center">
-    <nav aria-label="Pagination">
-        <ul class="flex list-none">
-            {% if users.has_previous %}
-            <li>
-                <a href="?page=1" class="px-4 py-2 border border-gray-300 rounded-l-lg bg-white text-gray-700 hover:bg-gray-100">First</a>
-            </li>
-            <li>
-                <a href="?page={{ users.previous_page_number }}" class="px-4 py-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-100">Previous</a>
-            </li>
-            {% endif %}
-            <li>
-                <span class="px-4 py-2 border border-gray-300 bg-gray-800 text-white">{{ users.number }} of {{ users.paginator.num_pages }}</span>
-            </li>
-            {% if users.has_next %}
-            <li>
-                <a href="?page={{ users.next_page_number }}" class="px-4 py-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-100">Next</a>
-            </li>
-            <li>
-                <a href="?page={{ users.paginator.num_pages }}" class="px-4 py-2 border border-gray-300 rounded-r-lg bg-white text-gray-700 hover:bg-gray-100">Last</a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
-</div>
-
-<!-- Items Per Page Dropdown -->
-<div class="flex justify-end mb-4">
-    <form method="GET" action="{% url 'user_viewer' %}">
-        <label for="per_page" class="mr-2">Items per page:</label>
-        <select name="per_page" id="per_page" onchange="this.form.submit()" class="border p-2 rounded">
-            <option value="10" {% if request.GET.per_page == "10" %}selected{% endif %}>10</option>
-            <option value="20" {% if request.GET.per_page == "20" %}selected{% endif %}>20</option>
-            <option value="50" {% if request.GET.per_page == "50" %}selected{% endif %}>50</option>
-        </select>
-    </form>
-</div>
+    {% include 'components/pagination.html' with page_obj=users %}
 </div>
 {% endblock %}

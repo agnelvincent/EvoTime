@@ -1,100 +1,282 @@
-
 {% load static %}
-
+{% load socialaccount %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Signup - EvoTime</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" type="image/jpg" href="{% static 'evo_time-removebg.png' %}">
-    <style>
-        body {
-            background-image: url('https://images.unsplash.com/photo-1523170335258-f5ed11844a49?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-        .overlay {
-            background: rgba(0, 0, 0, 0.8);
-        }
-        .gradient-bg {
-            background: linear-gradient(135deg, rgba(100, 100, 255, 0.8), rgba(30, 144, 255, 0.8));
-            transition: background 0.3s ease;
-        }
-        .gradient-bg:hover {
-            background: linear-gradient(135deg, rgba(70, 70, 255, 0.9), rgba(0, 102, 204, 0.9));
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Signup – EvoTime</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpg" href="{% static 'evo_time-removebg.png' %}">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <style>
+    * {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background-color: #020617; /* slate-950 */
+      color: #f8fafc;
+    }
+
+    /* Floating Orbs */
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(6%, 8%) scale(1.15); }
+    }
+    @keyframes float2 {
+      0%, 100% { transform: translate(0, 0) scale(1.1); }
+      50% { transform: translate(-6%, -8%) scale(0.95); }
+    }
+    @keyframes float3 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-4%, 4%) scale(1.05); }
+    }
+    .animate-float-1 { animation: float1 20s ease-in-out infinite; }
+    .animate-float-2 { animation: float2 24s ease-in-out infinite; }
+    .animate-float-3 { animation: float3 16s ease-in-out infinite; }
+
+    /* Shifting Gradient Button */
+    .gradient-btn {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #6366f1 100%);
+      background-size: 200% auto;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .gradient-btn:hover {
+      background-position: right center;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+      transform: translateY(-1.5px);
+    }
+    .gradient-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Glass Card */
+    .glass-card {
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Custom Input Focus */
+    .glass-input {
+      background: rgba(2, 6, 23, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-input:focus {
+      background: rgba(2, 6, 23, 0.6);
+      border-color: rgba(99, 102, 241, 0.5);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    }
+
+    /* Google Button */
+    .btn-google-glass {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: rgba(30, 41, 59, 0.4);
+      color: #f1f5f9;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+    .btn-google-glass:hover {
+      background: rgba(30, 41, 59, 0.7);
+      border-color: #475569;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-1.5px);
+    }
+  </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
+<body class="flex items-center justify-center min-h-screen relative overflow-y-auto py-12 px-4">
 
-    <div class="overlay absolute inset-0"></div>
+  <!-- Decorative floating background orbs (Mesh Gradient) -->
+  <div class="fixed top-[-15%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-600/10 blur-[130px] pointer-events-none animate-float-1"></div>
+  <div class="fixed bottom-[-15%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-purple-600/10 blur-[130px] pointer-events-none animate-float-2"></div>
+  <div class="fixed top-[35%] left-[55%] w-[35vw] h-[35vw] rounded-full bg-indigo-600/5 blur-[120px] pointer-events-none animate-float-3"></div>
 
-    <div class="w-full max-w-md bg-white/10 backdrop-blur-md rounded-xl shadow-2xl p-6 relative z-10 border border-white/10">
-        <div class="flex justify-center mb-6">
-            <img src="{% static 'evo_time-removebg.png' %}" alt="EvoTime Logo" class="w-16 h-16">
-        </div>
 
-        <h2 class="text-2xl font-bold text-center text-white mb-4">
-            Create an Account
-        </h2>
-
-        {% if messages %}
-            <div class="mb-4">
-                {% for message in messages %}
-                    {% if message.tags == 'error' %}
-                        <div class="px-4 py-2 text-sm rounded-lg bg-red-50 text-red-600">
-                            {{ message }}
-                        </div>
-                    {% endif %}
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <form action="{% url 'user_signup' %}" method="POST" class="space-y-4" enctype="multipart/form-data">
-            {% csrf_token %}
-
-            <div>
-                <label for="full_name" class="block text-sm font-medium text-white mb-1">Full Name</label>
-                <input type="text" id="full_name" name="full_name" placeholder="Enter your full name" required class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/50 text-sm transition-all">
-            </div>
-
-            <div>
-                <label for="email" class="block text-sm font-medium text-white mb-1">Email Address</label>
-                <input type="email" id="email" name="email" placeholder="Enter your email" required class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/50 text-sm transition-all">
-            </div>
-
-            <div>
-                <label for="phone_number" class="block text-sm font-medium text-white mb-1">Phone Number</label>
-                <input type="tel" id="phone_number" name="phone_number" placeholder="Enter your phone number" required class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/50 text-sm transition-all">
-            </div>
-
-            <div>
-                <label for="password" class="block text-sm font-medium text-white mb-1">Password</label>
-                <input type="password" id="password" name="password" placeholder="Enter your password" required class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/50 text-sm transition-all">
-            </div>
-
-            <div>
-                <label for="confirm_password" class="block text-sm font-medium text-white mb-1">Confirm Password</label>
-                <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/50 text-sm transition-all">
-            </div>
-
-            <button type="submit" class="w-full gradient-bg text-white text-sm font-semibold py-2 rounded-lg shadow-md hover:shadow-lg transition-all">Sign Up</button>
-        </form>
-
-        <div class="flex items-center my-4">
-            <div class="flex-grow border-t border-white/20"></div>
-            <span class="mx-3 text-white/50 text-sm">OR</span>
-            <div class="flex-grow border-t border-white/20"></div>
-        </div>
-
-        <p class="mt-4 text-center text-sm text-white/80">
-            Already have an account? 
-            <a href="{% url 'user_login' %}" class="text-blue-300 hover:text-blue-200 font-medium transition-colors">Log in here</a>
-        </p>
+  <!-- Signup Card -->
+  <div class="w-full max-w-md glass-card rounded-3xl p-8 relative z-10 my-6">
+    
+    <!-- Logo -->
+    <div class="flex justify-center mb-5">
+      <div class="w-16 h-16 rounded-2xl bg-slate-800/40 flex items-center justify-center p-3 border border-slate-700/50 shadow-inner">
+        <img src="{% static 'evo_time-removebg.png' %}" alt="EvoTime Logo" class="w-full h-full object-contain">
+      </div>
     </div>
 
+    <!-- Headers -->
+    <h2 class="text-3xl font-extrabold text-center text-white tracking-tight">Create Account</h2>
+    <p class="text-center text-slate-400 text-sm mt-1.5 mb-6 font-medium">Join EvoTime for a premium experience</p>
+
+    <!-- Error Messages Block -->
+    {% if messages %}
+      <div class="mb-5 space-y-2">
+        {% for message in messages %}
+          {% if message.tags == 'error' %}
+            <div class="px-4 py-3 text-sm rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 flex items-center gap-2">
+              <i class="fas fa-exclamation-circle text-red-400"></i>
+              <span>{{ message }}</span>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Signup Form -->
+    <form action="{% url 'user_signup' %}" method="POST" class="space-y-4" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <!-- Full Name -->
+      <div>
+        <label for="full_name" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Full Name</label>
+        <div class="relative">
+          <i class="far fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+          <input type="text"
+                 id="full_name"
+                 name="full_name"
+                 placeholder="Enter your full name"
+                 required
+                 class="glass-input w-full pl-11 pr-4 py-2.5 text-sm rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none">
+        </div>
+      </div>
+
+      <!-- Email Address -->
+      <div>
+        <label for="email" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Email Address</label>
+        <div class="relative">
+          <i class="far fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+          <input type="email"
+                 id="email"
+                 name="email"
+                 placeholder="Enter your email address"
+                 required
+                 class="glass-input w-full pl-11 pr-4 py-2.5 text-sm rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none">
+        </div>
+      </div>
+
+      <!-- Phone Number -->
+      <div>
+        <label for="phone_number" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Phone Number</label>
+        <div class="relative">
+          <i class="fas fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+          <input type="tel"
+                 id="phone_number"
+                 name="phone_number"
+                 placeholder="Enter your phone number"
+                 required
+                 class="glass-input w-full pl-11 pr-4 py-2.5 text-sm rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none">
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div>
+        <label for="password" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Password</label>
+        <div class="relative">
+          <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+          <input type="password"
+                 id="password"
+                 name="password"
+                 placeholder="Create a password"
+                 required
+                 class="glass-input w-full pl-11 pr-12 py-2.5 text-sm rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none">
+          <button type="button"
+                  id="togglePasswordBtn"
+                  onclick="togglePassword('password', 'togglePasswordBtn')"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 transition-colors"
+                  aria-label="Toggle password visibility">
+            <i class="far fa-eye text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Confirm Password -->
+      <div>
+        <label for="confirm_password" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Confirm Password</label>
+        <div class="relative">
+          <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+          <input type="password"
+                 id="confirm_password"
+                 name="confirm_password"
+                 placeholder="Confirm your password"
+                 required
+                 class="glass-input w-full pl-11 pr-12 py-2.5 text-sm rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none">
+          <button type="button"
+                  id="toggleConfirmBtn"
+                  onclick="togglePassword('confirm_password', 'toggleConfirmBtn')"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 transition-colors"
+                  aria-label="Toggle confirm password visibility">
+            <i class="far fa-eye text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit"
+              class="w-full gradient-btn text-white text-sm font-bold py-3 rounded-xl shadow-md mt-2">
+        Create Account
+      </button>
+    </form>
+
+    <!-- Divider -->
+    <div class="flex items-center my-5">
+      <div class="flex-grow border-t border-slate-800"></div>
+      <span class="mx-4 text-slate-600 text-xs font-bold tracking-widest">OR</span>
+      <div class="flex-grow border-t border-slate-800"></div>
+    </div>
+
+    <!-- Google OAuth Button -->
+    <a href="{% provider_login_url 'google' %}" class="btn-google-glass w-full">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" width="16" height="16">
+      <span>Sign up with Google</span>
+    </a>
+
+    <!-- Footer Register CTA -->
+    <p class="text-xs text-center text-slate-400 mt-6 font-medium">
+      Already have an account? 
+      <a href="{% url 'user_login' %}"
+         class="text-indigo-400 hover:text-indigo-300 font-bold ml-1 transition-colors">
+        Log in
+      </a>
+    </p>
+  </div>
+
+  <!-- JavaScript password toggles -->
+  <script>
+    function togglePassword(inputId, btnId) {
+      const pwInput = document.getElementById(inputId);
+      const toggleBtn = document.getElementById(btnId);
+      const icon = toggleBtn.querySelector('i');
+      
+      if (pwInput.type === 'password') {
+        pwInput.type = 'text';
+        icon.className = 'far fa-eye-slash';
+      } else {
+        pwInput.type = 'password';
+        icon.className = 'far fa-eye';
+      }
+    }
+  </script>
 </body>
 </html>

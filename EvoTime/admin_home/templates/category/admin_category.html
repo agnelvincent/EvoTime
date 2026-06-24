@@ -2,99 +2,214 @@
 
 {% block admin_side %}
 <div class="flex-1 p-4 sm:p-6 overflow-y-auto">
-    <!-- Page Title -->
-    <h1 class="text-2xl font-bold text-gray-700 mb-6">Manage Categories</h1>
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h1 class="text-2xl font-bold text-gray-800">Manage Categories</h1>
+        <button onclick="openAddCategoryModal()" class="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm transition-colors w-full sm:w-auto flex items-center justify-center gap-2">
+            <i class="fas fa-plus"></i> Add Category
+        </button>
+    </div>
 
     <!-- Table for Categories -->
-    <div class="overflow-x-auto shadow-lg rounded-lg mb-6">
-        <table class="min-w-full bg-white border border-gray-300">
-            <thead class="bg-gray-100">
+    <div class="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden mb-6">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
                 <tr>
-                    <th class="border px-4 py-3 text-left text-sm font-semibold text-gray-700">#</th>
-                    <th class="border px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-                    <th class="border px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                    <th class="border px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Image</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Offer (%)</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="bg-white divide-y divide-gray-200">
                 {% for category in categories %}
-                <tr class="hover:bg-gray-50">
-                    <td class="border px-4 py-3 text-gray-700">{{ forloop.counter }}</td>
-                    <td class="border px-4 py-3 text-gray-700">{{ category.name }}</td>
-                    <td class="border px-4 py-3 text-gray-700">
-                        {% if category.is_active %}
-                        <span class="text-green-600 font-semibold">Active</span>
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ forloop.counter }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if category.image %}
+                        <img src="{{ category.image.url }}" alt="{{ category.name }}" class="h-10 w-10 rounded-full object-cover border border-gray-200">
                         {% else %}
-                        <span class="text-red-600 font-semibold">Blocked</span>
+                        <div class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                            <i class="fas fa-image"></i>
+                        </div>
                         {% endif %}
                     </td>
-                    <td class="border px-4 py-3">
-                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                            <!-- Block/Unblock Button -->
-                            <form method="POST" action="{% url 'toggle_category' category.id %}" class="inline">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ category.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {% if category.offer_percentage > 0 %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {{ category.offer_percentage|floatformat:1 }}%
+                        </span>
+                        {% else %}
+                        <span class="text-gray-400">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if category.is_active %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Blocked</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="flex items-center space-x-3">
+                            <button onclick="openEditCategoryModal('{{ category.id }}', '{{ category.name|escapejs }}', '{{ category.offer_percentage|default:0 }}')" class="text-blue-600 hover:text-blue-900 font-medium bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
+                                Edit
+                            </button>
+                            <form method="POST" action="{% url 'toggle_category' category.id %}" class="inline m-0 p-0">
                                 {% csrf_token %}
-                                <button type="submit" class="w-full sm:w-auto px-3 py-1 text-sm text-white {% if category.is_active %}bg-red-500 hover:bg-red-600{% else %}bg-green-500 hover:bg-green-600{% endif %} rounded transition duration-200">
+                                <button type="submit" class="font-medium px-3 py-1 rounded transition-colors {% if category.is_active %}text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-900{% else %}text-green-600 bg-green-50 hover:bg-green-100 hover:text-green-900{% endif %}">
                                     {% if category.is_active %}Block{% else %}Unblock{% endif %}
                                 </button>
-                            </form>
-                            
-                            <!-- Edit Form -->
-                            <form method="POST" action="{% url 'edit_category' category.id %}" class="inline" enctype="multipart/form-data">
-                                {% csrf_token %}
-                                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                                    <input type="text" name="category_name" value="{{ category.name }}" required class="w-full sm:w-auto p-1 border border-gray-300 rounded text-sm">
-                                    <input type="file" name="category_image" class="w-full sm:w-auto p-1 border border-gray-300 rounded text-sm">
-                                    <button type="submit" class="w-full sm:w-auto px-3 py-1 text-sm text-white bg-blue-500 hover:bg-blue-600 rounded transition duration-200">
-                                        Save
-                                    </button>
-                                </div>
                             </form>
                         </div>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="border px-4 py-3 text-center text-gray-600">No categories found.</td>
+                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-folder-open text-4xl text-gray-300 mb-3"></i>
+                            <p>No categories found.</p>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    <!-- Add New Category Section -->
-    <h2 class="text-xl font-semibold text-gray-700 mb-4">Add New Category</h2>
-    <form method="POST" class="bg-gray-50 p-4 rounded-lg shadow-sm" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Category Name:</label>
-                <input type="text" name="category_name" placeholder="Enter category name" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Category Image:</label>
-                <input type="file" name="Category_image" placeholder="Enter category image" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" accept="image/*">
-            </div>
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">
-                Add Category
-            </button>
-        </div>
-    </form>
-
-    <nav class="inline-flex rounded-md shadow-sm">
-        {% if categories.has_previous %}
-            <a href="?page=1" class="px-4 py-2 border rounded-l-md bg-white text-gray-700 hover:bg-gray-50">First</a>
-            <a href="?page={{ categories.previous_page_number }}" class="px-4 py-2 border bg-white text-gray-700 hover:bg-gray-50">Previous</a>
-        {% endif %}
-
-        <span class="px-4 py-2 border bg-white text-gray-700">
-            Page {{ categories.number }} of {{ categories.paginator.num_pages }}
-        </span>
-
-        {% if categories.has_next %}
-            <a href="?page={{ categories.next_page_number }}" class="px-4 py-2 border bg-white text-gray-700 hover:bg-gray-50">Next</a>
-            <a href="?page={{ categories.paginator.num_pages }}" class="px-4 py-2 border rounded-r-md bg-white text-gray-700 hover:bg-gray-50">Last</a>
-        {% endif %}
-    </nav>
+    <!-- Pagination Component -->
+    {% include 'components/pagination.html' with page_obj=categories %}
 </div>
+
+<!-- Add Category Modal -->
+<div id="addCategoryModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity" aria-hidden="true" onclick="closeAddCategoryModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="mb-5 flex justify-between items-center">
+                        <h3 class="text-xl leading-6 font-bold text-gray-900" id="modal-title">Add New Category</h3>
+                        <button type="button" onclick="closeAddCategoryModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="category_name" placeholder="Enter category name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Offer Percentage (%)</label>
+                            <input type="number" name="offer_percentage" placeholder="0" min="0" max="100" step="0.01" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category Image <span class="text-red-500">*</span></label>
+                            <input type="file" name="Category_image" required accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors border border-gray-300 rounded-lg p-1">
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end gap-3">
+                    <button type="button" onclick="closeAddCategoryModal()" class="w-full sm:w-auto justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="w-full sm:w-auto justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                        Add Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div id="editCategoryModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="edit-modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity" aria-hidden="true" onclick="closeEditCategoryModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <form id="editCategoryForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="mb-5 flex justify-between items-center">
+                        <h3 class="text-xl leading-6 font-bold text-gray-900" id="edit-modal-title">Edit Category</h3>
+                        <button type="button" onclick="closeEditCategoryModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="category_name" id="editCategoryName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Offer Percentage (%)</label>
+                            <input type="number" name="offer_percentage" id="editCategoryOffer" min="0" max="100" step="0.01" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Update Image</label>
+                            <input type="file" name="category_image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors border border-gray-300 rounded-lg p-1">
+                            <p class="text-xs text-gray-500 mt-1">Leave empty to keep the current image.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end gap-3">
+                    <button type="button" onclick="closeEditCategoryModal()" class="w-full sm:w-auto justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="w-full sm:w-auto justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openAddCategoryModal() {
+        document.getElementById('addCategoryModal').classList.remove('hidden');
+    }
+    
+    function closeAddCategoryModal() {
+        document.getElementById('addCategoryModal').classList.add('hidden');
+    }
+
+    function openEditCategoryModal(id, name, offer) {
+        document.getElementById('editCategoryName').value = name;
+        document.getElementById('editCategoryOffer').value = offer;
+        // Dynamically update the form action URL
+        const form = document.getElementById('editCategoryForm');
+        form.action = `/admin-panel/categories/edit/${id}/`;
+        document.getElementById('editCategoryModal').classList.remove('hidden');
+    }
+    
+    function closeEditCategoryModal() {
+        document.getElementById('editCategoryModal').classList.add('hidden');
+    }
+
+    // Attach Unified Cropper
+    document.addEventListener("DOMContentLoaded", function() {
+        const fileInputs = document.querySelectorAll('input[type="file"][name="Category_image"], input[type="file"][name="category_image"]');
+        fileInputs.forEach(input => {
+            input.addEventListener('change', function(e) {
+                // Prevent infinite loop if triggered by Cropper itself
+                if (e.cropperInternal) return; 
+                if (this.files && this.files.length > 0) {
+                    UnifiedCropper.open(this, { aspectRatio: 1 });
+                }
+            });
+        });
+    });
+</script>
+
+<!-- Unified Cropper Component -->
+{% include 'components/image_cropper.html' %}
 
 {% endblock %}

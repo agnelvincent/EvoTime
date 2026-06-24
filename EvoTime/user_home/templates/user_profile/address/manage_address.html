@@ -1,298 +1,371 @@
 {% extends "user_profile/account_overview.html" %}
 
-<!-- Main Content -->
 {% block user %}
-<main class="flex-1 p-6 bg-gray-50 min-h-screen">
-    <div class="max-w-4xl mx-auto">
-        <!-- Page Title -->
-        <h1 class="text-3xl font-bold text-gray-800 mb-8">Manage Addresses</h1>
+<div class="fade-up">
 
-        <!-- Address List -->
-        <div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Addresses</h1>
+            <p class="text-slate-500 text-sm mt-1">Manage your saved delivery addresses</p>
+        </div>
+        <button type="button" id="openAddModalBtn" class="btn-primary self-start sm:self-auto">
+            <i class="fas fa-plus"></i>
+            Add New Address
+        </button>
+    </div>
+
+    <!-- Address Grid -->
+    {% if addresses %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             {% for address in addresses %}
-            <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                <div class="flex flex-col space-y-4">
-                    <!-- Address Details -->
-                    <div class="flex flex-col space-y-2">
-                        <p class="text-lg font-semibold text-gray-800">{{ address.name }}</p>
-                        <p class="text-gray-600">{{ address.address_line }}, {{ address.city }}, {{ address.state }}, {{ address.country }} - {{ address.postal_code }}</p>
-                        <p class="text-gray-600">Phone: {{ address.phone }}</p>
-                        <p class="text-sm text-gray-500">Type: {{ address.get_address_type_display }}</p>
-                    </div>
+            <div class="profile-card p-5 border-l-4
+                {% if address.address_type == 'home' %}border-indigo-500
+                {% elif address.address_type == 'work' %}border-emerald-500
+                {% else %}border-amber-500{% endif %}">
 
-                    <!-- Action Buttons -->
-                    <div class="flex space-x-4">
-                        <button 
-                            class="text-blue-600 hover:text-blue-700 transition-colors"
-                            onclick="openEditModal('{{ address.id }}', '{{ address.name }}', '{{ address.phone }}', '{{ address.address_line }}', '{{ address.city }}', '{{ address.state }}', '{{ address.postal_code }}', '{{ address.country }}', '{{ address.address_type }}')">
-                            Edit
+                <!-- Type badge + actions row -->
+                <div class="flex items-start justify-between mb-3">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold
+                        {% if address.address_type == 'home' %}bg-indigo-50 text-indigo-700
+                        {% elif address.address_type == 'work' %}bg-emerald-50 text-emerald-700
+                        {% else %}bg-amber-50 text-amber-700{% endif %}">
+                        {% if address.address_type == 'home' %}<i class="fas fa-home text-[10px]"></i>
+                        {% elif address.address_type == 'work' %}<i class="fas fa-briefcase text-[10px]"></i>
+                        {% else %}<i class="fas fa-map-marker-alt text-[10px]"></i>{% endif %}
+                        {{ address.get_address_type_display }}
+                    </span>
+                    <div class="flex gap-2">
+                        <button type="button"
+                                class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                                title="Edit"
+                                onclick="openEditModal('{{ address.id }}','{{ address.name|escapejs }}','{{ address.phone|escapejs }}','{{ address.address_line|escapejs }}','{{ address.city|escapejs }}','{{ address.state|escapejs }}','{{ address.postal_code|escapejs }}','{{ address.country|escapejs }}','{{ address.address_type }}')">
+                            <i class="fas fa-pen text-xs"></i>
                         </button>
-                        <button 
-                            class="text-red-600 hover:text-red-700 transition-colors"
-                            onclick="confirmDelete('{{ address.id }}')">
-                            Delete
+                        <button type="button"
+                                class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                                title="Delete"
+                                onclick="confirmDelete('{{ address.id }}')">
+                            <i class="fas fa-trash text-xs"></i>
                         </button>
                     </div>
                 </div>
+
+                <!-- Address details -->
+                <p class="font-semibold text-slate-800 text-sm">{{ address.name }}</p>
+                <div class="mt-2 space-y-1 text-xs text-slate-500">
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-map-marker-alt mt-0.5 text-slate-400 flex-shrink-0"></i>
+                        <span>{{ address.address_line }}, {{ address.city }}, {{ address.state }}, {{ address.country }} – {{ address.postal_code }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-phone text-slate-400 flex-shrink-0"></i>
+                        <span>{{ address.phone }}</span>
+                    </div>
+                </div>
             </div>
-            {% empty %}
-            <p class="text-gray-600">No addresses found.</p>
             {% endfor %}
         </div>
 
-        <!-- Add Address Button -->
-        <div class="mt-8">
-            <button 
-                class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                onclick="openAddModal()">
-                Add New Address
+    {% else %}
+        <!-- Empty state -->
+        <div class="profile-card flex flex-col items-center justify-center py-20 text-center">
+            <div class="w-20 h-20 rounded-2xl bg-indigo-50 flex items-center justify-center mb-5">
+                <i class="fas fa-map-marked-alt text-3xl text-indigo-400"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-700 mb-1">No addresses saved</h3>
+            <p class="text-slate-400 text-sm mb-6 max-w-xs">Add a delivery address to make checkout faster.</p>
+            <button type="button" id="emptyStateAddBtn" class="btn-primary">
+                <i class="fas fa-plus"></i> Add Address
+            </button>
+        </div>
+    {% endif %}
+
+</div>
+
+<!-- ══════════════════════════════════════
+     Add Address Modal
+════════════════════════════════════════ -->
+<div id="addAddressModal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-box" style="width:480px; text-align:left; padding:28px;">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-base font-bold text-slate-800">Add New Address</h2>
+            <button type="button" onclick="closeModal('addAddressModal')"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+        <form id="addAddressForm" novalidate>
+            {% csrf_token %}
+            <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Full Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" placeholder="e.g. Agnel Vincent" class="field-input" required>
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Phone <span class="text-red-500">*</span></label>
+                    <input type="tel" name="phone" placeholder="+91 98765 43210" class="field-input" required>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Address Line <span class="text-red-500">*</span></label>
+                    <input type="text" name="address_line" placeholder="Street, Area, Landmark" class="field-input" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">City <span class="text-red-500">*</span></label>
+                    <input type="text" name="city" placeholder="City" class="field-input" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">State <span class="text-red-500">*</span></label>
+                    <input type="text" name="state" placeholder="State" class="field-input" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Postal Code <span class="text-red-500">*</span></label>
+                    <input type="text" name="postal_code" placeholder="123456" class="field-input" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Country <span class="text-red-500">*</span></label>
+                    <input type="text" name="country" placeholder="India" class="field-input" required>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Address Type</label>
+                    <select name="address_type" class="field-input">
+                        <option value="home">🏠 Home</option>
+                        <option value="work">💼 Work</option>
+                        <option value="other">📍 Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="closeModal('addAddressModal')"
+                        class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="flex-1 btn-primary justify-center">
+                    <i class="fas fa-check"></i> Save Address
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     Edit Address Modal
+════════════════════════════════════════ -->
+<div id="editAddressModal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-box" style="width:480px; text-align:left; padding:28px;">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-base font-bold text-slate-800">Edit Address</h2>
+            <button type="button" onclick="closeModal('editAddressModal')"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+        <form id="editAddressForm" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="address_id" id="editAddressId">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Full Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" id="editName" class="field-input" required>
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Phone <span class="text-red-500">*</span></label>
+                    <input type="tel" name="phone" id="editPhone" class="field-input" required>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Address Line <span class="text-red-500">*</span></label>
+                    <input type="text" name="address_line" id="editAddressLine" class="field-input" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">City <span class="text-red-500">*</span></label>
+                    <input type="text" name="city" id="editCity" class="field-input" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">State <span class="text-red-500">*</span></label>
+                    <input type="text" name="state" id="editState" class="field-input" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Postal Code <span class="text-red-500">*</span></label>
+                    <input type="text" name="postal_code" id="editPostalCode" class="field-input" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Country <span class="text-red-500">*</span></label>
+                    <input type="text" name="country" id="editCountry" class="field-input" required>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Address Type</label>
+                    <select name="address_type" id="editAddressType" class="field-input">
+                        <option value="home">🏠 Home</option>
+                        <option value="work">💼 Work</option>
+                        <option value="other">📍 Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="closeModal('editAddressModal')"
+                        class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="flex-1 btn-primary justify-center">
+                    <i class="fas fa-check"></i> Update
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     Delete Confirmation Modal
+════════════════════════════════════════ -->
+<div id="deleteConfirmModal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-box" style="padding:32px;">
+        <div class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-trash-alt text-2xl text-red-500"></i>
+        </div>
+        <p class="font-bold text-slate-800 text-base mb-1">Delete this address?</p>
+        <p class="text-slate-500 text-sm mb-6">This action cannot be undone.</p>
+        <input type="hidden" id="deleteAddressId">
+        <div class="flex gap-3">
+            <button type="button" onclick="closeModal('deleteConfirmModal')"
+                    class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors">
+                Cancel
+            </button>
+            <button type="button" onclick="deleteAddress()"
+                    class="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2">
+                <i class="fas fa-trash-alt text-xs"></i> Delete
             </button>
         </div>
     </div>
-
-    <!-- Add Address Modal -->
-    <div id="addAddressModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center p-4 z-50">
-        <div class="bg-white rounded-lg w-full max-w-md p-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-6">Add New Address</h2>
-            <form id="addAddressForm">
-                {% csrf_token %}
-                <div class="space-y-4">
-                    <input type="text" name="name" placeholder="Name" class="w-full p-2 border border-gray-300 rounded-md" required>
-                    <input type="text" name="phone" placeholder="Phone" class="w-full p-2 border border-gray-300 rounded-md" required>
-                    <input type="text" name="address_line" placeholder="Address Line" class="w-full p-2 border border-gray-300 rounded-md" required>
-                    <select name="address_type" class="w-full p-2 border border-gray-300 rounded-md" required>
-                        <option value="home">Home</option>
-                        <option value="work">Work</option>
-                        <option value="other">Other</option>
-                    </select>
-                    <input type="text" name="city" placeholder="City" class="w-full p-2 border border-gray-300 rounded-md" required>
-                    <input type="text" name="state" placeholder="State" class="w-full p-2 border border-gray-300 rounded-md" required>
-                    <input type="text" name="postal_code" placeholder="Postal Code" class="w-full p-2 border border-gray-300 rounded-md" required>
-                    <input type="text" name="country" placeholder="Country" class="w-full p-2 border border-gray-300 rounded-md" required>
-                </div>
-                <div class="mt-6 flex justify-end space-x-4">
-                    <button type="button" class="text-gray-600 hover:text-gray-800" onclick="closeAddModal()">Cancel</button>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit Address Modal -->
-    <div id="editAddressModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center p-4 z-50">
-        <div class="bg-white rounded-lg w-full max-w-md p-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-6">Edit Address</h2>
-            <form id="editAddressForm">
-                {% csrf_token %}
-                <input type="hidden" name="address_id" id="editAddressId">
-                <div class="space-y-4">
-                    <input type="text" name="name" id="editName" placeholder="Name" class="w-full p-2 border border-gray-300 rounded-md" required>
-                    <input type="text" name="phone" id="editPhone" placeholder="Phone" class="w-full p-2 border border-gray-300 rounded-md" required>
-                    <input type="text" name="address_line" id="editAddressLine" placeholder="Address Line" class="w-full p-2 border border-gray-300 rounded-md" required>
-                    <select name="address_type" id="editAddressType" class="w-full p-2 border border-gray-300 rounded-md" required>
-                        <option value="home">Home</option>
-                        <option value="work">Work</option>
-                        <option value="other">Other</option>
-                    </select>
-                    <input type="text" name="city" id="editCity" placeholder="City" class="w-full p-2 border border-gray-300 rounded-md" required>
-                    <input type="text" name="state" id="editState" placeholder="State" class="w-full p-2 border border-gray-300 rounded-md" required>
-                    <input type="text" name="postal_code" id="editPostalCode" placeholder="Postal Code" class="w-full p-2 border border-gray-300 rounded-md" required>
-                    <input type="text" name="country" id="editCountry" placeholder="Country" class="w-full p-2 border border-gray-300 rounded-md" required>
-                </div>
-                <div class="mt-6 flex justify-end space-x-4">
-                    <button type="button" class="text-gray-600 hover:text-gray-800" onclick="closeEditModal()">Cancel</button>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Update</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center p-4 z-50">
-        <div class="bg-white rounded-lg w-full max-w-md p-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Confirm Deletion</h2>
-            <p class="text-gray-600 mb-6">Are you sure you want to delete this address?</p>
-            <input type="hidden" id="deleteAddressId">
-            <div class="flex justify-end space-x-4">
-                <button class="text-gray-600 hover:text-gray-800" onclick="closeDeleteModal()">Cancel</button>
-                <button class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700" onclick="deleteAddress()">Delete</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toastify Notifications Container -->
-    <div id="toast-container" class="fixed top-4 right-4 z-50"></div>
-</main>
-
-<!-- Toastify CSS and JS -->
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+</div>
 
 <script>
-    // Function to get CSRF token from cookies
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
+(function () {
+    'use strict';
+
+    /* ── CSRF helper ── */
+    function getCsrf() {
+        const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
+        return cookie ? cookie.split('=')[1] : '';
     }
 
-    // Toastify notification function
-    function showToast(message, type = 'success') {
-        Toastify({
-            text: message,
-            duration: 3000,
-            close: true,
-            gravity: "top",
-            position: "right",
-            backgroundColor: type === 'success' ? "#10B981" : "#EF4444",
-        }).showToast();
-    }
+    /* ── Modal helpers (use CSS class, not inline display) ── */
+    window.openModal = function (id) {
+        document.getElementById(id).classList.add('open');
+    };
+    window.closeModal = function (id) {
+        document.getElementById(id).classList.remove('open');
+    };
 
-    // Add Address Modal Functions
-    function openAddModal() {
-        document.getElementById('addAddressModal').style.display = 'flex';
-    }
-
-    function closeAddModal() {
-        document.getElementById('addAddressModal').style.display = 'none';
-        document.getElementById('addAddressForm').reset();
-    }
-
-    // Edit Address Modal Functions
-    function openEditModal(id, name, phone, addressLine, city, state, postalCode, country, addressType) {
-        document.getElementById('editAddressId').value = id;
-        document.getElementById('editName').value = name;
-        document.getElementById('editPhone').value = phone;
-        document.getElementById('editAddressLine').value = addressLine;
-        document.getElementById('editCity').value = city;
-        document.getElementById('editState').value = state;
-        document.getElementById('editPostalCode').value = postalCode;
-        document.getElementById('editCountry').value = country;
-        document.getElementById('editAddressType').value = addressType;
-        document.getElementById('editAddressModal').style.display = 'flex';
-    }
-
-    function closeEditModal() {
-        document.getElementById('editAddressModal').style.display = 'none';
-    }
-
-    // Delete Confirmation Modal Functions
-    function confirmDelete(addressId) {
-        document.getElementById('deleteAddressId').value = addressId;
-        document.getElementById('deleteConfirmModal').style.display = 'flex';
-    }
-
-    function closeDeleteModal() {
-        document.getElementById('deleteConfirmModal').style.display = 'none';
-    }
-
-    // Handle Add Address Form Submission
-    document.getElementById('addAddressForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        
-        try {
-            const response = await fetch('/add-address/', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
+    /* Close on backdrop click */
+    ['addAddressModal', 'editAddressModal', 'deleteConfirmModal'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', function (e) {
+                if (e.target === el) closeModal(id);
             });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
+        }
+    });
+
+    /* Open Add modal */
+    const addBtn = document.getElementById('openAddModalBtn');
+    if (addBtn) addBtn.addEventListener('click', function () { openModal('addAddressModal'); });
+    const emptyBtn = document.getElementById('emptyStateAddBtn');
+    if (emptyBtn) emptyBtn.addEventListener('click', function () { openModal('addAddressModal'); });
+
+    /* ── Open Edit modal ── */
+    window.openEditModal = function (id, name, phone, line, city, state, postal, country, type) {
+        document.getElementById('editAddressId').value    = id;
+        document.getElementById('editName').value         = name;
+        document.getElementById('editPhone').value        = phone;
+        document.getElementById('editAddressLine').value  = line;
+        document.getElementById('editCity').value         = city;
+        document.getElementById('editState').value        = state;
+        document.getElementById('editPostalCode').value   = postal;
+        document.getElementById('editCountry').value      = country;
+        document.getElementById('editAddressType').value  = type;
+        openModal('editAddressModal');
+    };
+
+    /* ── Open Delete modal ── */
+    window.confirmDelete = function (id) {
+        document.getElementById('deleteAddressId').value = id;
+        openModal('deleteConfirmModal');
+    };
+
+    /* ── Add Address ── */
+    document.getElementById('addAddressForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const btn = this.querySelector('[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+        try {
+            const res  = await fetch('/add-address/', { method: 'POST', body: new FormData(this), headers: { 'X-CSRFToken': getCsrf() } });
+            const data = await res.json();
+            if (res.ok) {
                 showToast('Address added successfully!', 'success');
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
+                setTimeout(() => location.reload(), 1200);
             } else {
-                showToast(data.error || 'Error adding address', 'error');
+                showToast(data.error || 'Failed to add address.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> Save Address';
             }
-        } catch (error) {
-            showToast('Something went wrong. Please try again.', 'error');
+        } catch {
+            showToast('Network error. Please try again.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Save Address';
         }
     });
 
-    // Handle Edit Address Form Submission
-    document.getElementById('editAddressForm').addEventListener('submit', async function(e) {
+    /* ── Edit Address ── */
+    document.getElementById('editAddressForm').addEventListener('submit', async function (e) {
         e.preventDefault();
-        const formData = new FormData(this);
-        const addressId = formData.get('address_id');
-        
+        const btn = this.querySelector('[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating…';
+        const id = new FormData(this).get('address_id');
+
         try {
-            const response = await fetch(`/edit-address/${addressId}/`, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-                showToast('Address updated successfully!', 'success');
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
+            const res  = await fetch(`/edit-address/${id}/`, { method: 'POST', body: new FormData(this), headers: { 'X-CSRFToken': getCsrf() } });
+            const data = await res.json();
+            if (res.ok) {
+                showToast('Address updated!', 'success');
+                setTimeout(() => location.reload(), 1200);
             } else {
-                showToast(data.error || 'Error updating address', 'error');
+                showToast(data.error || 'Failed to update.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> Update';
             }
-        } catch (error) {
-            showToast('Something went wrong. Please try again.', 'error');
+        } catch {
+            showToast('Network error. Please try again.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Update';
         }
     });
 
-    // Handle Delete Address
-    async function deleteAddress() {
-        const addressId = document.getElementById('deleteAddressId').value;
-        
-        try {
-            const response = await fetch(`/delete-address/${addressId}/`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-                showToast('Address deleted successfully!', 'success');
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-            } else {
-                if (data.type === 'address_in_use') {
-                    showToast(data.error, 'error');
-                } else {
-                    showToast(data.error || 'Error deleting address', 'error');
-                }
-            }
-            
-            closeDeleteModal();
-        } catch (error) {
-            showToast('Something went wrong. Please try again.', 'error');
-            closeDeleteModal();
-        }
-    }
+    /* ── Delete Address ── */
+    window.deleteAddress = async function () {
+        const id  = document.getElementById('deleteAddressId').value;
+        const btn = document.querySelector('#deleteConfirmModal button[onclick="deleteAddress()"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting…';
 
-    // Display Django messages if any
-    {% if messages %}
-        {% for message in messages %}
-            showToast('{{ message }}', '{{ message.tags }}');
-        {% endfor %}
-    {% endif %}
+        try {
+            const res  = await fetch(`/delete-address/${id}/`, { method: 'DELETE', headers: { 'X-CSRFToken': getCsrf() } });
+            const data = await res.json();
+            closeModal('deleteConfirmModal');
+            if (res.ok) {
+                showToast('Address deleted.', 'success');
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                showToast(data.error || 'Failed to delete.', 'error');
+            }
+        } catch {
+            closeModal('deleteConfirmModal');
+            showToast('Network error. Please try again.', 'error');
+        }
+    };
+
+})();
 </script>
 {% endblock user %}

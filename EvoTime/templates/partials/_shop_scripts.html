@@ -1,0 +1,171 @@
+
+<script>
+(function () {
+    'use strict';
+
+    /* ── CSRF helper ── */
+    function getCsrf() {
+        const c = document.cookie.split(';').find(s => s.trim().startsWith('csrftoken='));
+        return c ? c.split('=')[1] : '';
+    }
+
+    /* ── Toast (wraps Toastify; safe to call from any page) ── */
+    function showToast(message, type) {
+        if (typeof Toastify === 'undefined') return;
+        Toastify({
+            text: message,
+            duration: 3000,
+            close: true,
+            gravity: 'top',
+            position: 'right',
+            style: {
+                background: type === 'error'
+                    ? 'linear-gradient(135deg,#ef4444,#dc2626)'
+                    : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontFamily: 'Inter, sans-serif',
+                padding: '12px 18px',
+            }
+        }).showToast();
+    }
+    /* Expose globally so inline onclick handlers can call it */
+    window.showToast = showToast;
+
+    /* ── Update navbar cart badge ── */
+    function updateCartBadge(count) {
+        let badge = document.querySelector('#evo-navbar .evo-badge');
+        if (count > 0) {
+            if (!badge) {
+                const cartLink = document.querySelector('#evo-navbar a[href*="view_cart"]');
+                if (cartLink) {
+                    badge = document.createElement('span');
+                    badge.className = 'evo-badge';
+                    cartLink.style.position = 'relative';
+                    cartLink.appendChild(badge);
+                }
+            }
+            if (badge) badge.textContent = count;
+        } else if (badge) {
+            badge.remove();
+        }
+    }
+
+    /* ── Add to cart ── */
+    window.addCartItem = async function (variantId, btn) {
+        if (!btn || btn.disabled) return;
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:11px;"></i>';
+
+        try {
+            const res  = await fetch(`/cart/add_to_cart/${variantId}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrf(), 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                updateCartBadge(data.cart_item_count);
+                showToast('Added to cart!', 'success');
+                btn.innerHTML = '<i class="fas fa-check" style="font-size:11px;"></i> Added';
+                setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 1500);
+                return;
+            }
+            throw new Error(data.error || 'Could not add to cart.');
+        } catch (e) {
+            showToast(e.message, 'error');
+            btn.innerHTML = orig;
+            btn.disabled = false;
+        }
+    };
+
+    /* ── Wishlist toggle ── */
+    window.toggleWishlist = async function (variantId, btn) {
+        if (!btn) return;
+        const isIn    = btn.getAttribute('data-in-wishlist') === 'true';
+        const url     = isIn ? `/wishlist/remove/${variantId}/` : `/wishlist/add/${variantId}/`;
+        const origHtml = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#94a3b8;font-size:13px;"></i>';
+
+        try {
+            const res  = await fetch(url, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrf(), 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                const nowIn = !isIn;
+                btn.setAttribute('data-in-wishlist', String(nowIn));
+                btn.innerHTML = nowIn
+                    ? '<i class="fas fa-heart" style="color:#f43f5e;"></i>'
+                    : '<i class="far fa-heart" style="color:#f43f5e;"></i>';
+                showToast(nowIn ? 'Added to wishlist' : 'Removed from wishlist', 'success');
+
+                // If on wishlist page and item was removed, fade out and remove card
+                if (!nowIn && window.location.pathname.includes('/wishlist/')) {
+                    const card = btn.closest('.product-card');
+                    if (card) {
+                        card.style.transition = 'all 0.4s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.9)';
+                        setTimeout(() => {
+                            card.remove();
+                            // Check if wishlist container is now empty
+                            const container = document.getElementById('wishlist-container');
+                            if (container && container.querySelectorAll('.product-card').length === 0) {
+                                const emptyMsg = document.getElementById('empty-wishlist-message');
+                                if (emptyMsg) {
+                                    emptyMsg.style.display = 'block';
+                                } else {
+                                    const msg = document.createElement('p');
+                                    msg.id = 'empty-wishlist-message';
+                                    msg.className = 'text-gray-600';
+                                    msg.textContent = 'Your wishlist is empty.';
+                                    container.parentNode.appendChild(msg);
+                                }
+                            }
+                        }, 400);
+                    }
+                }
+            } else {
+                throw new Error(data.error || 'Could not update wishlist.');
+            }
+        } catch (e) {
+            btn.innerHTML = origHtml;
+            showToast(e.message, 'error');
+        }
+        btn.disabled = false;
+    };
+
+    /* ── On load: sync wishlist icons from server ── */
+    async function syncWishlistIcons() {
+        try {
+            const res = await fetch('/wishlist/status/', {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) return;
+            const { items } = await res.json();
+            if (!Array.isArray(items)) return;
+
+            const inWishlist = new Set(items.map(Number));
+            document.querySelectorAll('.wishlist-btn[data-variant-id]').forEach(btn => {
+                const id   = parseInt(btn.getAttribute('data-variant-id'), 10);
+                const isIn = inWishlist.has(id);
+                btn.setAttribute('data-in-wishlist', String(isIn));
+                btn.innerHTML = isIn
+                    ? '<i class="fas fa-heart" style="color:#f43f5e;"></i>'
+                    : '<i class="far fa-heart" style="color:#f43f5e;"></i>';
+            });
+        } catch { /* non-critical */ }
+    }
+
+    document.addEventListener('DOMContentLoaded', syncWishlistIcons);
+})();
+</script>

@@ -1,40 +1,71 @@
 {% extends 'admin_dashboard.html' %}
 
 {% block admin_side %}
-<div class="max-w-7xl mx-auto p-4 sm:p-6 bg-white shadow-lg rounded-lg">
-    <!-- Page Title -->
-    <h1 class="text-2xl font-bold mb-6">Variants for {{ product.name }}</h1>
-
-    <!-- Add Variant Button -->
-    <button onclick="openAddVariantModal()" class="mb-6 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200">
-        Add New Variant
-    </button>
+<div class="flex-1 p-4 sm:p-6 overflow-y-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h1 class="text-2xl font-bold text-gray-800">Variants for {{ product.name }}</h1>
+        <div class="flex gap-2 w-full sm:w-auto">
+            <a href="{% url 'admin_product' %}" class="px-5 py-2.5 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 shadow-sm transition-colors flex items-center justify-center gap-2">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <button onclick="openAddVariantModal()" class="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm transition-colors flex items-center justify-center gap-2">
+                <i class="fas fa-plus"></i> Add Variant
+            </button>
+        </div>
+    </div>
 
     <!-- Variants Table -->
-    <div class="overflow-x-auto">
-        <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-            <thead class="bg-gray-100">
+    <div class="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden mb-6">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Color</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Stock</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Variant Name</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">SKU</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Attributes</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Images</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 {% for variant in variants %}
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-3 text-gray-700 font-medium">{{ variant.color }}</td>
-                    <td class="px-4 py-3 text-gray-600">{{ variant.stock }}</td>
-                    <td class="px-4 py-3">
-                        <div class="flex space-x-4">
-                            <button 
-                                onclick="openEditVariantModal('{{ variant.id }}', '{{ variant.color }}', '{{ variant.stock }}')" 
-                                class="text-blue-600 hover:underline">
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ variant.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs font-mono text-gray-500">{{ variant.sku }}</td>
+                    <td class="px-6 py-4 text-xs text-gray-600">
+                        <div class="flex flex-wrap gap-1">
+                        {% for attr in variant.attributes.all %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                                {{ attr.attribute_name }}: {{ attr.attribute_value }}
+                            </span>
+                        {% empty %}
+                            <span class="text-gray-400">—</span>
+                        {% endfor %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex gap-1">
+                        {% for img in variant.images.all %}
+                            <img src="{{ img.image.url }}" class="w-8 h-8 object-cover rounded border border-gray-200" alt="img {{ img.sort_order }}">
+                        {% empty %}
+                            <span class="text-xs text-gray-400">No images</span>
+                        {% endfor %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {% if variant.stock > 0 %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ variant.stock }}</span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Out of Stock</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="flex items-center space-x-3">
+                            <button onclick="openEditVariantModal('{{ variant.id }}', '{{ variant.name|escapejs }}', '{{ variant.stock }}')" class="text-blue-600 hover:text-blue-900 font-medium bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
                                 Edit
                             </button>
-                            <button 
-                                onclick="deleteVariant('{{ variant.id }}')" 
-                                class="text-red-500 hover:underline">
+                            <button onclick="deleteVariant('{{ variant.id }}')" class="text-red-600 hover:text-red-900 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded transition-colors">
                                 Delete
                             </button>
                         </div>
@@ -42,126 +73,142 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="3" class="text-center text-gray-600 py-4">No variants found.</td>
+                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-layer-group text-4xl text-gray-300 mb-3"></i>
+                            <p>No variants found.</p>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-
-
     </div>
 
+    <!-- Pagination -->
+    {% include 'components/pagination.html' with page_obj=variants %}
+</div>
 
-
-
-    </div>
-                    <!-- Pagination -->
-                    <div class="mt-6 flex justify-center">
-    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-        {% if variants.has_previous %}
-            <a href="?page={{ variants.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                <span class="sr-only">Previous</span>
-                <!-- Heroicon name: solid/chevron-left -->
-                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
-            </a>
-        {% endif %}
-
-        {% for num in variants.paginator.page_range %}
-            {% if variants.number == num %}
-                <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-500 text-white text-sm font-medium">
-                    {{ num }}
-                </a>
-            {% else %}
-                <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                    {{ num }}
-                </a>
-            {% endif %}
-        {% endfor %}
-
-        {% if variants.has_next %}
-            <a href="?page={{ variants.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                <span class="sr-only">Next</span>
-                <!-- Heroicon name: solid/chevron-right -->
-                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-            </a>
-        {% endif %}
-    </nav>
-    <!-- Add Variant Modal -->
-    <div id="addVariantModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-            <h2 class="text-xl font-bold mb-4">Add New Variant</h2>
+<!-- Add Variant Modal -->
+<div id="addVariantModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity" aria-hidden="true" onclick="closeAddVariantModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
             <form id="addVariantForm" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
-                <input type="hidden" name="action" value="add">
-                <div class="space-y-4">
-                    <input type="text" name="color" placeholder="Color" class="w-full border border-gray-300 p-2 rounded" required>
-                    <input type="number" name="stock" placeholder="Stock" class="w-full border border-gray-300 p-2 rounded" required>
-                    <input type="file" name="image1" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
-                    <input type="file" name="image2" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
-                    <input type="file" name="image3" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
-                    <input type="file" name="image4" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 max-h-[70vh] overflow-y-auto">
+                    <div class="mb-5 flex justify-between items-center">
+                        <h3 class="text-xl leading-6 font-bold text-gray-900">Add New Variant</h3>
+                        <button type="button" onclick="closeAddVariantModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Variant Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" placeholder="e.g. Midnight Black – 42mm Leather" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                            <p class="text-xs text-gray-400 mt-1">A descriptive display name visible to customers.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Stock <span class="text-red-500">*</span></label>
+                            <input type="number" name="stock" placeholder="0" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                        </div>
+
+                        <!-- Attributes -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Attributes</label>
+                            <div id="addAttrList" class="space-y-2">
+                                <div class="flex gap-2">
+                                    <input type="text" name="attr_name_1" placeholder="e.g. color" class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                    <input type="text" name="attr_value_1" placeholder="e.g. Black" class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <button type="button" onclick="addAttrRow('addAttrList','add')" class="mt-2 text-blue-600 text-sm hover:underline font-medium"><i class="fas fa-plus"></i> Add attribute</button>
+                        </div>
+
+                        <!-- Images (dynamic gallery) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Images</label>
+                            <div class="flex flex-wrap gap-3 mb-2" id="addVariantImageGallery"></div>
+                            
+                            <input type="file" accept="image/*" class="unified-cropper-gallery-input w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors border border-gray-300 rounded-lg p-1" data-gallery="addVariantImageGallery">
+                            <p class="text-xs text-gray-400 mt-1">Select images one by one to crop them. First image = primary display image.</p>
+                            
+                            <!-- Hidden inputs will be appended here -->
+                            <div id="addVariantHiddenInputs" class="hidden"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="mt-6 flex justify-end space-x-4">
-                    <button type="button" onclick="closeAddVariantModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end gap-3">
+                    <button type="button" onclick="closeAddVariantModal()" class="w-full sm:w-auto justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
                         Cancel
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    <button type="submit" class="w-full sm:w-auto justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
                         Add Variant
                     </button>
                 </div>
             </form>
         </div>
     </div>
+</div>
 
-    <div id="imageCropperModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z--5=100">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6">
-            <h2 class="text-xl font-bold mb-4">Crop Image</h2>
-            <div class="flex">
-                <div class="w-3/4 pr-4">
-                    <img id="cropperImage" class="max-w-full" src="" alt="Image to crop">
-                </div>
-                <div class="w-1/4">
-                    <div class="preview-container overflow-hidden"></div>
-                </div>
-            </div>
-            <div class="mt-6 flex justify-end space-x-4">
-                <button type="button" onclick="closeCropperModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">
-                    Cancel
-                </button>
-                <button type="button" onclick="confirmCrop()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                    Confirm Crop
-                </button>
-            </div>
-        </div>
-    </div>
-
-
-
-    <!-- Edit Variant Modal -->
-    <div id="editVariantModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-            <h2 class="text-xl font-bold mb-4">Edit Variant</h2>
+<!-- Edit Variant Modal -->
+<div id="editVariantModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity" aria-hidden="true" onclick="closeEditVariantModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
             <form id="editVariantForm" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
-                <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="variant_id" id="editVariantId">
-                <div class="space-y-4">
-                    <input type="text" name="color" id="editVariantColor" placeholder="Color" class="w-full border border-gray-300 p-2 rounded" required>
-                    <input type="number" name="stock" id="editVariantStock" placeholder="Stock" class="w-full border border-gray-300 p-2 rounded" required>
-                    <input type="file" name="image1" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
-                    <input type="file" name="image2" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
-                    <input type="file" name="image3" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
-                    <input type="file" name="image4" class="w-full border border-gray-300 p-2 rounded" accept="image/*">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 max-h-[70vh] overflow-y-auto">
+                    <div class="mb-5 flex justify-between items-center">
+                        <h3 class="text-xl leading-6 font-bold text-gray-900">Edit Variant</h3>
+                        <button type="button" onclick="closeEditVariantModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Variant Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" id="editVariantName" placeholder="Variant display name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Stock <span class="text-red-500">*</span></label>
+                            <input type="number" name="stock" id="editVariantStock" placeholder="0" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                        </div>
+
+                        <!-- Attributes -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Update Attributes</label>
+                            <div id="editAttrList" class="space-y-2">
+                                <div class="flex gap-2">
+                                    <input type="text" name="attr_name_1" placeholder="attribute name" class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                    <input type="text" name="attr_value_1" placeholder="attribute value" class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <button type="button" onclick="addAttrRow('editAttrList','edit')" class="mt-2 text-blue-600 text-sm hover:underline font-medium"><i class="fas fa-plus"></i> Add attribute</button>
+                        </div>
+
+                        <!-- Additional images (dynamic gallery) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Add More Images</label>
+                            <div class="flex flex-wrap gap-3 mb-2" id="editVariantImageGallery"></div>
+                            
+                            <input type="file" accept="image/*" class="unified-cropper-gallery-input w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors border border-gray-300 rounded-lg p-1" data-gallery="editVariantImageGallery">
+                            <p class="text-xs text-gray-400 mt-1">New images are appended to existing ones.</p>
+                            
+                            <!-- Hidden inputs will be appended here -->
+                            <div id="editVariantHiddenInputs" class="hidden"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="mt-6 flex justify-end space-x-4">
-                    <button type="button" onclick="closeEditVariantModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end gap-3">
+                    <button type="button" onclick="closeEditVariantModal()" class="w-full sm:w-auto justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
                         Cancel
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    <button type="submit" class="w-full sm:w-auto justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
                         Update Variant
                     </button>
                 </div>
@@ -173,48 +220,69 @@
 <script>
     const productId = {{ product.id }};
 
-    // Add Variant Modal Functions
+    // Add Variant Modal
     function openAddVariantModal() {
         document.getElementById('addVariantModal').classList.remove('hidden');
     }
-
     function closeAddVariantModal() {
         document.getElementById('addVariantModal').classList.add('hidden');
     }
 
-    // Edit Variant Modal Functions
-    function openEditVariantModal(variantId, color, stock) {
+    // Edit Variant Modal
+    function openEditVariantModal(variantId, name, stock) {
         document.getElementById('editVariantId').value = variantId;
-        document.getElementById('editVariantColor').value = color;
+        document.getElementById('editVariantName').value = name;
         document.getElementById('editVariantStock').value = stock;
         document.getElementById('editVariantModal').classList.remove('hidden');
     }
-
     function closeEditVariantModal() {
         document.getElementById('editVariantModal').classList.add('hidden');
     }
 
+    // Dynamic attribute rows
+    const attrCounts = { add: 1, edit: 1 };
+    function addAttrRow(containerId, prefix) {
+        attrCounts[prefix]++;
+        const n = attrCounts[prefix];
+        const row = document.createElement('div');
+        row.className = 'flex gap-2';
+        row.innerHTML = `
+            <input type="text" name="attr_name_${n}" placeholder="attribute name" class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+            <input type="text" name="attr_value_${n}" placeholder="attribute value" class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+        `;
+        document.getElementById(containerId).appendChild(row);
+    }
+
     // Delete Variant Function
     async function deleteVariant(variantId) {
-        if (!confirm('Are you sure you want to delete this variant?')) return;
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin-panel/variants/${variantId}/delete/`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    });
 
-        try {
-            const response = await fetch(`/admin-panel/variants/${variantId}/delete/`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Failed to delete variant');
+
+                    Swal.fire('Deleted!', data.message, 'success').then(() => window.location.reload());
+                } catch (error) {
+                    console.error('Error deleting variant:', error);
+                    Swal.fire('Error', error.message || 'An error occurred while deleting the variant', 'error');
                 }
-            });
-
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Failed to delete variant');
-
-            alert(data.message);
-            window.location.reload();
-        } catch (error) {
-            console.error('Error deleting variant:', error);
-            alert(error.message || 'An error occurred while deleting the variant');
-        }
+            }
+        });
     }
 
     // Form Submission Handlers
@@ -243,11 +311,10 @@
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Failed to process request');
 
-            alert(data.message);
-            window.location.reload();
+            Swal.fire('Success', data.message, 'success').then(() => window.location.reload());
         } catch (error) {
             console.error('Error:', error);
-            alert(error.message || 'An error occurred');
+            Swal.fire('Error', error.message || 'An error occurred', 'error');
         }
     }
 
@@ -258,92 +325,67 @@
         if (parts.length === 2) return parts.pop().split(';').shift();
     }
 
-    let currentCropper = null;
-    let currentFileInput = null;
+    // Unified Cropper Multiple Image Gallery Logic
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll('.unified-cropper-gallery-input').forEach(input => {
+            input.addEventListener('change', function(e) {
+                if (e.cropperInternal) return;
+                
+                if (this.files && this.files.length > 0) {
+                    const galleryId = this.getAttribute('data-gallery');
+                    const gallery = document.getElementById(galleryId);
+                    const hiddenInputsContainer = gallery.nextElementSibling.nextElementSibling; // The #addVariantHiddenInputs div
 
-    // Modify file input to trigger cropping
-    function setupImageCropping(fileInput) {
-        const file = fileInput.files[0];
-        if (!file) return;
+                    UnifiedCropper.open(this, { 
+                        aspectRatio: 1,
+                        onCrop: (croppedFile, croppedDataUrl) => {
+                            // 1. Create a visual thumbnail
+                            const thumbDiv = document.createElement('div');
+                            thumbDiv.className = 'relative w-16 h-16 rounded border border-gray-300';
+                            
+                            const img = document.createElement('img');
+                            img.src = croppedDataUrl;
+                            img.className = 'w-full h-full object-cover rounded';
+                            
+                            // Delete button overlay
+                            const delBtn = document.createElement('button');
+                            delBtn.type = 'button';
+                            delBtn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition-colors';
+                            delBtn.innerHTML = '<i class="fas fa-times"></i>';
+                            
+                            thumbDiv.appendChild(img);
+                            thumbDiv.appendChild(delBtn);
+                            gallery.appendChild(thumbDiv);
 
-        // Close any open modals to prevent stacking
-        closeAddVariantModal();
-        closeEditVariantModal();
+                            // 2. Create a hidden input for the actual file
+                            const hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'file';
+                            hiddenInput.name = 'images';
+                            hiddenInput.className = 'hidden';
+                            
+                            const dt = new DataTransfer();
+                            dt.items.add(croppedFile);
+                            hiddenInput.files = dt.files;
+                            
+                            hiddenInputsContainer.appendChild(hiddenInput);
 
-        currentFileInput = fileInput;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const cropperImage = document.getElementById('cropperImage');
-            cropperImage.src = e.target.result;
-            
-            // Close any existing cropper
-            if (currentCropper) {
-                currentCropper.destroy();
-            }
+                            // Link delete button to remove both visual and hidden input
+                            delBtn.addEventListener('click', () => {
+                                thumbDiv.remove();
+                                hiddenInput.remove();
+                            });
 
-            // Open cropper modal
-            document.getElementById('imageCropperModal').classList.remove('hidden');
-
-            // Initialize cropper
-            currentCropper = new Cropper(cropperImage, {
-                aspectRatio: 1, // Square crop
-                viewMode: 1,
-                preview: '.preview-container'
-            });
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function confirmCrop() {
-        if (currentCropper && currentFileInput) {
-            // Get cropped canvas
-            const croppedCanvas = currentCropper.getCroppedCanvas({
-                width: 500, // Set a standard width
-                height: 500  // Set a standard height
-            });
-
-            // Convert canvas to blob
-            croppedCanvas.toBlob(function(blob) {
-                // Create a new File object with the cropped image
-                const croppedFile = new File([blob], 'cropped_image.jpg', {
-                    type: 'image/jpeg'
-                });
-
-                // Replace the original file in the input
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(croppedFile);
-                currentFileInput.files = dataTransfer.files;
-
-                // Close cropper
-                closeCropperModal();
-
-                // Reopen the original modal
-                if (currentFileInput.closest('#addVariantModal')) {
-                    openAddVariantModal();
-                } else if (currentFileInput.closest('#editVariantModal')) {
-                    const variantId = document.getElementById('editVariantId').value;
-                    const color = document.getElementById('editVariantColor').value;
-                    const stock = document.getElementById('editVariantStock').value;
-                    openEditVariantModal(variantId, color, stock);
+                            // Reset the visible input so another file can be selected
+                            input.value = '';
+                        }
+                    });
                 }
-            }, 'image/jpeg');
-        }
-    }
-
-    function closeCropperModal() {
-        document.getElementById('imageCropperModal').classList.add('hidden');
-        if (currentCropper) {
-            currentCropper.destroy();
-            currentCropper = null;
-        }
-    }
-
-    // Modify existing file inputs to use cropping
-    document.querySelectorAll('input[type="file"]').forEach(fileInput => {
-        fileInput.addEventListener('change', function() {
-            setupImageCropping(this);
+            });
         });
     });
 </script>
+
+<!-- Unified Cropper Component -->
+{% include 'components/image_cropper.html' %}
 
 {% endblock %}

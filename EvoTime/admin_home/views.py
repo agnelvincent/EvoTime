@@ -432,7 +432,17 @@ def edit_brand(request, brand_id):
     if request.method == "POST":
         brand = get_object_or_404(Brand, id=brand_id)
         brand.name = request.POST.get('name', brand.name)
-        brand.offer_percentage = request.POST.get('offer_percentage', brand.offer_percentage)
+        offer_percentage = request.POST.get('offer_percentage',0)
+        if offer_percentage.strip():  # Ensure offer percentage is not empty
+            try:
+                offer_percentage = Decimal(offer_percentage)
+                if offer_percentage < 0 or offer_percentage > 100:
+                    raise ValueError
+            except (ValueError, TypeError):
+                messages.error(request, "Offer percentage must be between 0 and 100.")
+                return redirect('admin_brand')
+            
+        brand.offer_percentage = offer_percentage
         if 'Brand_image' in request.FILES:
             brand.Brand_image = request.FILES['Brand_image']
         brand.save()
@@ -716,10 +726,10 @@ def manage_variants(request, product_id):
         return render(request, 'variant/manage_variant.html', context)
     
     elif request.method == 'POST':
-        # Handle adding new variant
-        color = request.POST.get('color', '').strip().lower()
-        if not color:
-            return JsonResponse({'error': 'Color cannot be empty!'}, status=400)
+        # Handle adding a new variant inline from the manage page
+        name = request.POST.get('name', '').strip()
+        if not name:
+            return JsonResponse({'error': 'Variant name cannot be empty!'}, status=400)
 
         try:
             stock = int(request.POST.get('stock', 0))
@@ -728,38 +738,54 @@ def manage_variants(request, product_id):
         except ValueError:
             return JsonResponse({'error': 'Invalid stock value!'}, status=400)
 
-        if ProductVariant.objects.filter(product=product, color=color).exists():
-            return JsonResponse({'error': f"The color '{color}' already exists for this product."}, status=400)
+        if ProductVariant.objects.filter(product=product, name__iexact=name).exists():
+            return JsonResponse({'error': f"A variant named '{name}' already exists for this product."}, status=400)
 
-        # Handle image uploads
-        images = {}
-        for i in range(1, 5):
-            image = request.FILES.get(f'image{i}')
-            if image:
-                images[f'image{i}'] = image
+        from Products.models import VariantAttribute, VariantImage
+        from django.db import transaction as db_transaction
 
-        variant = ProductVariant.objects.create(
-            product=product,
-            color=color,
-            stock=stock,
-            **images
-        )
-        
+        with db_transaction.atomic():
+            variant = ProductVariant.objects.create(
+                product=product,
+                name=name,
+                stock=stock,
+            )
+            # Save uploaded images
+            for i, image_file in enumerate(request.FILES.getlist('images'), start=1):
+                VariantImage.objects.create(variant=variant, image=image_file, sort_order=i)
+
+            # Save attributes (sent as attr_name_1 / attr_value_1 pairs)
+            i = 1
+            while True:
+                attr_name  = request.POST.get(f'attr_name_{i}', '').strip()
+                attr_value = request.POST.get(f'attr_value_{i}', '').strip()
+                if not attr_name:
+                    break
+                if attr_value:
+                    VariantAttribute.objects.create(
+                        variant=variant,
+                        attribute_name=attr_name.lower(),
+                        attribute_value=attr_value,
+                    )
+                i += 1
+
         return JsonResponse({'message': 'Variant added successfully!'})
 
 @require_http_methods(["POST"])
 @admin_required
 @never_cache
 def add_variant(request, product_id):
+    """Create a new ProductVariant with attributes and images."""
+    from Products.models import VariantAttribute, VariantImage
     try:
         product = get_object_or_404(Product, id=product_id)
-        
-        # Get and validate color
-        color = request.POST.get('color', '').strip().lower()
-        if not color:
-            return JsonResponse({'error': 'Color cannot be empty!'}, status=400)
 
-        # Get and validate stock
+        # Validate name
+        name = request.POST.get('name', '').strip()
+        if not name:
+            return JsonResponse({'error': 'Variant name cannot be empty!'}, status=400)
+
+        # Validate stock
         try:
             stock = int(request.POST.get('stock', 0))
             if stock < 0:
@@ -767,34 +793,46 @@ def add_variant(request, product_id):
         except ValueError:
             return JsonResponse({'error': 'Invalid stock value!'}, status=400)
 
-        # Check for duplicate color
-        if ProductVariant.objects.filter(product=product, color=color).exists():
-            return JsonResponse({'error': f"The color '{color}' already exists for this product."}, status=400)
+        # Check duplicate name within same product
+        if ProductVariant.objects.filter(product=product, name__iexact=name).exists():
+            return JsonResponse({'error': f"A variant named '{name}' already exists for this product."}, status=400)
 
-        # Handle image uploads
-        images = {}
-        for i in range(1, 5):
-            image = request.FILES.get(f'image{i}')
-            if image:
-                images[f'image{i}'] = image
+        with transaction.atomic():
+            variant = ProductVariant.objects.create(
+                product=product,
+                name=name,
+                stock=stock,
+            )
 
-        # Create variant
-        variant = ProductVariant.objects.create(
-            product=product,
-            color=color,
-            stock=stock,
-            **images
-        )
-        
+            # Save uploaded images (unlimited, field name: 'images')
+            for sort_order, image_file in enumerate(request.FILES.getlist('images'), start=1):
+                VariantImage.objects.create(variant=variant, image=image_file, sort_order=sort_order)
+
+            # Save key-value attributes (attr_name_1/attr_value_1, attr_name_2/attr_value_2 …)
+            i = 1
+            while True:
+                attr_name  = request.POST.get(f'attr_name_{i}', '').strip()
+                attr_value = request.POST.get(f'attr_value_{i}', '').strip()
+                if not attr_name:
+                    break
+                if attr_value:
+                    VariantAttribute.objects.get_or_create(
+                        variant=variant,
+                        attribute_name=attr_name.lower(),
+                        defaults={'attribute_value': attr_value},
+                    )
+                i += 1
+
         return JsonResponse({
             'message': 'Variant added successfully!',
             'variant': {
                 'id': variant.id,
-                'color': variant.color,
-                'stock': variant.stock
+                'name': variant.name,
+                'sku': variant.sku,
+                'stock': variant.stock,
             }
         })
-    
+
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
@@ -803,11 +841,13 @@ def add_variant(request, product_id):
 @never_cache
 @require_http_methods(["POST"])
 def edit_variant(request, variant_id):
+    """Update an existing ProductVariant's name, stock, images, and attributes."""
+    from Products.models import VariantAttribute, VariantImage
     variant = get_object_or_404(ProductVariant, id=variant_id)
-    
-    color = request.POST.get('color', '').strip().lower()
-    if not color:
-        return JsonResponse({'error': 'Color cannot be empty!'}, status=400)
+
+    name = request.POST.get('name', '').strip()
+    if not name:
+        return JsonResponse({'error': 'Variant name cannot be empty!'}, status=400)
 
     try:
         stock = int(request.POST.get('stock', 0))
@@ -816,22 +856,38 @@ def edit_variant(request, variant_id):
     except ValueError:
         return JsonResponse({'error': 'Invalid stock value!'}, status=400)
 
+    # Check duplicate name on same product (exclude self)
     if ProductVariant.objects.filter(
-        product=variant.product, 
-        color=color
+        product=variant.product,
+        name__iexact=name,
     ).exclude(id=variant.id).exists():
-        return JsonResponse({'error': f"The color '{color}' already exists for this product."}, status=400)
+        return JsonResponse({'error': f"A variant named '{name}' already exists for this product."}, status=400)
 
-    variant.color = color
-    variant.stock = stock
+    with transaction.atomic():
+        variant.name = name
+        variant.stock = stock
+        variant.save()
 
-    # Handle image uploads
-    for i in range(1, 5):
-        image = request.FILES.get(f'image{i}')
-        if image:
-            setattr(variant, f'image{i}', image)
+        # Append new images (existing images are kept)
+        existing_count = variant.images.count()
+        for i, image_file in enumerate(request.FILES.getlist('images'), start=existing_count + 1):
+            VariantImage.objects.create(variant=variant, image=image_file, sort_order=i)
 
-    variant.save()
+        # Update / create attributes
+        i = 1
+        while True:
+            attr_name  = request.POST.get(f'attr_name_{i}', '').strip()
+            attr_value = request.POST.get(f'attr_value_{i}', '').strip()
+            if not attr_name:
+                break
+            if attr_value:
+                VariantAttribute.objects.update_or_create(
+                    variant=variant,
+                    attribute_name=attr_name.lower(),
+                    defaults={'attribute_value': attr_value},
+                )
+            i += 1
+
     return JsonResponse({'message': 'Variant updated successfully!'})
 
 @staff_member_required
@@ -853,8 +909,8 @@ def manage_categories(request):
     if request.method == 'POST':
         category_name = request.POST.get('category_name', '').strip()
         image = request.FILES.get('Category_image')
+        offer_percentage = request.POST.get('offer_percentage',0)
 
-        # Comprehensive Validations
         errors = []
 
         # Name Validation
@@ -871,27 +927,25 @@ def manage_categories(request):
         if Category.objects.filter(name__iexact=category_name).exists():
             errors.append("A category with this name already exists!")
 
+        offer_percentage = int(offer_percentage)
+        if offer_percentage < 0 or offer_percentage > 100:
+            errors.append('Invalid offer details')
+
         # Handle Errors
         if errors:
             for error in errors:
                 messages.error(request, error)
             return redirect('manage_categories')
         
-        print("Form submitted!")
-        print(f"POST data: {request.POST}")
-        print(f"FILES data: {request.FILES}")
-
-        # Create Category with Transaction
         try:
             with transaction.atomic():
-                Category.objects.create(name=category_name , Category_image = image)
+                Category.objects.create(name=category_name , Category_image = image, offer_percentage = offer_percentage)
             messages.success(request, f"Category '{category_name}' added successfully!")
         except IntegrityError:
             messages.error(request, "An error occurred while creating the category.")
         
         return redirect('manage_categories')
 
-    # Fetch categories with ordering
     categories = Category.objects.all().order_by('-created_at')
     categories_list = Category.objects.all().order_by('-created_at')
 
@@ -952,6 +1006,7 @@ def edit_category(request, category_id):
     if request.method == 'POST':
         category_name = request.POST.get('category_name', '').strip()
         category_image = request.FILES.get('category_image')
+        offer_percentage = request.POST.get('offer_percentage',0)
 
         # Comprehensive Validations
         errors = []
@@ -970,6 +1025,10 @@ def edit_category(request, category_id):
         if Category.objects.filter(name__iexact=category_name).exclude(id=category.id).exists():
             errors.append("A category with this name already exists!")
 
+        offer_percentage = int(offer_percentage)
+        if offer_percentage < 0 or offer_percentage > 100:
+            errors.append('Invalid offer percentage provided')
+
         # Handle Errors
         if errors:
             for error in errors:
@@ -982,6 +1041,8 @@ def edit_category(request, category_id):
                 category.name = category_name
                 if category_image:
                     category.Category_image = category_image
+                if offer_percentage:
+                    category.offer_percentage = offer_percentage
                 category.save()
             messages.success(request, f"Category '{category_name}' updated successfully!")
         except IntegrityError:

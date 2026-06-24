@@ -1,0 +1,64 @@
+<!-- admin_home/templates/components/sidebar.html -->
+<aside class="w-64 bg-gray-900 text-gray-300 flex flex-col fixed lg:relative z-20 h-full transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-xl" id="sidebar">
+    <div class="p-6 text-center text-2xl font-extrabold text-white border-b border-gray-800 tracking-wider">
+        <span class="text-blue-500">Evo</span>Time
+    </div>
+    <nav class="flex-1 mt-6 overflow-y-auto">
+        <ul class="space-y-1 px-4">
+            <li>
+                <a href="{% url 'admin_dashboard' %}" class="flex items-center space-x-3 py-3 px-4 rounded-lg transition duration-200 hover:bg-gray-800 hover:text-white {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gray-800 text-white border-l-4 border-blue-500{% endif %}">
+                    <i class="fas fa-home w-5 text-center"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'manage_categories' %}" class="flex items-center space-x-3 py-3 px-4 rounded-lg transition duration-200 hover:bg-gray-800 hover:text-white {% if request.resolver_match.url_name == 'manage_categories' %}bg-gray-800 text-white border-l-4 border-blue-500{% endif %}">
+                    <i class="fas fa-tags w-5 text-center"></i>
+                    <span class="font-medium">Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'list_brands' %}" class="flex items-center space-x-3 py-3 px-4 rounded-lg transition duration-200 hover:bg-gray-800 hover:text-white {% if request.resolver_match.url_name == 'list_brands' %}bg-gray-800 text-white border-l-4 border-blue-500{% endif %}">
+                    <i class="fas fa-copyright w-5 text-center"></i>
+                    <span class="font-medium">Brands</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'admin_product' %}" class="flex items-center space-x-3 py-3 px-4 rounded-lg transition duration-200 hover:bg-gray-800 hover:text-white {% if 'product' in request.resolver_match.url_name %}bg-gray-800 text-white border-l-4 border-blue-500{% endif %}">
+                    <i class="fas fa-box w-5 text-center"></i>
+                    <span class="font-medium">Products</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'admin_order_list_view' %}" class="flex items-center space-x-3 py-3 px-4 rounded-lg transition duration-200 hover:bg-gray-800 hover:text-white {% if 'order' in request.resolver_match.url_name %}bg-gray-800 text-white border-l-4 border-blue-500{% endif %}">
+                    <i class="fas fa-shopping-cart w-5 text-center"></i>
+                    <span class="font-medium">Orders</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'sales_report' %}" class="flex items-center space-x-3 py-3 px-4 rounded-lg transition duration-200 hover:bg-gray-800 hover:text-white {% if 'sales_report' in request.resolver_match.url_name %}bg-gray-800 text-white border-l-4 border-blue-500{% endif %}">
+                    <i class="fas fa-chart-line w-5 text-center"></i>
+                    <span class="font-medium">Sales Report</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'user_viewer' %}" class="flex items-center space-x-3 py-3 px-4 rounded-lg transition duration-200 hover:bg-gray-800 hover:text-white {% if 'user' in request.resolver_match.url_name %}bg-gray-800 text-white border-l-4 border-blue-500{% endif %}">
+                    <i class="fas fa-users w-5 text-center"></i>
+                    <span class="font-medium">Users</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'coupon_management' %}" class="flex items-center space-x-3 py-3 px-4 rounded-lg transition duration-200 hover:bg-gray-800 hover:text-white {% if 'coupon' in request.resolver_match.url_name %}bg-gray-800 text-white border-l-4 border-blue-500{% endif %}">
+                    <i class="fas fa-ticket-alt w-5 text-center"></i>
+                    <span class="font-medium">Coupons</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <div class="p-4 border-t border-gray-800">
+        <a href="{% url 'admin_logout' %}" class="flex items-center justify-center space-x-2 py-3 w-full bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-200 shadow-md">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="font-bold">Logout</span>
+        </a>
+    </div>
+</aside>

@@ -1,159 +1,116 @@
 {% extends "user_profile/account_overview.html" %}
 
 {% block user %}
-<div class="animate-fade-in">
-    <!-- Breadcrumbs -->
-    <div class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-        <a href="{% url 'account_overview' %}" class="hover:text-blue-600 transition-colors">Account Overview</a>
-        <span>/</span>
-        <span>Wallet</span>
+<div class="fade-up">
+
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-slate-900">Wallet</h1>
+        <p class="text-slate-500 text-sm mt-1">Your balance and transaction history</p>
     </div>
 
-    <!-- Wallet Balance Card -->
-    <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-xl shadow-lg text-white mb-8">
-        <h2 class="text-xl font-bold mb-2">Wallet Balance</h2>
-        <p class="text-3xl font-semibold">₹{{ wallet.balance }}</p>
+    <!-- Balance Card -->
+    <div class="relative overflow-hidden rounded-2xl p-6 mb-8 text-white"
+         style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 60%, #ec4899 100%);">
+
+        <!-- Decorative circles -->
+        <div class="absolute -top-10 -right-10 w-44 h-44 rounded-full bg-white/10"></div>
+        <div class="absolute -bottom-6 -right-4 w-28 h-28 rounded-full bg-white/5"></div>
+
+        <div class="relative z-10 flex items-start justify-between">
+            <div>
+                <p class="text-white/70 text-xs font-medium uppercase tracking-widest mb-1">Available Balance</p>
+                <p class="text-4xl font-bold tracking-tight">₹{{ wallet.balance }}</p>
+                <p class="text-white/60 text-xs mt-2">EvoTime Wallet</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                <i class="fas fa-wallet text-white text-xl"></i>
+            </div>
+        </div>
     </div>
 
-    <!-- Transaction History Section -->
-    <div class="bg-white rounded-xl shadow-md overflow-hidden">
-        <div class="p-6 border-b border-gray-100">
-            <h2 class="text-xl font-bold text-gray-800">Transaction History</h2>
+    <!-- Transaction History -->
+    <div class="profile-card overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-slate-800">Transaction History</h2>
+            <span class="text-xs text-slate-400">{{ page_obj.paginator.count }} total</span>
         </div>
 
-        <!-- Transaction Table -->
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[600px]">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="p-4 text-left text-sm font-semibold text-gray-600">Date</th>
-                        <th class="p-4 text-left text-sm font-semibold text-gray-600">Type</th>
-                        <th class="p-4 text-left text-sm font-semibold text-gray-600">Amount</th>
-                        <th class="p-4 text-left text-sm font-semibold text-gray-600">Reason</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for transaction in page_obj %}
-                    <tr class="border-t hover:bg-gray-50 transition-colors">
-                        <td class="p-4 text-sm text-gray-700">{{ transaction.timestamp|date:"Y-m-d H:i" }}</td>
-                        <td class="p-4">
-                            {% if transaction.transaction_type == "CREDIT" %}
-                                <span class="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700">+ CREDIT</span>
-                            {% else %}
-                                <span class="px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-700">- DEBIT</span>
-                            {% endif %}
-                        </td>
-                        <td class="p-4 text-sm text-gray-700">₹{{ transaction.amount }}</td>
-                        <td class="p-4 text-sm text-gray-700">{{ transaction.reason }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="p-4 text-center text-gray-500">No transactions found</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Pagination -->
-        {% if page_obj.has_other_pages %}
-        <div class="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6">
-            <div class="flex flex-1 justify-between sm:hidden">
-                {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
-                {% else %}
-                <span class="relative inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500 cursor-not-allowed">Previous</span>
-                {% endif %}
-                
-                {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}" class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
-                {% else %}
-                <span class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500 cursor-not-allowed">Next</span>
-                {% endif %}
-            </div>
-            
-            <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                <div>
-                    <p class="text-sm text-gray-700">
-                        Showing <span class="font-medium">{{ page_obj.start_index }}</span> to <span class="font-medium">{{ page_obj.end_index }}</span> of <span class="font-medium">{{ page_obj.paginator.count }}</span> transactions
-                    </p>
+        {% if page_obj.object_list %}
+            <!-- Transaction list -->
+            <div class="divide-y divide-slate-50">
+                {% for txn in page_obj %}
+                <div class="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition-colors">
+
+                    <!-- Icon -->
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0
+                        {% if txn.transaction_type == 'CREDIT' %}bg-emerald-50{% else %}bg-red-50{% endif %}">
+                        <i class="fas {% if txn.transaction_type == 'CREDIT' %}fa-arrow-down text-emerald-500{% else %}fa-arrow-up text-red-500{% endif %} text-xs"></i>
+                    </div>
+
+                    <!-- Details -->
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-slate-800 truncate">{{ txn.reason }}</p>
+                        <p class="text-xs text-slate-400 mt-0.5">{{ txn.timestamp|date:"d M Y, g:i A" }}</p>
+                    </div>
+
+                    <!-- Amount + badge -->
+                    <div class="text-right flex-shrink-0">
+                        <p class="text-sm font-bold {% if txn.transaction_type == 'CREDIT' %}text-emerald-600{% else %}text-red-600{% endif %}">
+                            {% if txn.transaction_type == 'CREDIT' %}+{% else %}−{% endif %}₹{{ txn.amount }}
+                        </p>
+                        <span class="inline-block mt-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full
+                            {% if txn.transaction_type == 'CREDIT' %}bg-emerald-50 text-emerald-700{% else %}bg-red-50 text-red-700{% endif %}">
+                            {{ txn.transaction_type }}
+                        </span>
+                    </div>
                 </div>
-                <div>
-                    <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                        {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                            <span class="sr-only">Previous</span>
-                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
-                            </svg>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="flex items-center justify-between px-5 py-3.5 border-t border-slate-100 text-sm">
+                <p class="text-slate-500 text-xs">
+                    {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+                </p>
+                <div class="flex gap-2">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}"
+                           class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50 hover:border-indigo-300 transition-all">
+                            <i class="fas fa-chevron-left text-[10px] mr-1"></i> Prev
                         </a>
-                        {% else %}
-                        <span class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-300 ring-1 ring-inset ring-gray-300 cursor-not-allowed">
-                            <span class="sr-only">Previous</span>
-                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
-                            </svg>
-                        </span>
-                        {% endif %}
-                        
-                        {% for i in page_obj.paginator.page_range %}
-                            {% if page_obj.number == i %}
-                            <span class="relative z-10 inline-flex items-center bg-blue-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">{{ i }}</span>
-                            {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
-                            <a href="?page={{ i }}" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">{{ i }}</a>
-                            {% elif i == page_obj.number|add:'-3' or i == page_obj.number|add:'3' %}
-                            <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300">...</span>
-                            {% endif %}
-                        {% endfor %}
-                        
-                        {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                            <span class="sr-only">Next</span>
-                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
-                            </svg>
+                    {% else %}
+                        <button disabled class="px-3 py-1.5 rounded-lg border border-slate-100 text-slate-300 text-xs font-medium cursor-not-allowed">
+                            <i class="fas fa-chevron-left text-[10px] mr-1"></i> Prev
+                        </button>
+                    {% endif %}
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}"
+                           class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50 hover:border-indigo-300 transition-all">
+                            Next <i class="fas fa-chevron-right text-[10px] ml-1"></i>
                         </a>
-                        {% else %}
-                        <span class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-300 ring-1 ring-inset ring-gray-300 cursor-not-allowed">
-                            <span class="sr-only">Next</span>
-                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
-                            </svg>
-                        </span>
-                        {% endif %}
-                    </nav>
+                    {% else %}
+                        <button disabled class="px-3 py-1.5 rounded-lg border border-slate-100 text-slate-300 text-xs font-medium cursor-not-allowed">
+                            Next <i class="fas fa-chevron-right text-[10px] ml-1"></i>
+                        </button>
+                    {% endif %}
                 </div>
             </div>
-        </div>
+            {% endif %}
+
+        {% else %}
+            <!-- Empty state -->
+            <div class="flex flex-col items-center justify-center py-16 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4">
+                    <i class="fas fa-receipt text-2xl text-indigo-400"></i>
+                </div>
+                <p class="text-slate-600 font-semibold text-sm">No transactions yet</p>
+                <p class="text-slate-400 text-xs mt-1">Your transaction history will appear here.</p>
+            </div>
         {% endif %}
     </div>
 
-    <!-- Toastify Notifications Container -->
-    <div id="toast-container" class="fixed top-4 right-4 z-50"></div>
 </div>
-
-<!-- Toastify Script -->
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-
-<script>
-    // Show Toastify notifications
-    function showToast(message, type = 'success') {
-        Toastify({
-            text: message,
-            duration: 3000,
-            close: true,
-            gravity: "top",
-            position: "right",
-            backgroundColor: type === 'success' ? "#10B981" : "#EF4444",
-        }).showToast();
-    }
-
-    // Display messages from Django
-    {% if messages %}
-        {% for message in messages %}
-            showToast('{{ message }}', '{{ message.tags }}');
-        {% endfor %}
-    {% endif %}
-</script>
 {% endblock %}
