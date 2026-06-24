@@ -65,9 +65,11 @@
                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 px-5 py-4">
                         <!-- Product image -->
                         <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
-                            <img src="{{ item.product_variant.image1.url }}"
+                            {% with primary=item.product_variant.get_primary_image %}
+                            <img src="{% if primary %}{{ primary.image.url }}{% else %}{{ item.product_variant.product.image.url }}{% endif %}"
                                  alt="{{ item.product_variant.product.name }}"
                                  class="w-full h-full object-cover">
+                            {% endwith %}
                         </div>
 
                         <!-- Product info -->

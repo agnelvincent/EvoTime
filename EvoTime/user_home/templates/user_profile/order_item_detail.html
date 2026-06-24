@@ -42,32 +42,33 @@
                 <!-- Product Image -->
                 <div class="md:w-1/3">
                     <div class="bg-gray-50 rounded-xl overflow-hidden">
-                        {% if order_item.product_variant.image1 %}
-                            <img src="{{ order_item.product_variant.image1.url }}" alt="{{ order_item.product_variant.product.name }}" class="w-full h-64 object-contain p-4">
+                        {% with primary=order_item.product_variant.get_primary_image %}
+                        {% if primary %}
+                            <img id="main-product-image" src="{{ primary.image.url }}" alt="{{ order_item.product_variant.product.name }}" class="w-full h-64 object-contain p-4 transition-all duration-300">
+                        {% elif order_item.product_variant.product.image %}
+                            <img id="main-product-image" src="{{ order_item.product_variant.product.image.url }}" alt="{{ order_item.product_variant.product.name }}" class="w-full h-64 object-contain p-4 transition-all duration-300">
                         {% else %}
                             <div class="w-full h-64 flex items-center justify-center bg-gray-100">
                                 <i class="fas fa-image text-gray-300 text-4xl"></i>
                             </div>
                         {% endif %}
+                        {% endwith %}
                     </div>
                     
-                    <!-- Thumbnail gallery -->
                     <div class="grid grid-cols-4 gap-2 mt-2">
-                        {% if order_item.product_variant.image1 %}
-                        <div class="bg-gray-50 rounded-lg overflow-hidden border-2 border-blue-500">
-                            <img src="{{ order_item.product_variant.image1.url }}" alt="" class="w-full h-16 object-cover">
+                        {% for variant_image in order_item.product_variant.images.all %}
+                        <div class="thumbnail-container bg-gray-50 rounded-lg overflow-hidden cursor-pointer border {% if forloop.first %}border-2 border-blue-500{% else %}border-transparent{% endif %} hover:border-blue-300 transition-all duration-200"
+                             onclick="changeMainImage('{{ variant_image.image.url }}', this)">
+                            <img src="{{ variant_image.image.url }}" alt="{{ variant_image.alt_text|default:'' }}" class="w-full h-16 object-cover">
+                        </div>
+                        {% empty %}
+                        {% if order_item.product_variant.product.image %}
+                        <div class="thumbnail-container bg-gray-50 rounded-lg overflow-hidden cursor-pointer border-2 border-blue-500 hover:border-blue-300 transition-all duration-200"
+                             onclick="changeMainImage('{{ order_item.product_variant.product.image.url }}', this)">
+                            <img src="{{ order_item.product_variant.product.image.url }}" alt="" class="w-full h-16 object-cover">
                         </div>
                         {% endif %}
-                        {% if order_item.product_variant.image2 %}
-                        <div class="bg-gray-50 rounded-lg overflow-hidden">
-                            <img src="{{ order_item.product_variant.image2.url }}" alt="" class="w-full h-16 object-cover">
-                        </div>
-                        {% endif %}
-                        {% if order_item.product_variant.image3 %}
-                        <div class="bg-gray-50 rounded-lg overflow-hidden">
-                            <img src="{{ order_item.product_variant.image3.url }}" alt="" class="w-full h-16 object-cover">
-                        </div>
-                        {% endif %}
+                        {% endfor %}
                     </div>
                 </div>
 
@@ -331,6 +332,26 @@
 
 
 <script>
+    function changeMainImage(url, element) {
+        const mainImage = document.getElementById('main-product-image');
+        if (mainImage) {
+            mainImage.src = url;
+        }
+        
+        // Remove active class from all thumbnails
+        const containers = document.querySelectorAll('.thumbnail-container');
+        containers.forEach(container => {
+            container.classList.remove('border-2', 'border-blue-500');
+            container.classList.add('border-transparent');
+        });
+        
+        // Add active class to clicked thumbnail
+        if (element) {
+            element.classList.remove('border-transparent');
+            element.classList.add('border-2', 'border-blue-500');
+        }
+    }
+
     function retryPayment(orderId) {
         fetch(`/cart/retry-payment/${orderId}/`, {
             method: 'POST',
