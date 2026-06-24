@@ -667,7 +667,7 @@ def order_list_view(request):
     status = request.GET.get('status')
     if status:
         orders_list = orders_list.filter(status__status=status)
-
+        
     # Pagination
     paginator = Paginator(orders_list.order_by('id'), 5)  # Show 10 orders per page
     page_number = request.GET.get('page')
