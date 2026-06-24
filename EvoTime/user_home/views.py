@@ -395,6 +395,10 @@ def all_products(request):
         'brands': brands,
         'categories': categories,
         'search_query': search_query,
+        'brand_filter': brand_filter,
+        'category_filter': category_filter,
+        'price_filter': price_filter,
+        'sort_by': sort_by,
     }
 
     return render(request, 'all_products.html', context)

@@ -1,240 +1,454 @@
-
-
-{% extends 'home.html' %}  
+{% extends 'home.html' %}
 {% load static %}
 
 {% block product %}
-<div class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-12">
-        <!-- Page Title with subtle animation -->
-        <div class="text-center mb-10" data-aos="fade-down">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">Premium Collection</h1>
-            <p class="text-gray-600 max-w-2xl mx-auto">Discover our handpicked selection of exceptional timepieces</p>
-        </div>
 
-        <!-- Search & Filter Container -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-10 transition-all duration-300 hover:shadow-xl">
-            <!-- Search Bar -->
-            <form method="GET" action="{% url 'all_products' %}" class="relative mb-8">
-                <div class="flex items-center overflow-hidden rounded-lg border-2 border-gray-200 focus-within:border-blue-500 transition-all duration-300 hover:border-blue-300">
-                    <input 
-                        type="text" 
-                        name="search" 
-                        placeholder="Find your perfect timepiece..." 
-                        value="{% if search_query %}{{ search_query }}{% else %}{% endif %}" 
-                        class="w-full px-6 py-4 text-gray-700 focus:outline-none"
-                    >
-                    <button 
-                        type="submit" 
-                        class="px-6 py-4 bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 flex items-center gap-2"
-                    >
-                        <i class="fas fa-search"></i>
-                        <span class="hidden sm:inline">Search</span>
-                    </button>
-                </div>
-            </form>
+<style>
+    /* ── Page layout ── */
+    .shop-page { background: #f8fafc; min-height: 100vh; }
 
-            <!-- Filters and Sorting Section -->
-            <div>
-                <div class="flex items-center justify-between mb-5">
-                    <h2 class="text-xl font-semibold text-gray-800">Refine Results</h2>
-                    <button id="toggleFilters" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1">
-                        <i class="fas fa-sliders-h"></i> <span>Filters</span>
-                    </button>
-                </div>
-                
-                <div id="filterSection" class="grid grid-cols-1 lg:grid-cols-4 gap-5">
-                    <!-- Brand Filter -->
-                    <div class="filter-group">
-                        <label for="brand" class="block text-sm font-medium text-gray-700 mb-2">Brand</label>
-                        <div class="relative">
-                            <select id="brand" name="brand" class="block w-full pl-4 pr-10 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none transition-all duration-300 hover:border-blue-300">
-                                <option value="">All Brands</option>
-                                {% for brand in brands %}
-                                    <option value="{{ brand.id }}" {% if brand_filter == brand.id|stringformat:"s" %}selected{% endif %}>{{ brand.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
-                        </div>
-                    </div>
+    /* ── Filter sidebar / panel ── */
+    .filter-panel {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 20px rgba(0,0,0,0.04);
+        padding: 28px;
+        position: sticky;
+        top: 20px;
+    }
 
-                    <!-- Category Filter -->
-                    <div class="filter-group">
-                        <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                        <div class="relative">
-                            <select id="category" name="category" class="block w-full pl-4 pr-10 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none transition-all duration-300 hover:border-blue-300">
-                                <option value="">All Categories</option>
-                                {% for category in categories %}
-                                    <option value="{{ category.id }}" {% if category_filter == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
-                        </div>
-                    </div>
+    /* ── Search bar ── */
+    .search-bar {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 20px rgba(0,0,0,0.04);
+        overflow: hidden;
+        border: 2px solid transparent;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-bar:focus-within {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+    }
+    .search-bar input {
+        flex: 1;
+        padding: 14px 20px;
+        border: none;
+        outline: none;
+        font-size: 0.95rem;
+        color: #1e293b;
+        background: transparent;
+    }
+    .search-bar button {
+        padding: 14px 22px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border: none;
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: opacity 0.2s;
+    }
+    .search-bar button:hover { opacity: 0.88; }
 
-                    <!-- Price Filter -->
-                    <div class="filter-group">
-                        <label for="price" class="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
-                        <div class="relative">
-                            <select id="price" name="price" class="block w-full pl-4 pr-10 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none transition-all duration-300 hover:border-blue-300">
-                                <option value="">All Prices</option>
-                                <option value="0-100" {% if price_filter == "0-100" %}selected{% endif %}>Under $100</option>
-                                <option value="100-500" {% if price_filter == "100-500" %}selected{% endif %}>$100 - $500</option>
-                                <option value="500-1000" {% if price_filter == "500-1000" %}selected{% endif %}>$500 - $1000</option>
-                                <option value="1000-" {% if price_filter == "1000-" %}selected{% endif %}>Over $1000</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
-                        </div>
-                    </div>
+    /* ── Filter select ── */
+    .filter-select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        color: #374151;
+        background: #fff;
+        outline: none;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236366f1'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 18px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .filter-select:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
 
-                    <!-- Sorting -->
-                    <div class="filter-group">
-                        <label for="sort" class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
-                        <div class="relative">
-                            <select id="sort" name="sort" class="block w-full pl-4 pr-10 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none transition-all duration-300 hover:border-blue-300">
-                                <option value="">Popular</option>
-                                <option value="price_asc" {% if sort_by == "price_asc" %}selected{% endif %}>Price: Low to High</option>
-                                <option value="price_desc" {% if sort_by == "price_desc" %}selected{% endif %}>Price: High to Low</option>
-                                <option value="name_asc" {% if sort_by == "name_asc" %}selected{% endif %}>Name: A to Z</option>
-                                <option value="name_desc" {% if sort_by == "name_desc" %}selected{% endif %}>Name: Z to A</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    /* ── Filter label ── */
+    .filter-label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #64748b;
+        margin-bottom: 8px;
+    }
 
-        <!-- Products Section -->
+    /* ── Active filter chips ── */
+    .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        background: #eef2ff;
+        color: #4f46e5;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .filter-chip button { background: none; border: none; cursor: pointer; color: #818cf8; font-size: 12px; }
+
+    /* ── Results count badge ── */
+    .results-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 14px;
+        background: #f1f5f9;
+        color: #475569;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        color: #94a3b8;
+    }
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #cbd5e1;
+    }
+
+    /* ── Divider ── */
+    .filter-divider { border-top: 1px solid #f1f5f9; margin: 18px 0; }
+
+    /* ── Mobile filter toggle ── */
+    .mobile-filter-btn {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        background: #fff;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        cursor: pointer;
+        transition: border-color 0.2s;
+    }
+    .mobile-filter-btn:hover { border-color: #6366f1; color: #6366f1; }
+
+    @media (max-width: 1023px) {
+        .mobile-filter-btn { display: flex; }
+        .filter-panel {
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            width: 300px;
+            z-index: 200;
+            border-radius: 0;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+        .filter-panel.open { transform: translateX(0); }
+        .filter-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 199;
+            backdrop-filter: blur(2px);
+        }
+        .filter-overlay.open { display: block; }
+    }
+
+    /* ── Sort dropdown ── */
+    .sort-select {
+        padding: 9px 36px 9px 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        background: #fff;
+        outline: none;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236366f1'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 18px;
+        transition: border-color 0.2s;
+    }
+    .sort-select:focus { border-color: #6366f1; }
+</style>
+
+<div class="shop-page">
+    <div class="max-w-screen-xl mx-auto px-4 py-10">
+
+        <!-- ── Page header ── -->
         <div class="mb-8">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800">Featured Timepieces</h2>
-                <div class="flex items-center gap-2 text-sm text-gray-500">
-                    <span>Showing <span class="font-semibold">{{ products|length }}</span> products</span>
-                </div>
+            <span class="section-eyebrow">Collection</span>
+            <h1 class="text-3xl font-bold text-slate-800 mt-1">All Timepieces</h1>
+            <p class="text-slate-500 mt-1 text-sm">{{ products|length }} product{{ products|length|pluralize }} found</p>
+        </div>
+
+        <!-- ── Search bar ── -->
+        <form method="GET" action="{% url 'all_products' %}" class="mb-6" id="filterForm">
+            <div class="search-bar">
+                <i class="fas fa-search text-slate-400 ml-5"></i>
+                <input
+                    type="text"
+                    name="search"
+                    id="searchInput"
+                    placeholder="Search watches, brands, collections…"
+                    value="{{ search_query }}"
+                    autocomplete="off"
+                >
+                <!-- Hidden fields so other filters survive search submit -->
+                <input type="hidden" name="brand" value="{{ brand_filter }}">
+                <input type="hidden" name="category" value="{{ category_filter }}">
+                <input type="hidden" name="price" value="{{ price_filter }}">
+                <input type="hidden" name="sort" value="{{ sort_by }}">
+                <button type="submit">
+                    <i class="fas fa-arrow-right"></i>
+                    <span class="hidden sm:inline">Search</span>
+                </button>
             </div>
-            
-            <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {% for product in products %}
-                    {% include 'partials/_product_card.html' with product=product %}
-                {% endfor %}
+        </form>
+
+        <!-- ── Main layout ── -->
+        <div class="flex gap-8 items-start">
+
+            <!-- ── Filter overlay (mobile) ── -->
+            <div class="filter-overlay" id="filterOverlay" onclick="closeFilters()"></div>
+
+            <!-- ══ SIDEBAR FILTERS ══ -->
+            <aside class="filter-panel w-64 flex-shrink-0" id="filterPanel">
+                <!-- Mobile close -->
+                <div class="flex items-center justify-between mb-6 lg:hidden">
+                    <span class="font-bold text-slate-800 text-lg">Filters</span>
+                    <button onclick="closeFilters()" class="text-slate-400 hover:text-slate-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <h2 class="text-base font-bold text-slate-800 mb-5 hidden lg:block">
+                    <i class="fas fa-sliders-h text-indigo-500 mr-2"></i>Filters
+                </h2>
+
+                <!-- Brand -->
+                <div class="mb-5">
+                    <label class="filter-label">Brand</label>
+                    <select class="filter-select" id="brandFilter" onchange="applyFilters()">
+                        <option value="">All Brands</option>
+                        {% for brand in brands %}
+                            <option value="{{ brand.id }}" {% if brand_filter == brand.id|stringformat:"s" %}selected{% endif %}>
+                                {{ brand.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-divider"></div>
+
+                <!-- Category -->
+                <div class="mb-5">
+                    <label class="filter-label">Category</label>
+                    <select class="filter-select" id="categoryFilter" onchange="applyFilters()">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {% if category_filter == category.id|stringformat:"s" %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-divider"></div>
+
+                <!-- Price range -->
+                <div class="mb-5">
+                    <label class="filter-label">Price Range</label>
+                    <select class="filter-select" id="priceFilter" onchange="applyFilters()">
+                        <option value="">All Prices</option>
+                        <option value="0-100"   {% if price_filter == "0-100"   %}selected{% endif %}>Under ₹100</option>
+                        <option value="100-500"  {% if price_filter == "100-500"  %}selected{% endif %}>₹100 – ₹500</option>
+                        <option value="500-1000" {% if price_filter == "500-1000" %}selected{% endif %}>₹500 – ₹1,000</option>
+                        <option value="1000-"   {% if price_filter == "1000-"   %}selected{% endif %}>Over ₹1,000</option>
+                    </select>
+                </div>
+
+                <div class="filter-divider"></div>
+
+                <!-- Reset -->
+                <a href="{% url 'all_products' %}{% if search_query %}?search={{ search_query }}{% endif %}"
+                   class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-semibold text-slate-500 hover:border-rose-300 hover:text-rose-500 transition-colors">
+                    <i class="fas fa-undo-alt text-xs"></i> Reset Filters
+                </a>
+            </aside>
+
+            <!-- ══ PRODUCT GRID ══ -->
+            <div class="flex-1 min-w-0">
+
+                <!-- Toolbar: results + sort -->
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Mobile filter button -->
+                        <button class="mobile-filter-btn" onclick="openFilters()">
+                            <i class="fas fa-sliders-h text-indigo-500"></i> Filters
+                        </button>
+
+                        <span class="results-count">
+                            <i class="fas fa-box-open text-indigo-400 text-xs"></i>
+                            {{ products|length }} result{{ products|length|pluralize }}
+                        </span>
+
+                        <!-- Active filter chips -->
+                        {% if search_query %}
+                        <span class="filter-chip">
+                            "{{ search_query }}"
+                            <button onclick="clearFilter('search')" title="Remove">×</button>
+                        </span>
+                        {% endif %}
+                        {% if brand_filter %}
+                        <span class="filter-chip">
+                            Brand applied
+                            <button onclick="clearFilter('brand')" title="Remove">×</button>
+                        </span>
+                        {% endif %}
+                        {% if category_filter %}
+                        <span class="filter-chip">
+                            Category applied
+                            <button onclick="clearFilter('category')" title="Remove">×</button>
+                        </span>
+                        {% endif %}
+                        {% if price_filter %}
+                        <span class="filter-chip">
+                            Price filter
+                            <button onclick="clearFilter('price')" title="Remove">×</button>
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Sort -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider hidden sm:block">Sort</span>
+                        <select class="sort-select" id="sortFilter" onchange="applyFilters()">
+                            <option value="">Popular</option>
+                            <option value="price_asc"  {% if sort_by == "price_asc"  %}selected{% endif %}>Price: Low → High</option>
+                            <option value="price_desc" {% if sort_by == "price_desc" %}selected{% endif %}>Price: High → Low</option>
+                            <option value="name_asc"   {% if sort_by == "name_asc"   %}selected{% endif %}>Name: A → Z</option>
+                            <option value="name_desc"  {% if sort_by == "name_desc"  %}selected{% endif %}>Name: Z → A</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Grid -->
+                {% if products %}
+                <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {% for product in products %}
+                        {% include 'partials/_product_card.html' with product=product %}
+                    {% endfor %}
+                </div>
+                {% else %}
+                <!-- Empty state -->
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-700 mb-2">No products found</h3>
+                    <p class="text-slate-400 mb-6 max-w-sm mx-auto">
+                        We couldn't find anything matching your filters. Try adjusting them or browse all products.
+                    </p>
+                    <a href="{% url 'all_products' %}"
+                       class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-white"
+                       style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                        <i class="fas fa-th-large"></i> Browse All
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- JavaScript for Filters, Sorting, and Product Shuffling -->
 <script>
+    function buildFilterURL(overrides = {}) {
+        const params = {
+            search:   document.getElementById('searchInput')?.value   || '',
+            brand:    document.getElementById('brandFilter')?.value    || '',
+            category: document.getElementById('categoryFilter')?.value || '',
+            price:    document.getElementById('priceFilter')?.value    || '',
+            sort:     document.getElementById('sortFilter')?.value     || '',
+            ...overrides
+        };
+        const qs = Object.entries(params)
+            .filter(([, v]) => v !== '')
+            .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+            .join('&');
+        return `${window.location.pathname}${qs ? '?' + qs : ''}`;
+    }
+
+    function applyFilters() {
+        window.location.href = buildFilterURL();
+    }
+
+    function clearFilter(key) {
+        window.location.href = buildFilterURL({ [key]: '' });
+    }
+
+    function openFilters() {
+        document.getElementById('filterPanel').classList.add('open');
+        document.getElementById('filterOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeFilters() {
+        document.getElementById('filterPanel').classList.remove('open');
+        document.getElementById('filterOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    // Fade-in animation on scroll
     document.addEventListener('DOMContentLoaded', function () {
-        // Filter toggle functionality
-        const toggleFilters = document.getElementById('toggleFilters');
-        const filterSection = document.getElementById('filterSection');
-        
-        toggleFilters.addEventListener('click', function() {
-            filterSection.classList.toggle('hidden');
-            const iconElement = toggleFilters.querySelector('i');
-            if (filterSection.classList.contains('hidden')) {
-                iconElement.classList.remove('fa-sliders-h');
-                iconElement.classList.add('fa-filter');
-                toggleFilters.querySelector('span').textContent = 'Show Filters';
-            } else {
-                iconElement.classList.remove('fa-filter');
-                iconElement.classList.add('fa-sliders-h');
-                toggleFilters.querySelector('span').textContent = 'Hide Filters';
-            }
-        });
-
-        // Filter and sorting functionality
-        const brandFilter = document.getElementById('brand');
-        const categoryFilter = document.getElementById('category');
-        const priceFilter = document.getElementById('price');
-        const sortFilter = document.getElementById('sort');
-
-        function applyFilters() {
-            const brand = brandFilter.value;
-            const category = categoryFilter.value;
-            const price = priceFilter.value;
-            const sort = sortFilter.value;
-
-            // Redirect or fetch filtered products
-            window.location.href = `?brand=${brand}&category=${category}&price=${price}&sort=${sort}`;
-        }
-
-        brandFilter.addEventListener('change', applyFilters);
-        categoryFilter.addEventListener('change', applyFilters);
-        priceFilter.addEventListener('change', applyFilters);
-        sortFilter.addEventListener('change', applyFilters);
-
-        // Shuffle products on page load
-        function shuffleProducts() {
-            const productsGrid = document.getElementById('productsGrid');
-            const productCards = Array.from(productsGrid.children);
-            
-            // Shuffle array
-            for (let i = productCards.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [productCards[i], productCards[j]] = [productCards[j], productCards[i]];
-            }
-            
-            // Append shuffled products
-            productCards.forEach(card => {
-                productsGrid.appendChild(card);
-            });
-        }
-        
-        // Call the shuffle function on page load
-        shuffleProducts();
-        
-        // Add animation effects to products on scroll
-        function animateProductsOnScroll() {
-            const productCards = document.querySelectorAll('.product-card');
-            
+        if ('IntersectionObserver' in window) {
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        entry.target.classList.add('animate-fadeIn');
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
                         observer.unobserve(entry.target);
                     }
                 });
-            }, { threshold: 0.1 });
-            
-            productCards.forEach(card => {
+            }, { threshold: 0.05 });
+
+            document.querySelectorAll('.product-card').forEach((card, i) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(18px)';
+                card.style.transition = `opacity 0.45s ease ${i * 0.05}s, transform 0.45s ease ${i * 0.05}s`;
                 observer.observe(card);
             });
-        }
-        
-        // Add this if you want animation on scroll
-        if ('IntersectionObserver' in window) {
-            animateProductsOnScroll();
         }
     });
 </script>
 
-<style>
-    /* Additional custom animations */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .animate-fadeIn {
-        animation: fadeIn 0.5s ease-out forwards;
-    }
-    
-    /* Add line-clamp utility if not available in your Tailwind version */
-    .line-clamp-1 {
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 1;
-    }
-</style>
 {% endblock %}
