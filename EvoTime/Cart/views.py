@@ -303,6 +303,9 @@ def checkout(request):
                         payment.transaction_id = razorpay_order['id']
                         payment.save()
 
+                        if not is_buy_now:
+                            cart_items.delete()
+
                         return JsonResponse({
                             "razorpay_order_id": razorpay_order['id'], 
                             "amount": total_price,
