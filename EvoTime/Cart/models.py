@@ -115,12 +115,11 @@ class OrderItem(models.Model):
         return time_elapsed.total_seconds() <= (self.RETURN_WINDOW_DAYS * 86400)  # 86400 seconds in a day
 
     def cancel_item(self, reason=""):
-        """Cancels this specific order item"""
         if not self.can_be_cancelled:
             raise ValidationError("This item cannot be cancelled.")
 
         with transaction.atomic():
-            # Restore stock for this item
+
             self.product_variant.stock += self.quantity
             self.product_variant.save()
 
@@ -133,15 +132,12 @@ class OrderItem(models.Model):
             raise ValidationError("This item cannot be returned.")
 
         with transaction.atomic():
-            # Restore stock for this item
             self.product_variant.stock += self.quantity
             self.product_variant.save()
 
-            # Update item status
             self.status = "returned"
             self.save()
 
-            # Calculate refund
             total_items = self.order.items.exclude(status="returned").count()
             per_item_shipping_charge = self.order.shipping_charge / total_items if total_items > 0 else 0
             refund_amount = self.total_price + per_item_shipping_charge

@@ -1241,7 +1241,8 @@ def admin_handle_return_request(request, item_id):
                 else:
                     per_item_shipping_charge = order.shipping_charge  # If only one item, refund full shipping charge
 
-                refund_amount = (order_item.product_variant.product.sales_price * Decimal(order_item.quantity)) + per_item_shipping_charge
+                # Use the frozen purchase price (unit_price_at_purchase × qty), not the current live sales price
+                refund_amount = order_item.total_price + per_item_shipping_charge
 
                 # **3. Check if the order has a valid payment**
                 payment = getattr(order, "payment", None)  # Safely get the payment attribute

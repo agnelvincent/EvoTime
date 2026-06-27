@@ -829,14 +829,16 @@ def cancel_order_item(request, item_id):
 
 
             order = order_item.order
-            total_items = order.items.count()  
+            # Count only active items (exclude already cancelled/returned) — this item is still "pending"/"processing" at this point
+            active_items = order.items.exclude(status__in=["cancelled", "returned"]).count()
 
-            if total_items > 1:
-                shipping_share = order.shipping_charge / Decimal(total_items) 
+            if active_items > 1:
+                shipping_share = order.shipping_charge / Decimal(active_items)
             else:
-                shipping_share = order.shipping_charge 
+                # This is the last active item — refund the full remaining shipping charge
+                shipping_share = order.shipping_charge
 
-
+            # Use the frozen purchase price (unit_price_at_purchase × qty), not current market price
             refund_amount = order_item.total_price + shipping_share
 
 
