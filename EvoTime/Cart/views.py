@@ -146,8 +146,6 @@ def view_cart(request):
         return render(request, 'cart.html', {'message': 'Your cart is empty.'})
 
 
-
-
 @block_superuser_navigation
 @never_cache
 @login_required
@@ -183,7 +181,7 @@ def checkout(request):
                 applied_coupon = Coupon.objects.get(id=coupon_id, is_active=True)
                 
                 if cart_total >= applied_coupon.min_cart_value:
-                    cart_total = Decimal(cart_total)  # ✅ Ensure cart total is Decimal
+                    cart_total = Decimal(cart_total)  
                     discount = Decimal(applied_coupon_data.get('discount_amount', applied_coupon.calculate_discount(cart_total)))
                     total_price = max(cart_total - discount, Decimal(0)) 
                 else:
@@ -236,7 +234,6 @@ def checkout(request):
                     UsedCoupon.objects.create(user=request.user, coupon=applied_coupon)
                     request.session.pop("applied_coupon", None)  # Clear from session after use
 
-                # Handle "Buy Now" case
                 if is_buy_now and single_variant:
                     if single_variant.stock < single_quantity:
                         messages.error(request, f"Not enough stock for {single_variant.product.name} ({single_variant.name})")
@@ -360,7 +357,6 @@ def checkout(request):
         print(f"Error in checkout: {str(e)}")
         messages.error(request, f"Error: {str(e)}")
 
-        # ✅ Instead of redirecting, render the checkout page with an error message
         return render(request, "checkout.html", {
             "cart_items": cart_items if not variant_id else [],
             "cart_total": cart_total,
@@ -370,7 +366,7 @@ def checkout(request):
             "wallet": wallet,
             "addresses": Address.objects.filter(user=request.user),
             "buy_now_item": single_variant if variant_id else None,
-            "error": str(e),  # ✅ Pass error to template
+            "error": str(e), 
         })
 
 
@@ -412,7 +408,6 @@ def verify_razorpay_payment(request):
             payment_id = data.get("payment_id")
             signature = data.get("signature")
 
-            # Fetch order details
             order = Order.objects.get(razorpay_order_id=order_id)
             payment = Payment.objects.get(order=order)
 
