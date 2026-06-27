@@ -183,20 +183,17 @@ def checkout(request):
                 applied_coupon = Coupon.objects.get(id=coupon_id, is_active=True)
                 
                 if cart_total >= applied_coupon.min_cart_value:
-                    # Use the stored discount amount or recalculate
                     cart_total = Decimal(cart_total)  # ✅ Ensure cart total is Decimal
                     discount = Decimal(applied_coupon_data.get('discount_amount', applied_coupon.calculate_discount(cart_total)))
-                    total_price = max(cart_total - discount, Decimal(0))  # ✅ Use Decimal(0)
+                    total_price = max(cart_total - discount, Decimal(0)) 
                 else:
                     request.session.pop("applied_coupon", None)  # Remove invalid coupon
 
             except Coupon.DoesNotExist:
                 request.session.pop("applied_coupon", None)
 
-        # Add shipping charge
         shipping_charge = 100  
  
-
         if request.method == "POST":
             address_id = request.POST.get("address")
             payment_method = request.POST.get("payment_method")
@@ -209,8 +206,8 @@ def checkout(request):
             print("Discounted Total Price:", discounted_total_price)
 
             if discounted_total_price:
-                shipping_charge = Decimal(100)  # ✅ Convert to Decimal
-                total_price = Decimal(discounted_total_price) + shipping_charge  # ✅ Convert both to Decimal
+                shipping_charge = Decimal(100) 
+                total_price = Decimal(discounted_total_price) + shipping_charge  
 
             else:
                 total_price = original_total_price + shipping_charge
@@ -226,17 +223,15 @@ def checkout(request):
                 return redirect("checkout")
 
             with transaction.atomic():
-                # Create the order
                 order = Order.objects.create(
                     user=request.user,
                     shipping_address=shipping_address,
                     total_amount=total_price,
                     discount=discount,  
                     applied_coupon=applied_coupon if applied_coupon else None,
-                    shipping_charge=shipping_charge,  # ✅ Store shipping charge
+                    shipping_charge=shipping_charge, 
                 )
 
-                # Mark coupon as used if applied - FIX: Create UsedCoupon record
                 if applied_coupon:
                     UsedCoupon.objects.create(user=request.user, coupon=applied_coupon)
                     request.session.pop("applied_coupon", None)  # Clear from session after use
@@ -277,15 +272,13 @@ def checkout(request):
                             status="processing",
                         )
 
-                # Wallet Payment Logic
                 if payment_method == "wallet":
                     wallet.refresh_from_db()
-                    total_price_decimal = Decimal(total_price)  # ✅ Convert to Decimal
+                    total_price_decimal = Decimal(total_price) 
 
                     if wallet.deduct_amount(total_price_decimal, reason=f"Payment for Order {order.id}"):
                         print("Wallet payment successful. New balance:", wallet.balance)
 
-                        # Create payment record
                         payment = Payment.objects.create(
                             order=order,
                             amount=total_price_decimal,
@@ -294,7 +287,6 @@ def checkout(request):
                             status="completed",
                         )
 
-                        # Clear cart if not a buy-now order
                         if not is_buy_now:
                             cart_items.delete()
 
@@ -304,10 +296,8 @@ def checkout(request):
                         messages.error(request, "Insufficient wallet balance. Please choose another payment method.")
                         return redirect("checkout")
 
-                # Razorpay Payment Logic
                 elif payment_method == "razorpay":
                     with transaction.atomic():
-                        # Store payment as "pending" initially
                         payment = Payment.objects.create(
                             order=order,  
                             amount=total_price,
@@ -324,11 +314,9 @@ def checkout(request):
                             "payment_capture": 1
                         })
 
-                        # Store Razorpay Order ID
                         order.razorpay_order_id = razorpay_order['id']
                         order.save()
 
-                        # Update Payment Transaction ID
                         payment.transaction_id = razorpay_order['id']
                         payment.save()
 
@@ -338,7 +326,6 @@ def checkout(request):
                             "order_id": order.id
                         })
 
-                # COD Payment Logic
                 elif payment_method == "cod":
                     Payment.objects.create(
                         order=order,
@@ -348,10 +335,11 @@ def checkout(request):
                         status="pending",
                     )
 
-                    # Only delete cart items if not buying directly
                     if not is_buy_now:
                         cart_items.delete()
                     return redirect("order_success", order_id=order.id)
+        
+        total_price += shipping_charge
 
         return render(
             request,
