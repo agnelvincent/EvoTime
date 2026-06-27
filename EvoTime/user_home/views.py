@@ -838,9 +838,8 @@ def cancel_order_item(request, item_id):
                 # This is the last active item — refund the full remaining shipping charge
                 shipping_share = order.shipping_charge
 
-            # Use the frozen purchase price (unit_price_at_purchase × qty), not current market price
-            refund_amount = order_item.total_price + shipping_share
-
+            # Use the exact amount paid (total price minus proportional coupon discount)
+            refund_amount = order_item.exact_amount_paid + shipping_share
 
             payment = order.payment
             if payment.status == 'completed':

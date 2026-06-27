@@ -140,7 +140,7 @@ class OrderItem(models.Model):
 
             total_items = self.order.items.exclude(status="returned").count()
             per_item_shipping_charge = self.order.shipping_charge / total_items if total_items > 0 else 0
-            refund_amount = self.total_price + per_item_shipping_charge
+            refund_amount = self.exact_amount_paid + per_item_shipping_charge
 
             return refund_amount 
 
@@ -149,6 +149,29 @@ class OrderItem(models.Model):
     def total_price(self):
         """Uses the price frozen at order time — never affected by later price edits."""
         return self.unit_price_at_purchase * self.quantity
+
+    @property
+    def coupon_discount_share(self):
+        """
+        Calculates this item's proportional share of the overall order discount.
+        (Item Total / Order Subtotal) * Order Discount
+        """
+        if not self.order.discount or self.order.discount <= 0:
+            return Decimal('0.00')
+        
+        # Calculate the original subtotal of the order by summing all items
+        order_subtotal = sum(item.total_price for item in self.order.items.all())
+        if order_subtotal > 0:
+            share = (self.total_price / order_subtotal) * self.order.discount
+            return share.quantize(Decimal('0.01'))
+        return Decimal('0.00')
+
+    @property
+    def exact_amount_paid(self):
+        """
+        The exact amount paid for this item after deducting its share of the coupon discount.
+        """
+        return self.total_price - self.coupon_discount_share
 
     def __str__(self):
         return f"{self.quantity} x {self.product_variant.product.name} ({self.product_variant.name})"

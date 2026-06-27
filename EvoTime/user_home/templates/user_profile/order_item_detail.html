@@ -364,6 +364,29 @@
             </div>
           </div>
 
+          <!-- Pricing Breakdown -->
+          <div class="mt-2 p-4 rounded-xl bg-slate-50 border border-slate-200 shadow-sm">
+            <h4 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+              <i class="fas fa-receipt text-indigo-500"></i> Item Pricing Breakdown
+            </h4>
+            <div class="flex flex-col gap-2 text-sm text-slate-600">
+              <div class="flex justify-between">
+                <span>Original Price ({{ order_item.quantity }}x)</span>
+                <span>₹{{ order_item.total_price }}</span>
+              </div>
+              {% if order_item.coupon_discount_share > 0 %}
+              <div class="flex justify-between text-emerald-600 font-medium">
+                <span>Coupon Discount Share</span>
+                <span>− ₹{{ order_item.coupon_discount_share }}</span>
+              </div>
+              {% endif %}
+              <div class="flex justify-between pt-2 border-t border-slate-200 font-bold text-slate-900" style="font-size: 0.95rem;">
+                <span>Exact Amount Paid</span>
+                <span>₹{{ order_item.exact_amount_paid }}</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Action buttons -->
           <div class="flex flex-wrap gap-2 pt-2">
             {% if order_item.status == 'shipped' %}
