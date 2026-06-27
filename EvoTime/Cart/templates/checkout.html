@@ -676,6 +676,24 @@
               <div class="coupon-feedback error" id="couponError">
                 <i class="fas fa-times-circle"></i> <span id="couponErrorMsg">Invalid coupon code.</span>
               </div>
+
+              {% if available_coupons %}
+              <div class="mt-4">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Available Coupons</p>
+                <div class="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1">
+                  {% for ac in available_coupons %}
+                  <div class="border border-slate-200 rounded-md p-2 flex justify-between items-center bg-slate-50 hover:bg-slate-100 transition cursor-pointer" onclick="document.getElementById('couponCode').value='{{ ac.code }}'; document.getElementById('applyCouponBtn').click();">
+                    <div>
+                      <div class="font-bold text-slate-800 text-sm">{{ ac.code }}</div>
+                      <div class="text-[11px] text-slate-500">{{ ac.discount_percentage }}% off {% if ac.max_discount_amount %}(up to ₹{{ ac.max_discount_amount }}){% endif %} — Min ₹{{ ac.min_cart_value }}</div>
+                    </div>
+                    <div class="text-[11px] text-indigo-600 font-semibold bg-indigo-50 px-2 py-1 rounded border border-indigo-100 uppercase tracking-wider">Tap to Apply</div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+
             </div>
 
             <!-- Pricing breakdown -->

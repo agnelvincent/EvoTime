@@ -326,6 +326,14 @@ def checkout(request):
         if request.method == "GET":
             total_price = Decimal(cart_total) + shipping_charge
 
+        from django.utils import timezone
+        now_date = timezone.now().date()
+        used_coupon_ids = UsedCoupon.objects.filter(user=request.user).values_list('coupon_id', flat=True)
+        available_coupons = [
+            c for c in Coupon.objects.filter(is_active=True, start_date__lte=now_date).exclude(id__in=used_coupon_ids)
+            if not c.is_expired()
+        ]
+
         return render(
             request,
             "checkout.html",
@@ -338,6 +346,7 @@ def checkout(request):
                 "wallet": wallet,
                 "addresses": Address.objects.filter(user=request.user),
                 "buy_now_item": single_variant if variant_id else None,
+                "available_coupons": available_coupons,
             },
         )
 
@@ -354,6 +363,7 @@ def checkout(request):
             "wallet": wallet,
             "addresses": Address.objects.filter(user=request.user),
             "buy_now_item": single_variant if variant_id else None,
+            "available_coupons": available_coupons if 'available_coupons' in locals() else [],
             "error": str(e), 
         })
 
