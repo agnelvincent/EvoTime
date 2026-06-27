@@ -412,7 +412,7 @@
                 </button>
               </form>
             {% endif %}
-            {% if order_item.order.payment.status != 'completed' %}
+            {% if order_item.order.payment.status != 'completed' and order_item.order.payment.payment_method == 'razorpay' %}
               <button class="action-btn btn-retry" onclick="retryPayment({{ order_item.order.id }})">
                 <i class="fas fa-rotate"></i> Retry Payment
               </button>
