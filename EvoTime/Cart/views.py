@@ -176,7 +176,6 @@ def checkout(request):
         total_price = cart_total
         applied_coupon = None
 
-        # Apply coupon if available - FIX: Use the correct session key
         applied_coupon_data = request.session.get("applied_coupon")
         if applied_coupon_data and 'id' in applied_coupon_data:
             try:
@@ -195,7 +194,7 @@ def checkout(request):
                 request.session.pop("applied_coupon", None)
 
         # Add shipping charge
-        shipping_charge = 100  # Set a fixed value or make it dynamic if needed
+        shipping_charge = 100  
  
 
         if request.method == "POST":
