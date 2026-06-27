@@ -170,45 +170,15 @@ def checkout(request):
                 return redirect("home")
             cart_total = user_cart.total_price
 
-        discount = 0
-        total_price = cart_total
+        shipping_charge = Decimal(100)
+        discount = Decimal(0)
+        total_price = Decimal(cart_total) + shipping_charge
         applied_coupon = None
 
-        applied_coupon_data = request.session.get("applied_coupon")
-        if applied_coupon_data and 'id' in applied_coupon_data:
-            try:
-                coupon_id = applied_coupon_data['id']
-                applied_coupon = Coupon.objects.get(id=coupon_id, is_active=True)
-                
-                if cart_total >= applied_coupon.min_cart_value:
-                    cart_total = Decimal(cart_total)  
-                    discount = Decimal(applied_coupon_data.get('discount_amount', applied_coupon.calculate_discount(cart_total)))
-                    total_price = max(cart_total - discount, Decimal(0)) 
-                else:
-                    request.session.pop("applied_coupon", None)  # Remove invalid coupon
-
-            except Coupon.DoesNotExist:
-                request.session.pop("applied_coupon", None)
-
-        shipping_charge = 100  
- 
         if request.method == "POST":
             address_id = request.POST.get("address")
             payment_method = request.POST.get("payment_method")
-            original_total_price = float(request.POST.get("original_total_price"))
-            discounted_total_price = float(request.POST.get("discounted_total_price", original_total_price))
-
-            print("Address ID:", address_id)
-            print("Payment Method:", payment_method)
-            print("Original Total Price:", original_total_price)
-            print("Discounted Total Price:", discounted_total_price)
-
-            if discounted_total_price:
-                shipping_charge = Decimal(100) 
-                total_price = Decimal(discounted_total_price) + shipping_charge  
-
-            else:
-                total_price = original_total_price + shipping_charge
+            coupon_code = request.POST.get("coupon_code", "").strip()
 
             if not address_id or not payment_method:
                 messages.error(request, "Please select an address and payment method.")
@@ -220,19 +190,31 @@ def checkout(request):
                 messages.error(request, "Invalid address selection.")
                 return redirect("checkout")
 
+            # Server-side coupon validation & recalculation
+            if coupon_code:
+                try:
+                    coupon = Coupon.objects.get(code=coupon_code)
+                    if coupon.is_valid() and Decimal(cart_total) >= coupon.min_cart_value:
+                        if not UsedCoupon.objects.filter(user=request.user, coupon=coupon).exists():
+                            applied_coupon = coupon
+                            discount = coupon.calculate_discount(cart_total)
+                            total_price = max(Decimal(cart_total) - discount, Decimal(0)) + shipping_charge
+                except Coupon.DoesNotExist:
+                    pass  # Ignore invalid coupon codes and process order without discount
+
             with transaction.atomic():
                 order = Order.objects.create(
                     user=request.user,
                     shipping_address=shipping_address,
                     total_amount=total_price,
                     discount=discount,  
-                    applied_coupon=applied_coupon if applied_coupon else None,
+                    applied_coupon=applied_coupon,
                     shipping_charge=shipping_charge, 
                 )
 
-                if applied_coupon:
+                # UsedCoupon creation deferred - COD creates it immediately since payment is confirmed at door
+                if applied_coupon and payment_method == "cod":
                     UsedCoupon.objects.create(user=request.user, coupon=applied_coupon)
-                    request.session.pop("applied_coupon", None)  # Clear from session after use
 
                 if is_buy_now and single_variant:
                     if single_variant.stock < single_quantity:
@@ -283,6 +265,10 @@ def checkout(request):
                             payment_method="wallet",
                             status="completed",
                         )
+
+                        # Create UsedCoupon now that payment has succeeded
+                        if applied_coupon:
+                            UsedCoupon.objects.create(user=request.user, coupon=applied_coupon)
 
                         if not is_buy_now:
                             cart_items.delete()
@@ -336,7 +322,9 @@ def checkout(request):
                         cart_items.delete()
                     return redirect("order_success", order_id=order.id)
         
-        total_price += shipping_charge
+        # Calculate total price for GET request (rendering the page initially)
+        if request.method == "GET":
+            total_price = Decimal(cart_total) + shipping_charge
 
         return render(
             request,
@@ -431,6 +419,12 @@ def verify_razorpay_payment(request):
                     payment.transaction_id = payment_id
                     OrderItem.objects.filter(order=order).update(status="processing")
                     CartItem.objects.filter(cart__user=order.user).delete()
+                    
+                    # Create UsedCoupon now that Razorpay payment has succeeded
+                    if order.applied_coupon:
+                        from admin_home.models import UsedCoupon
+                        UsedCoupon.objects.get_or_create(user=order.user, coupon=order.applied_coupon)
+                        
                 else:
                     payment.status = "payment_not_received"  # Mark as failed but allow retry
                     order.save()
