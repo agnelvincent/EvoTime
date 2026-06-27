@@ -1292,7 +1292,8 @@ def coupon_management(request):
     if request.method == "POST":
         coupon_id = request.POST.get("coupon_id")
         code = request.POST.get("code")
-        discount_percentage = request.POST.get("discount_percentage")  # Updated field name
+        discount_percentage = request.POST.get("discount_percentage")
+        max_discount_amount = request.POST.get("max_discount_amount") or None
         min_cart_value = request.POST.get("min_cart_value")
         start_date = request.POST.get("start_date")
         expiry_date = request.POST.get("expiry_date") or None
@@ -1310,7 +1311,8 @@ def coupon_management(request):
         if coupon_id:  # Update existing coupon
             coupon = get_object_or_404(Coupon, id=coupon_id)
             coupon.code = code
-            coupon.discount_percentage = discount_percentage  # Updated field name
+            coupon.discount_percentage = discount_percentage
+            coupon.max_discount_amount = max_discount_amount
             coupon.min_cart_value = min_cart_value
             coupon.start_date = start_date
             coupon.expiry_date = expiry_date
@@ -1319,7 +1321,8 @@ def coupon_management(request):
         else:  # Create a new coupon
             Coupon.objects.create(
                 code=code,
-                discount_percentage=discount_percentage,  # Updated field name
+                discount_percentage=discount_percentage,
+                max_discount_amount=max_discount_amount,
                 min_cart_value=min_cart_value,
                 start_date=start_date,
                 expiry_date=expiry_date,
@@ -1339,7 +1342,8 @@ def get_coupon_details(request, coupon_id):
     data = {
         "id": coupon.id,
         "code": coupon.code,
-        "discount_percentage": str(coupon.discount_percentage),  # Updated field name
+        "discount_percentage": str(coupon.discount_percentage),
+        "max_discount_amount": str(coupon.max_discount_amount) if coupon.max_discount_amount else "",
         "min_cart_value": str(coupon.min_cart_value),
         "start_date": str(coupon.start_date),
         "expiry_date": str(coupon.expiry_date) if coupon.expiry_date else "",

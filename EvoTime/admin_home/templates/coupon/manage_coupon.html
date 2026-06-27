@@ -17,6 +17,7 @@
                 <tr>
                     <th class="border p-3 text-left text-sm font-semibold text-gray-700">Code</th>
                     <th class="border p-3 text-left text-sm font-semibold text-gray-700">Discount (%)</th>
+                    <th class="border p-3 text-left text-sm font-semibold text-gray-700">Max Discount</th>
                     <th class="border p-3 text-left text-sm font-semibold text-gray-700">Min Cart Value</th>
                     <th class="border p-3 text-left text-sm font-semibold text-gray-700">Start Date</th>
                     <th class="border p-3 text-left text-sm font-semibold text-gray-700">Expiry Date</th>
@@ -29,6 +30,7 @@
                 <tr class="hover:bg-gray-50">
                     <td class="border p-3 text-gray-700">{{ coupon.code }}</td>
                     <td class="border p-3 text-gray-700">{{ coupon.discount_percentage }}%</td>
+                    <td class="border p-3 text-gray-700">{% if coupon.max_discount_amount %}₹{{ coupon.max_discount_amount }}{% else %}-{% endif %}</td>
                     <td class="border p-3 text-gray-700">₹{{ coupon.min_cart_value }}</td>
                     <td class="border p-3 text-gray-700">{{ coupon.start_date }}</td>
                     <td class="border p-3 text-gray-700">{{ coupon.expiry_date|default:"-" }}</td>
@@ -112,6 +114,10 @@
                         <input type="number" name="discount_percentage" id="discount_percentage" class="w-full border border-gray-300 p-2 rounded" min="1" max="100" required>
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-gray-700">Max Discount Amount (₹ - Optional):</label>
+                        <input type="number" name="max_discount_amount" id="max_discount_amount" class="w-full border border-gray-300 p-2 rounded" min="0" step="0.01">
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-gray-700">Minimum Cart Value (₹):</label>
                         <input type="number" name="min_cart_value" id="min_cart_value" class="w-full border border-gray-300 p-2 rounded" min="0" required>
                     </div>
@@ -165,6 +171,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     document.getElementById("coupon_id").value = data.id;
                     document.getElementById("code").value = data.code;
                     document.getElementById("discount_percentage").value = data.discount_percentage;
+                    document.getElementById("max_discount_amount").value = data.max_discount_amount || "";
                     document.getElementById("min_cart_value").value = data.min_cart_value;
                     document.getElementById("start_date").value = data.start_date;
                     document.getElementById("expiry_date").value = data.expiry_date || "";
