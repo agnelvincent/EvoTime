@@ -550,7 +550,10 @@ def apply_coupon(request):
     cart_total = float(data.get("cart_total", 0))
 
     try:
-        coupon = Coupon.objects.get(code=coupon_code, is_active=True)
+        coupon = Coupon.objects.get(code=coupon_code)
+
+        if not coupon.is_valid():
+            return JsonResponse({"valid": False, "message": "Invalid or expired coupon."})
 
         # Check if the coupon has already been used by the user
         if UsedCoupon.objects.filter(user=request.user, coupon=coupon).exists():
@@ -563,19 +566,15 @@ def apply_coupon(request):
         # Calculate the discount amount using the model method
         discount_amount = coupon.calculate_discount(cart_total)
 
-        # Save applied coupon & discount amount in session
-        request.session['applied_coupon'] = {
-            "id": coupon.id,
-            "code": coupon.code,
-            "discount_amount": float(discount_amount)
-        }
-        request.session.modified = True
-
-        return JsonResponse({"valid": True, "discount_amount": float(discount_amount)})
+        # Removed session storage; return discount amount to frontend
+        return JsonResponse({
+            "valid": True,
+            "discount_amount": float(discount_amount),
+            "coupon_code": coupon.code
+        })
 
     except Coupon.DoesNotExist:
         return JsonResponse({"valid": False, "message": "Invalid or expired coupon."})
-
 
 
 @require_POST
@@ -583,11 +582,9 @@ def apply_coupon(request):
 @never_cache
 @login_required
 def remove_coupon(request):
-    if 'applied_coupon' in request.session:
-        del request.session['applied_coupon']
-        request.session.modified = True
-        return JsonResponse({"success": True})
-    return JsonResponse({"success": False, "message": "No coupon applied."})
+    # Session storage for coupons has been removed
+    # The frontend just needs a success response to reset the UI
+    return JsonResponse({"success": True})
 
 
 @block_superuser_navigation
