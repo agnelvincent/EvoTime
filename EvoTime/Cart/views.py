@@ -21,7 +21,6 @@ from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
 from user_home.views import block_superuser_navigation
 
-# Create your views here.
 
 @block_superuser_navigation
 @never_cache
@@ -52,9 +51,8 @@ def add_to_cart(request, variant_id):
             
             cart_item.quantity += 1  # Increment quantity if already in cart
 
-        cart_item.save()  # Save the cart item
+        cart_item.save()  
 
-        # Update cart total price
         cart_item_count = cart.items.count()
         total_price = cart.total_price
 
@@ -75,7 +73,7 @@ def add_to_cart(request, variant_id):
 @require_POST
 def update_quantity(request):
     try:
-        data = json.loads(request.body)  # Parse JSON request body
+        data = json.loads(request.body) 
         item_id = data.get('item_id')
         new_quantity = data.get('quantity')
 
@@ -84,7 +82,6 @@ def update_quantity(request):
 
         new_quantity = int(new_quantity)
 
-        # Get the CartItem and check stock availability
         cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
 
         if new_quantity > cart_item.product_variant.stock:
@@ -190,7 +187,6 @@ def checkout(request):
                 messages.error(request, "Invalid address selection.")
                 return redirect("checkout")
 
-            # Server-side coupon validation & recalculation
             if coupon_code:
                 try:
                     coupon = Coupon.objects.get(code=coupon_code)
@@ -200,7 +196,7 @@ def checkout(request):
                             discount = coupon.calculate_discount(cart_total)
                             total_price = max(Decimal(cart_total) - discount, Decimal(0)) + shipping_charge
                 except Coupon.DoesNotExist:
-                    pass  # Ignore invalid coupon codes and process order without discount
+                    pass  
 
             with transaction.atomic():
                 order = Order.objects.create(
@@ -212,7 +208,6 @@ def checkout(request):
                     shipping_charge=shipping_charge, 
                 )
 
-                # UsedCoupon creation deferred - COD creates it immediately since payment is confirmed at door
                 if applied_coupon and payment_method == "cod":
                     UsedCoupon.objects.create(user=request.user, coupon=applied_coupon)
 
@@ -325,7 +320,7 @@ def checkout(request):
                         cart_items.delete()
                     return redirect("order_success", order_id=order.id)
         
-        # Calculate total price for GET request (rendering the page initially)
+
         if request.method == "GET":
             total_price = Decimal(cart_total) + shipping_charge
 
@@ -382,7 +377,7 @@ def buy_now(request, variant_id):
 
         if variant.stock < 1:
             messages.error(request, f"{variant.product.name} ({variant.name}) is out of stock!")
-            return redirect('product_detail', id=variant.product.id)  # FIXED: Pass correct parameter
+            return redirect('product_detail', id=variant.product.id)  
         
         # Redirect to checkout with variant_id in the query parameters
         return redirect(f"{reverse('checkout')}?variant_id={variant_id}")
@@ -484,7 +479,6 @@ def retry_payment(request, order_id):
             "payment_capture": 1
         })
 
-        # Update Razorpay Order ID and Payment
         order.razorpay_order_id = razorpay_order['id']
         order.save()
 

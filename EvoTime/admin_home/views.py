@@ -39,7 +39,6 @@ def admin_required(view_func):
 
 @never_cache
 def admin_login(request):
-    # If the user is already logged in and is a staff member, redirect to the dashboard
     if request.user.is_authenticated and request.user.is_staff:
         return redirect('admin_dashboard')
 
