@@ -42,20 +42,19 @@ def admin_login(request):
     if request.user.is_authenticated and request.user.is_staff:
         return redirect('admin_dashboard')
 
-    # Handle POST request for login
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
         
         if user is not None and user.is_staff:
-            login(request, user)  # Log the user in
-            return redirect('admin_dashboard')  # Redirect to the admin dashboard
+            login(request, user)  
+            return redirect('admin_dashboard')  
         else:
-            messages.error(request, "Invalid username or password")  # Display error message
-            return redirect('admin_login')  # Redirect back to the login page
+            messages.error(request, "Invalid username or password")  
+            return redirect('admin_login')  
 
-    return render(request, 'admin_login.html')  # Render login page if not POST
+    return render(request, 'admin_login.html')  
 
 @admin_required
 @never_cache
@@ -507,7 +506,7 @@ def add_brand(request):
                 # Apply Offer to All Associated Products
                 products = brand.products.all()
                 for product in products:
-                    product.save()  # This triggers price recalculation
+                    product.save()  
 
             messages.success(request, f'Brand "{brand_name}" added successfully!')
             return redirect('admin_product')
@@ -653,7 +652,7 @@ def edit_product(request, product_id):
             return redirect('admin_product')
 
         # Validate and Apply Offer Percentage
-        if offer_percentage.strip():  # Ensure offer percentage is not empty
+        if offer_percentage.strip(): 
             try:
                 offer_percentage = Decimal(offer_percentage)
                 if offer_percentage < 0 or offer_percentage > 100:
@@ -668,7 +667,7 @@ def edit_product(request, product_id):
         category = get_object_or_404(Category, id=category_id)
         brand = get_object_or_404(Brand, id=brand_id)
 
-        # 🔥 Apply Highest Offer Between Product & Brand
+        # Apply Highest Offer Between Product & Brand
         brand_offer = Decimal(brand.offer_percentage) if brand else Decimal(0)
         final_offer = max(offer_percentage, brand_offer)
 
@@ -678,7 +677,7 @@ def edit_product(request, product_id):
         else:
             sales_price = regular_price  # No offer applied, use regular price
 
-        # Debugging output (Check if values are correctly fetched)
+
         print(f"Regular Price: {regular_price}, Product Offer: {offer_percentage}, Brand Offer: {brand_offer}, Applied Offer: {final_offer}, Sales Price: {sales_price}")
 
         # Assign updated values
@@ -687,7 +686,7 @@ def edit_product(request, product_id):
         product.description = description
         product.regular_price = regular_price
         product.sales_price = sales_price
-        product.offer_percentage = offer_percentage  # Save product-level offer only
+        product.offer_percentage = offer_percentage  
         product.brand = brand
 
         if image:
@@ -1168,7 +1167,6 @@ def admin_change_order_item_status_view(request, order_item_id):
                     order_item.status = new_status
                     order_item.save()
 
-                    # Handle Payment Status for COD Orders
                     try:
                         payment = order.payment
                         
@@ -1179,13 +1177,12 @@ def admin_change_order_item_status_view(request, order_item_id):
                             payment.save()
 
                     except Payment.DoesNotExist:
-                        # Log or handle case where payment doesn't exist
                         messages.warning(request, "No payment record found for this order.")
 
                     # Optional: Update overall order status if all items are in same status
                     order_statuses = order.items.values_list('status', flat=True).distinct()
                     if len(order_statuses) == 1:
-                        # If all items have same status, potentially update order status
+                    
                         if new_status == 'delivered':
                             # Mark order as fully delivered
                             order.status = 'completed'
@@ -1231,7 +1228,6 @@ def admin_handle_return_request(request, item_id):
                 product_variant.stock += order_item.quantity
                 product_variant.save()
 
-                # **2. Calculate Refund (Item Price + Shipping Share)**
                 order = order_item.order
                 total_items = order.items.filter(status__in=["pending", "processing", "shipped", "delivered"]).count()
 
@@ -1240,10 +1236,9 @@ def admin_handle_return_request(request, item_id):
                 else:
                     per_item_shipping_charge = order.shipping_charge  # If only one item, refund full shipping charge
 
-                # Use the exact amount paid (total price minus proportional coupon discount)
                 refund_amount = order_item.exact_amount_paid + per_item_shipping_charge
-                # **3. Check if the order has a valid payment**
-                payment = getattr(order, "payment", None)  # Safely get the payment attribute
+                
+                payment = getattr(order, "payment", None) 
                 if payment and payment.status == "completed":
                     wallet, _ = Wallet.objects.get_or_create(user=order.user)
                     wallet.add_amount(refund_amount, reason="Order Return Refund")
@@ -1273,7 +1268,6 @@ def admin_handle_return_request(request, item_id):
 @admin_required
 @never_cache   
 def coupon_management(request):
-    """Handles adding, updating, and listing coupons"""
     coupons = Coupon.objects.all()
     coupons_list = Coupon.objects.all()
         # Pagination
@@ -1335,7 +1329,6 @@ def coupon_management(request):
 @admin_required
 @never_cache   
 def get_coupon_details(request, coupon_id):
-    """Fetch coupon details via AJAX for editing"""
     coupon = get_object_or_404(Coupon, id=coupon_id)
     data = {
         "id": coupon.id,
@@ -1353,7 +1346,6 @@ def get_coupon_details(request, coupon_id):
 @admin_required
 @never_cache   
 def delete_coupon(request, coupon_id):
-    """Deletes a coupon"""
     coupon = get_object_or_404(Coupon, id=coupon_id)
     coupon.delete()
     return JsonResponse({"message": "Coupon deleted successfully"})
