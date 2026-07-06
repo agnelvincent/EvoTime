@@ -21,6 +21,8 @@
             style: {
                 background: type === 'error'
                     ? 'linear-gradient(135deg,#ef4444,#dc2626)'
+                    : type === 'success'
+                    ? 'linear-gradient(135deg,#10b981,#059669)'
                     : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
                 borderRadius: '12px',
                 fontSize: '14px',
@@ -166,6 +168,13 @@
         } catch { /* non-critical */ }
     }
 
-    document.addEventListener('DOMContentLoaded', syncWishlistIcons);
+    document.addEventListener('DOMContentLoaded', function() {
+        syncWishlistIcons();
+        {% if messages %}
+            {% for message in messages %}
+                showToast("{{ message|escapejs }}", "{{ message.tags }}");
+            {% endfor %}
+        {% endif %}
+    });
 })();
 </script>
