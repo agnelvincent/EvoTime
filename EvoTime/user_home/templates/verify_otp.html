@@ -164,23 +164,22 @@
 
   <!-- JavaScript timer logic -->
   <script>
-    const otpCreationTime = new Date("{{ user_data.otp_created_at }}").getTime();
-    const otpExpiryTime = otpCreationTime + 2 * 60 * 1000; // 2 minutes in milliseconds
+    let timeLeft = parseInt("{{ remaining_seconds|default:120 }}");
 
     function updateTimer() {
-      const now = new Date().getTime();
-      const distance = otpExpiryTime - now;
-
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      document.getElementById("timer").innerHTML = minutes + "m " + seconds + "s";
-
-      if (distance < 0) {
+      if (timeLeft <= 0) {
         clearInterval(timerInterval);
         document.getElementById("timer").innerHTML = "EXPIRED";
         document.getElementById("resend-link").style.display = "block"; // Show resend link
+        return;
       }
+
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      const paddedSeconds = seconds < 10 ? "0" + seconds : seconds;
+
+      document.getElementById("timer").innerHTML = minutes + "m " + paddedSeconds + "s";
+      timeLeft--;
     }
 
     const timerInterval = setInterval(updateTimer, 1000);

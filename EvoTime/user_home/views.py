@@ -159,15 +159,22 @@ def verify_otp(request):
 
             request.session.flush()
 
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-
-            messages.success(request, "Account created successfully! You are now logged in.")
-            return redirect('home')  
+            messages.success(request, "Account created successfully! Please log in to your account.")
+            return redirect('user_login')  
         else:
             messages.error(request, "Invalid OTP. Please try again.")
 
     user_data = request.session.get('user_data')
-    return render(request, 'verify_otp.html', {'user_data': user_data})
+    remaining_seconds = 0
+    if user_data and 'otp_created_at' in user_data:
+        otp_created_at = datetime.fromisoformat(user_data['otp_created_at'])
+        elapsed = timezone.now() - otp_created_at
+        remaining_seconds = max(0, 120 - int(elapsed.total_seconds()))
+
+    return render(request, 'verify_otp.html', {
+        'user_data': user_data,
+        'remaining_seconds': remaining_seconds
+    })
 
 
 @never_cache
