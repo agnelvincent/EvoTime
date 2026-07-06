@@ -17,18 +17,6 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
-# Static/Media
-media/
-public/media/
 
-# Node
-node_modules/
-npm-debug.log
 
-# OS / IDE
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-*.swp
-*.swo
+
