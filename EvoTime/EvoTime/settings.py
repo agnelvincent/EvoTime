@@ -8,7 +8,14 @@ SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = ["www.timeevo.life", "timeevo.life", "localhost", "127.0.0.1" ,]
+ALLOWED_HOSTS = [
+    # Legacy production domain
+    "www.timeevo.life", "timeevo.life",
+    # New DuckDNS domain — replace with your actual subdomain
+    config('DUCKDNS_DOMAIN', default=''),
+    # Docker internal & local
+    "localhost", "127.0.0.1",
+]
 
 AUTH_USER_MODEL = 'user_home.CustomUser'
 
@@ -60,13 +67,18 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 
-CSRF_TRUSTED_ORIGINS = ["https://timeevo.life"]
+CSRF_TRUSTED_ORIGINS = [
+    "https://timeevo.life",
+    # DuckDNS domain — Certbot will serve HTTPS on 443
+    f"https://{config('DUCKDNS_DOMAIN', default='localhost')}",
+]
 
 CORS_ALLOWED_ORIGINS = [
     "https://www.timeevo.life",
-    "http://www.timeevo.life",  
-    "http://localhost:8000",  
-    "http://127.0.0.1:8000"  
+    "http://www.timeevo.life",
+    f"https://{config('DUCKDNS_DOMAIN', default='localhost')}",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
 ]
 
 
@@ -130,7 +142,9 @@ DATABASES = {
         'NAME': config('DATABASE_NAME'),
         'USER': config('DATABASE_USER'),
         'PASSWORD': config('DATABASE_PASSWORD'),
-        'HOST': config('DATABASE_HOST', default='localhost'),
+        # In Docker, DATABASE_HOST must be set to 'db' (the service name).
+        # Locally, it falls back to 'localhost'.
+        'HOST': config('DATABASE_HOST', default='db'),
         'PORT': config('DATABASE_PORT', cast=int, default=5432),
     }
 }

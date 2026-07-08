@@ -1,0 +1,46 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# .dockerignore — EvoTime
+# Prevents unnecessary files from being sent to the Docker build context.
+# Keeps the image lean and prevents accidental secret leakage.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment (dependencies installed fresh inside the image)
+venv/
+env/
+.venv/
+
+# Git history (not needed in image)
+.git/
+.gitignore
+
+# Environment secrets (injected at runtime via docker-compose env_file)
+.env
+
+# Local SQLite database (if ever created during dev)
+db.sqlite3
+*.sqlite3
+
+# Node modules (Tailwind build artifacts, not needed at runtime)
+node_modules/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# IDE / editor configs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage
