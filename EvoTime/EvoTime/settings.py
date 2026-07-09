@@ -67,8 +67,9 @@ SOCIALACCOUNT_PROVIDERS = {
 CSRF_TRUSTED_ORIGINS = [
     # DuckDNS domain — Certbot will serve HTTPS on 443
     f"https://{config('DUCKDNS_DOMAIN', default='localhost')}",
-    f'https://'{config('EC2_INSTANCE_IP', default='localhost')}
+    f"https://{config('EC2_INSTANCE_IP', default='localhost')}"
 ]
+
 
 CORS_ALLOWED_ORIGINS = [
     f"https://{config('DUCKDNS_DOMAIN', default='localhost')}",
