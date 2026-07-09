@@ -10,7 +10,7 @@ DEBUG = config('DEBUG', cast=bool)
 
 ALLOWED_HOSTS = [
     config('DUCKDNS_DOMAIN', default=''),
-    # Docker internal & local
+    config('EC2_INSTANCE_IP',default=''),
     "localhost", "127.0.0.1",
 ]
 
@@ -67,6 +67,7 @@ SOCIALACCOUNT_PROVIDERS = {
 CSRF_TRUSTED_ORIGINS = [
     # DuckDNS domain — Certbot will serve HTTPS on 443
     f"https://{config('DUCKDNS_DOMAIN', default='localhost')}",
+    f'https://'{config('EC2_INSTANCE_IP', default='localhost')}
 ]
 
 CORS_ALLOWED_ORIGINS = [
