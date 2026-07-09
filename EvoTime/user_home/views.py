@@ -986,7 +986,7 @@ def user_logout(request):
     return redirect('user_login')
 
 def custom_page_not_found_view(request, exception):
-    return render(request, '404page.html', status=404)
+    return render(request, '404.html', status=404)
 
 
 
