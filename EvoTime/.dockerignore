@@ -1,9 +1,3 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# .dockerignore — EvoTime
-# Prevents unnecessary files from being sent to the Docker build context.
-# Keeps the image lean and prevents accidental secret leakage.
-# ─────────────────────────────────────────────────────────────────────────────
-
 # Python artifacts
 __pycache__/
 *.py[cod]
@@ -27,8 +21,6 @@ env/
 db.sqlite3
 *.sqlite3
 
-# Node modules (Tailwind build artifacts, not needed at runtime)
-node_modules/
 
 # OS artifacts
 .DS_Store
