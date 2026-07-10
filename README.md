@@ -21,13 +21,13 @@ EvoTime is a modern Django-based e-commerce platform featuring dynamic user expe
 ## Prerequisites
 
 Ensure you have the following installed on your system:
-- [Python 3.8+](https://www.python.org/downloads/)
-- [PostgreSQL](https://www.postgresql.org/download/)
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 - [Git](https://git-scm.com/downloads)
 
 ## Local Development Setup
 
-Follow these steps to get your development environment running:
+Follow these steps to get your development environment running using Docker:
 
 ### 1. Clone the repository
 
@@ -36,32 +36,7 @@ git clone <your-repository-url>
 cd EvoTime
 ```
 
-### 2. Create and activate a Virtual Environment
-
-It is recommended to isolate your project dependencies using a virtual environment.
-
-**Windows:**
-```bash
-python -m venv venv
-venv\Scripts\activate
-```
-
-**macOS/Linux:**
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
-
-Navigate to the source directory and install the required Python packages:
-
-```bash
-cd EvoTime
-pip install -r requirements.txt
-```
-
-### 4. Configure Environment Variables
+### 2. Configure Environment Variables
 
 The project uses `python-decouple` to manage environment variables. You will need to create a `.env` file inside the inner `EvoTime` folder (the same directory as `settings.py` and `manage.py`) with the following necessary keys:
 
@@ -74,7 +49,7 @@ DEBUG=True
 DATABASE_NAME=your_db_name
 DATABASE_USER=your_db_user
 DATABASE_PASSWORD=your_db_password
-DATABASE_HOST=localhost
+DATABASE_HOST=db
 DATABASE_PORT=5432
 
 # Cloudinary Storage Settings
@@ -98,32 +73,28 @@ EMAIL_HOST_USER=your_email@gmail.com
 EMAIL_HOST_PASSWORD=your_app_password
 ```
 
-### 5. Setup the Database
+### 3. Build and Run the Docker Containers
 
-Create your PostgreSQL database matching the credentials you supplied in your `.env` file, and then run the Django migrations:
-
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
-### 6. Create a Superuser
-
-To access the Django Admin panel, create a superuser account:
+Navigate to the directory containing the `docker-compose.yml` file (the inner `EvoTime` directory) and start the containers:
 
 ```bash
-python manage.py createsuperuser
+cd EvoTime
+docker-compose up --build -d
 ```
 
-### 7. Run the Development Server
+This command will build the Docker image, start the PostgreSQL database and Django web server, and automatically run the database migrations and collect static files.
 
-Start the local Django server:
+### 4. Create a Superuser
+
+To access the Django Admin panel, you can run the `createsuperuser` command inside the running web container:
 
 ```bash
-python manage.py runserver
+docker-compose exec web python manage.py createsuperuser
 ```
 
-You can now view the application at `http://127.0.0.1:8000/`.
+### 5. Access the Application
+
+You can now view the application at `http://127.0.0.1:8001/`. The admin panel is available at `http://127.0.0.1:8001/admin/`.
 
 ## Application Structure
 
